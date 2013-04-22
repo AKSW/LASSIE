@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -152,28 +153,41 @@ public class ExpressiveSchemaMappingGenerator {
 	 * @param targetClasses
 	 */
 	private void performUnsupervisedLinking(Set<NamedClass> sourceClasses, Collection<Description> targetClasses){
-		//for each source class C_i
+		//compute the Concise Bounded Description(CBD) for each instance
+		//in each source class C_i, thus creating a model for each class
+		Map<NamedClass, Model> sourceClassToModel = new HashMap<NamedClass, Model>();
 		for (NamedClass sourceClass : sourceClasses) {
 			//get all instances of C_i
 			SortedSet<Individual> sourceInstances = getSourceInstances(sourceClass);
 			
 			//get the fragment describing the instances of C_i
 			Model sourceFragment = getFragment(sourceInstances, source, 1);
+			sourceClassToModel.put(sourceClass, sourceFragment);
+		}
+		
+		//compute the Concise Bounded Description(CBD) for each instance
+		//in each each target class expression D_i, thus creating a model for each class expression
+		Map<Description, Model> targetClassExpressionToModel = new HashMap<Description, Model>();
+		for (Description targetClass : targetClasses) {
+			// get all instances of D_i
+			SortedSet<Individual> targetInstances = getTargetInstances(targetClass);
+
+			// get the fragment describing the instances of D_i
+			Model targetFragment = getFragment(targetInstances, target, 1);
+			targetClassExpressionToModel.put(targetClass, targetFragment);
+		}
+		
+		//for each C_i
+		for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
+			NamedClass sourceClass = entry.getKey();
+			Model sourceClassModel = entry.getValue();
 			
-			//for each target class expression D_i
-			for (Description targetClassExpression : targetClasses) {
-				//get all instances of D_i
-				SortedSet<Individual> targetInstances = getTargetInstances(targetClassExpression);
-				
-				//get the fragment describing the instances of D_i
-				Model targetFragment = getFragment(targetInstances, target, 1);
+			//for each D_i
+			for (Entry<Description, Model> entry2 : targetClassExpressionToModel.entrySet()) {
+				Description targetClassExpression = entry2.getKey();
+				Model targetClassExpressionModel = entry2.getValue();
 				
 				//call LIMES
-//				Cache sourceCache = new MemoryCache();
-//				Cache targetCache = new MemoryCache();
-//				
-//				SetConstraintsMapper sCM = SetConstraintsMapperFactory.getMapper(name, sInfo, tInfo, s, t, f, granularity);
-//				Mapping mapping = sCM.getLinks(arg0, arg1);
 			}
 		}
 	}
