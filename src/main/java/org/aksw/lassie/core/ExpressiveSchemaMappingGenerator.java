@@ -5,9 +5,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -23,6 +26,7 @@ import org.dllearner.core.AbstractReasonerComponent;
 import org.dllearner.core.ComponentInitException;
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.KnowledgeSource;
+import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 import org.dllearner.kb.OWLAPIOntology;
@@ -32,7 +36,10 @@ import org.dllearner.learningproblems.PosNegLPStandard;
 import org.dllearner.learningproblems.PosOnlyLP;
 import org.dllearner.reasoning.FastInstanceChecker;
 import org.dllearner.utilities.datastructures.SetManipulation;
+import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
+import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -40,6 +47,7 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
@@ -80,6 +88,8 @@ public class ExpressiveSchemaMappingGenerator {
 	private KnowledgeBase source;
 	private KnowledgeBase target;
 	private String linkingProperty = OWL.sameAs.getURI();
+
+	private int maxRecursionDepth = 2;
 	
 	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target) {
 		this.source = source;
@@ -101,33 +111,91 @@ public class ExpressiveSchemaMappingGenerator {
 	}
 	
 	public void run() {
-		// get all classes C in source KB
+		// get all classes C_i in source KB
 		Set<NamedClass> sourceClasses = getClasses(source);
+		
+		// get all classes D_i in target KB
+		Set<NamedClass> targetClasses = getClasses(target);
+		
+		//initially, the class expressions E_i in the target KB are the named classes D_i
+		Collection<Description> targetClassExpressions = new TreeSet<Description>();
+		targetClassExpressions.addAll(targetClasses);
+		
+		//perform the iterative schema matching
+		Map<NamedClass, Description> mapping = new HashMap<NamedClass, Description>();
+		int i = 1;
+		do {
+			//compute a set of links between each pair of class expressions (C_i, E_j)
+//			performUnsupervisedLinking(sourceClasses, targetClassExpressions);
+			
+			//for each source class C_i, compute a mapping to a class expression in the target KB
+			for (NamedClass sourceClass : sourceClasses) {
+				try {
+					EvaluatedDescription singleMapping = computeMapping(sourceClass);getTargetInstances(singleMapping.getDescription());
+					mapping.put(sourceClass, singleMapping.getDescription());
+				} catch (NonExistingLinksException e) {
+					logger.warn(e.getMessage() + "Skipped learning.");
+				}
+			}
+			
+			//set the target class expressions
+			targetClassExpressions = mapping.values();
 
-		// for each class c_i in C
-		for (NamedClass cls : sourceClasses) {
-			//compute the schema mapping
-			computeMapping(cls);
+		} while (++i <= 1);
+
+		
+	}
+	
+	/**
+	 * Run LIMES to generate owl:sameAs links
+	 * @param sourceClasses
+	 * @param targetClasses
+	 */
+	private void performUnsupervisedLinking(Set<NamedClass> sourceClasses, Collection<Description> targetClasses){
+		//for each source class C_i
+		for (NamedClass sourceClass : sourceClasses) {
+			//get all instances of C_i
+			SortedSet<Individual> sourceInstances = getSourceInstances(sourceClass);
+			
+			//get the fragment describing the instances of C_i
+			Model sourceFragment = getFragment(sourceInstances, source, 1);
+			
+			//for each target class expression D_i
+			for (Description targetClassExpression : targetClasses) {
+				//get all instances of D_i
+				SortedSet<Individual> targetInstances = getTargetInstances(targetClassExpression);
+				
+				//get the fragment describing the instances of D_i
+				Model targetFragment = getFragment(targetInstances, target, 1);
+				
+				//call LIMES
+//				Cache sourceCache = new MemoryCache();
+//				Cache targetCache = new MemoryCache();
+//				
+//				SetConstraintsMapper sCM = SetConstraintsMapperFactory.getMapper(name, sInfo, tInfo, s, t, f, granularity);
+//				Mapping mapping = sCM.getLinks(arg0, arg1);
+			}
 		}
 	}
 	
-	public List<? extends EvaluatedDescription> computeMapping(NamedClass cls){
-		//get all instances of c_i
-		SortedSet<Individual> sourceInstances = getSourceInstances(cls);
-		
+	public EvaluatedDescription computeMapping(NamedClass cls) throws NonExistingLinksException{
+		logger.info("*******************************************************\nComputing mapping for class " + cls + "...");
+		return computeMappings(cls).get(0);
+	}
+	
+	public List<? extends EvaluatedDescription> computeMappings(NamedClass cls) throws NonExistingLinksException{
 		//get all instances in the target KB to which instances of c_i are connected to
 		//this are our positive examples
 		SortedSet<Individual> targetInstances = getTargetInstances(cls);
 		
-		//compute an initial mapping
-		List<? extends EvaluatedDescription> schemaMapping = initSchemaMapping(targetInstances);
-		
-		//update schema mapping until total coverage is maximized
-//		do {
-//			updateSchemaMapping();
-//		} while (true);
-		
-		return schemaMapping;
+		//if there are no links to the target KB, then we can skip learning
+		if(targetInstances.isEmpty()){
+			throw new NonExistingLinksException();
+		} else {
+			//compute a mapping
+			List<? extends EvaluatedDescription> schemaMapping = initSchemaMapping(targetInstances);
+			return schemaMapping;
+		}
 	}
 	
 	private List<? extends EvaluatedDescription> initSchemaMapping(SortedSet<Individual> positiveExamples){
@@ -136,12 +204,15 @@ public class ExpressiveSchemaMappingGenerator {
 		
 		//starting from the positive examples, we first extract the fragment for them
 		logger.info("Extracting fragment for positive examples...");
+		mon.start();
 		Model positiveFragment = getFragment(positiveExamplesSample, target);
-		logger.info("...done.");
+		mon.stop();
+		logger.info("...got " + positiveFragment.size() + " triples in " + mon.getLastValue() + "ms.");
 		
 		//based on the fragment we try to find some good negative examples
 		SortedSet<Individual> negativeExamples = new TreeSet<Individual>();
-		mon.start();
+		logger.info("Computing negative examples...");
+		MonitorFactory.getTimeMonitor("negative examples").start();
 		//find the classes the positive examples are asserted to
 		Set<NamedClass> positiveExamplesClasses = new HashSet<NamedClass>();
 		ParameterizedSparqlString template = new ParameterizedSparqlString("SELECT ?type WHERE {?s a ?type.}");
@@ -157,30 +228,40 @@ public class ExpressiveSchemaMappingGenerator {
 				}
 			}
 		}
-		System.out.println(positiveExamplesClasses);
 		
 		//get the negative examples
+		logger.debug("Computing sibling classes...");
+		mon.start();
+		Set<NamedClass> parallelClasses = new HashSet<NamedClass>();
 		for(NamedClass nc : positiveExamplesClasses){
-			Set<NamedClass> parallelClasses = target.getReasoner().getSiblingClasses(nc);
-			for(NamedClass parallelClass : parallelClasses){
-				negativeExamples.addAll(target.getReasoner().getIndividuals(parallelClass, 5));
-				negativeExamples.removeAll(positiveExamples);
+			parallelClasses.addAll(target.getReasoner().getSiblingClasses(nc));
+		}
+		mon.stop();
+		logger.debug("...got " + parallelClasses.size() + " classes in " + mon.getLastValue() + "ms.");
+		for(NamedClass parallelClass : parallelClasses){
+			negativeExamples.addAll(target.getReasoner().getIndividuals(parallelClass, 5));
+			if(negativeExamples.size() >= maxNrOfNegativeExamples){
+				break;
 			}
 		}
+		negativeExamples.removeAll(positiveExamples);
 		
-		mon.stop();
-		logger.info("Found " + negativeExamples.size() + " negative examples in " + mon.getLastValue() + "ms.");
+		MonitorFactory.getTimeMonitor("negative examples").stop();
+		logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
 		
 		//get a sample of the negative examples
 		SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);
 		
-		logger.info("#Positive examples: " + positiveExamplesSample.size());
-		logger.info("#Negative examples: " + negativeExamplesSample.size());
-		
 		//create fragment for negative examples
 		logger.info("Extracting fragment for negative examples...");
+		mon.start();
 		Model negativeFragment = getFragment(negativeExamplesSample, target);
-		logger.info("...done.");
+		mon.stop();
+		logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
+		
+		logger.info("Learning input:");
+		logger.info("Positive examples: " + positiveExamplesSample.size() + " with " + positiveFragment.size() + " triples.");
+		logger.info("Negative examples: " + negativeExamplesSample.size() + " with " + negativeFragment.size() + " triples.");
 		
 		//create fragment consisting of both
 		OntModel fullFragment = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM);
@@ -232,11 +313,6 @@ public class ExpressiveSchemaMappingGenerator {
 		return null;
 	}
 	
-	
-	private void updateSchemaMapping(){
-		
-	}
-	
 	/**
 	 * Return all instances of the given class in the source KB.
 	 * @param cls
@@ -244,6 +320,7 @@ public class ExpressiveSchemaMappingGenerator {
 	 */
 	private SortedSet<Individual> getSourceInstances(NamedClass cls){
 		logger.info("Retrieving instances of class " + cls + "...");
+		mon.start();
 		SortedSet<Individual> instances = new TreeSet<Individual>();
 		String query = String.format("SELECT DISTINCT ?s WHERE {?s a <%s>}", cls.getName());
 		ResultSet rs = source.executeSelect(query);
@@ -252,7 +329,37 @@ public class ExpressiveSchemaMappingGenerator {
 			qs = rs.next();
 			instances.add(new Individual(qs.getResource("s").getURI()));
 		}
-		logger.info("...done.");
+		mon.stop();
+		logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
+		return instances;
+	}
+	
+	/**
+	 * Return all instances which are (assumed to be) contained in the target KB.
+	 * Here we should apply a namespace filter on the URIs such that we get only instances which are really contained in the target KB.
+	 * @param cls
+	 * @return
+	 */
+	private SortedSet<Individual> getTargetInstances(Description desc){
+		logger.info("Retrieving instances of class expression " + desc + "...");
+		return getInstances(desc, target);
+	}
+	
+	private SortedSet<Individual> getInstances(Description desc, KnowledgeBase kb){
+		logger.info("Retrieving instances of class expression " + desc + "...");
+		mon.start();
+		SortedSet<Individual> instances = new TreeSet<Individual>();
+		OWLClassExpressionToSPARQLConverter converter = new OWLClassExpressionToSPARQLConverter();
+		OWLClassExpression classExpression = OWLAPIDescriptionConvertVisitor.getOWLClassExpression(desc);
+		Query query = converter.asQuery("?x", classExpression);
+		ResultSet rs = kb.executeSelect(query.toString());
+		QuerySolution qs;
+		while(rs.hasNext()){
+			qs = rs.next();
+			instances.add(new Individual(qs.getResource("x").getURI()));
+		}
+		mon.stop();
+		logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
 		return instances;
 	}
 	
@@ -264,6 +371,7 @@ public class ExpressiveSchemaMappingGenerator {
 	 */
 	private SortedSet<Individual> getTargetInstances(NamedClass cls){
 		logger.info("Retrieving instances to which instances of class " + cls + " are linked to via property " + linkingProperty + "...");
+		mon.start();
 		SortedSet<Individual> instances = new TreeSet<Individual>();
 		String query = String.format("SELECT DISTINCT ?o WHERE {?s a <%s>. ?s <%s> ?o. FILTER(REGEX(?o,'^%s'))}", cls.getName(), linkingProperty, target.getNamespace());
 		ResultSet rs = source.executeSelect(query);
@@ -272,7 +380,8 @@ public class ExpressiveSchemaMappingGenerator {
 			qs = rs.next();
 			instances.add(new Individual(qs.getResource("o").getURI()));
 		}
-		logger.info("...done.");
+		mon.stop();
+		logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
 		return instances;
 	}
 	
@@ -299,18 +408,52 @@ public class ExpressiveSchemaMappingGenerator {
 	 * @param ind
 	 */
 	private Model getFragment(SortedSet<Individual> individuals, KnowledgeBase kb){
+		return getFragment(individuals, kb, maxRecursionDepth);
+	}
+	
+	/**
+	 * Computes a fragment containing hopefully useful information about the resources.
+	 * @param ind
+	 */
+	private Model getFragment(SortedSet<Individual> individuals, KnowledgeBase kb, int recursionDepth){
 		OntModel fullFragment = ModelFactory.createOntologyModel();
 		int i = 1;
 		for(Individual ind : individuals){
-			logger.info(i++  + "/" + individuals.size());
-			fullFragment.add(getFragment(ind, kb));
+//			logger.info(i++  + "/" + individuals.size());
+			fullFragment.add(getFragment(ind, kb, recursionDepth));
 		}
 		filter(fullFragment);
 		return fullFragment;
 	}
 	
+	/**
+	 * Computes a fragment containing hopefully useful information about the resource.
+	 * @param ind
+	 */
+	private Model getFragment(Individual ind, KnowledgeBase kb){
+		return getFragment(ind, kb, maxRecursionDepth);
+	}
+	
+	/**
+	 * Computes a fragment containing hopefully useful information about the resource.
+	 * @param ind
+	 */
+	private Model getFragment(Individual ind, KnowledgeBase kb, int recursionDepth){
+		logger.debug("Loading fragment for " + ind.getName());
+		ConciseBoundedDescriptionGenerator cbdGen;
+		if(kb.isRemote()){
+			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase)kb).getEndpoint());
+		} else {
+			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((LocalKnowledgeBase)kb).getModel());
+		}
+		
+		Model cbd = cbdGen.getConciseBoundedDescription(ind.getName(), fragmentDepth);
+		logger.debug("Got " + cbd.size() + " triples.");
+		return cbd;
+	}
+	
 	private void filter(Model model) {
-		// filter out triples with String literals, as there often occur are
+		// filter out triples with String literals, as therein often occur
 		// some syntax errors and they are not relevant for learning
 		List<Statement> statementsToRemove = new ArrayList<Statement>();
 		for (Iterator<Statement> iter = model.listStatements().toList().iterator(); iter.hasNext();) {
@@ -333,30 +476,11 @@ public class ExpressiveSchemaMappingGenerator {
 		model.remove(statementsToRemove);
 	}
 	
-	
-	/**
-	 * Computes a fragment containing hopefully useful information about the resource.
-	 * @param ind
-	 */
-	private Model getFragment(Individual ind, KnowledgeBase kb){
-		logger.debug("Loading fragment for " + ind.getName());
-		ConciseBoundedDescriptionGenerator cbdGen;
-		if(kb.isRemote()){
-			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase)kb).getEndpoint());
-		} else {
-			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((LocalKnowledgeBase)kb).getModel());
-		}
-		
-		Model cbd = cbdGen.getConciseBoundedDescription(ind.getName(), fragmentDepth);
-		logger.debug("Got " + cbd.size() + " triples.");
-		return cbd;
-	}
-	
 	private Set<NamedClass> getClasses(KnowledgeBase kb){
 		Set<NamedClass> classes = new HashSet<NamedClass>();
 		
 		//get all OWL classes
-		String query = String.format("SELECT ?type WHERE {?s a <%s>.}", OWL.Class.getURI());
+		String query = String.format("SELECT ?type WHERE {?type a <%s>.}", OWL.Class.getURI());
 		ResultSet rs = kb.executeSelect(query);
 		QuerySolution qs;
 		while(rs.hasNext()){

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
+import org.aksw.lassie.core.NonExistingLinksException;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.aksw.lassie.util.PrintUtils;
@@ -54,7 +55,7 @@ public class OntologyMatchingTest {
 		SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 		ExtractionDBCache cache = new ExtractionDBCache("cache");
 		String namespace = "http://dbpedia.org/resource/";
-		dbpedia = new RemoteKnowledgeBase(endpoint, namespace);
+		dbpedia = new RemoteKnowledgeBase(endpoint, cache, namespace);
 		
 		//World Factbook
 		//TODO problem with World Factbook is that old FU Berlin server is useless because of bugs and current version
@@ -64,19 +65,19 @@ public class OntologyMatchingTest {
 		endpoint = new SparqlEndpoint(new URL("http://wifo5-03.informatik.uni-mannheim.de/factbook/sparql"));
 		cache = new ExtractionDBCache("cache");
 		namespace = "http://www4.wiwiss.fu-berlin.de/factbook/resource/";
-		worldFactBook = new RemoteKnowledgeBase(endpoint, namespace);
+		worldFactBook = new RemoteKnowledgeBase(endpoint, cache, namespace);
 		
 		//local OpenCyc
 		endpoint = new SparqlEndpoint(new URL("http://localhost:8890/sparql"));
 		cache = new ExtractionDBCache("cache");
 		namespace = "http://sw.cyc.com";
-		openCyc = new RemoteKnowledgeBase(endpoint, namespace);
+		openCyc = new RemoteKnowledgeBase(endpoint, cache, namespace);
 		
 		//LinkedGeoData
 		endpoint = new SparqlEndpoint(new URL("http://linkedgeodata.org/sparql"));
 		cache = new ExtractionDBCache("cache");
 		namespace = "http://linkedgeodata.org/triplify/";
-		linkedGeoData = new RemoteKnowledgeBase(endpoint, namespace);
+		linkedGeoData = new RemoteKnowledgeBase(endpoint, cache, namespace);
 	}
 
 	@Test
@@ -101,10 +102,14 @@ public class OntologyMatchingTest {
 	public void testSingleClassOpenCycToDBpedia() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(openCyc, dbpedia);
 		NamedClass nc = new NamedClass("http://sw.opencyc.org/concept/Mx4r4fYeXvbPQdiKtoNafhmOew");
-		List<? extends EvaluatedDescription> mapping = matcher.computeMapping(nc);
-		Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
-		alignment.put(nc, mapping);
-		System.out.println(PrintUtils.toHTMLWithLabels(alignment, openCyc, dbpedia));
+		try {
+			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);
+			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
+			alignment.put(nc, mapping);
+			System.out.println(PrintUtils.toHTMLWithLabels(alignment, openCyc, dbpedia));
+		} catch (NonExistingLinksException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Test
@@ -112,20 +117,28 @@ public class OntologyMatchingTest {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(linkedGeoData, dbpedia);
 		matcher.setFragmentDepth(fragmentDepth);
 		NamedClass nc = new NamedClass("http://linkedgeodata.org/ontology/Aerodrome");
-		List<? extends EvaluatedDescription> mapping = matcher.computeMapping(nc);
-		Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
-		alignment.put(nc, mapping);
-		System.out.println(PrintUtils.toHTMLWithLabels(alignment, linkedGeoData, dbpedia));
+		try {
+			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);
+			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
+			alignment.put(nc, mapping);
+			System.out.println(PrintUtils.toHTMLWithLabels(alignment, linkedGeoData, dbpedia));
+		} catch (NonExistingLinksException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Test
 	public void testSingleClassDBpediaToLinkedGeoData() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
 		NamedClass nc = new NamedClass("http://dbpedia.org/ontology/AdministrativeRegion");
-		List<? extends EvaluatedDescription> mapping = matcher.computeMapping(nc);
-		Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
-		alignment.put(nc, mapping);
-		System.out.println(PrintUtils.toHTMLWithLabels(alignment, dbpedia, linkedGeoData));
+		try {
+			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);
+			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
+			alignment.put(nc, mapping);
+			System.out.println(PrintUtils.toHTMLWithLabels(alignment, dbpedia, linkedGeoData));
+		} catch (NonExistingLinksException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void save(String filename, Map<Description, List<? extends EvaluatedDescription>> mapping, KnowledgeBase source, KnowledgeBase target){

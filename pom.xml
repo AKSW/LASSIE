@@ -60,5 +60,16 @@
 			<artifactId>jena-core</artifactId>
 			<version>2.10.0</version>
 		</dependency>
+		<dependency>
+			<groupId>de.uni_leipzig.simba.limes</groupId>
+			<artifactId>LIMES</artifactId>
+			<version>0.6RC2</version>
+		</dependency>
+		<dependency>
+      <groupId>de.uni_leipzig.simba.limes</groupId>
+      <artifactId>limes-core</artifactId>
+      <version>0.6-SNAPSHOT</version>
+      <type>pom</type>
+    </dependency>
 	</dependencies>
 </project>
