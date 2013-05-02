@@ -3,6 +3,8 @@
  */
 package org.aksw.lassie.bmGenerator;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,17 +35,17 @@ public class ClassSplitModifier extends Modifier {
 			Model splitModel = getSubModel(sourceClassModel, targetClassSize, sourceClassModeloffset);
 			sourceClassModeloffset += targetClassSize;
 			splitModel = renameClass(splitModel, splitSourceClassUri, targetClassUri);
-			destroyedclassModel.add(splitModel);
+			destroyedClassModel.add(splitModel);
 			if(sourceClassModeloffset>sourceClassModel.size()){
 				//if some triples remains at the end just add them to the last split
 				sourceClassModeloffset=-targetClassSize; //go back to the last offset 
 				splitModel = getSubModel(sourceClassModel, sourceClassModel.size()-sourceClassModeloffset, sourceClassModeloffset); 
 				splitModel = renameClass(splitModel, splitSourceClassUri, targetClassUri);
-				destroyedclassModel.add(splitModel);
+				destroyedClassModel.add(splitModel);
 				break;
 			}
 		}
-		result.add(destroyedclassModel);
+		result.add(destroyedClassModel);
 		return result;
 	}
 	
@@ -53,16 +55,24 @@ public class ClassSplitModifier extends Modifier {
 		baseModel= loadModel(args[0]);
 		System.out.println("----- Base Model -----");
 		System.out.println("Size: "+baseModel.size());
-		baseModel.write(System.out,"TTL");
+//		baseModel.write(System.out,"TTL");
 		System.out.println();
 
 		classSpliter.splitSourceClassUri = "http://purl.org/ontology/mo/MusicArtist";
-		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/Split1");
-		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/Split2");
+		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit1");
+		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit2");
 		System.out.println("----- Split Model -----");
 		Model m = classSpliter.destroy(null);
 		System.out.println("Size: "+m.size());
-		m.write(System.out,"TTL");
+//		m.write(System.out,"TTL");
+		try {
+			FileWriter outFile = new FileWriter(args[1]);
+//			m.write(System.out, "TTL");
+			m.write(outFile, "TTL");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
