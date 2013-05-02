@@ -112,7 +112,8 @@ public class OntologyMatchingTest {
 		Set<NamedClass> targetClasses = Sets.newHashSet(
 				new NamedClass("http://linkedgeodata.org/ontology/Village"),
 				new NamedClass("http://linkedgeodata.org/ontology/City"),
-				new NamedClass("http://linkedgeodata.org/ontology/River")
+				new NamedClass("http://linkedgeodata.org/ontology/River"),
+				new NamedClass("http://linkedgeodata.org/ontology/Peak")
 				);
 		matcher.run(sourceClasses, targetClasses);
 	}
