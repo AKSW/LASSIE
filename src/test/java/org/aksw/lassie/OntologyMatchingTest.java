@@ -12,6 +12,7 @@ import java.util.Set;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.core.NonExistingLinksException;
 import org.aksw.lassie.kb.KnowledgeBase;
+import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.aksw.lassie.util.PrintUtils;
 import org.apache.log4j.ConsoleAppender;
@@ -30,6 +31,9 @@ import org.junit.Test;
 import org.semanticweb.owlapi.io.ToStringRenderer;
 
 import com.google.common.collect.Sets;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.util.FileManager;
 
 import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
 
@@ -156,6 +160,24 @@ public class OntologyMatchingTest {
 			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
 			alignment.put(nc, mapping);
 			System.out.println(PrintUtils.toHTMLWithLabels(alignment, dbpedia, linkedGeoData));
+		} catch (NonExistingLinksException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
+	public void testSingleClassPeel_0ToPeel_1() {
+		java.io.InputStream peel0File = FileManager.get().open( "/mypartition2/musicDatasets/lassieDatasets/peel_0.ttl" );
+		java.io.InputStream peel1File = FileManager.get().open( "/mypartition2/musicDatasets/lassieDatasets/peel_1.ttl" );
+		KnowledgeBase peel_0 = new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel0File, null, "TTL"));
+		KnowledgeBase peel_1= new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel1File, null, "TTL"));
+		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_1);
+		NamedClass nc = new NamedClass("http://purl.org/ontology/mo/MusicArtist");
+		try {
+			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);
+			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
+			alignment.put(nc, mapping);
+			System.out.println(PrintUtils.toHTMLWithLabels(alignment, peel_0, peel_1));
 		} catch (NonExistingLinksException e) {
 			e.printStackTrace();
 		}

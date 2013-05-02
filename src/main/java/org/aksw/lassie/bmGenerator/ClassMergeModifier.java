@@ -29,9 +29,9 @@ public class ClassMergeModifier extends Modifier{
 			Model sourceClassModel = getClassModel(sourceClassUri);
 			result.remove(sourceClassModel);
 			sourceClassModel = renameClass(sourceClassModel, sourceClassUri, mergeTargetClassuri);
-			destroyedclassModel.add(sourceClassModel);
+			destroyedClassModel.add(sourceClassModel);
 		}
-		result.add(destroyedclassModel);
+		result.add(destroyedClassModel);
 		return result;
 	}
 
