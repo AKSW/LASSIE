@@ -27,7 +27,7 @@ import com.hp.hpl.jena.util.FileManager;
 public abstract class Modifier {
 	static Model baseModel = ModelFactory.createDefaultModel();
 	static Model destroyedPropertiesModel = ModelFactory.createDefaultModel(); //destroyed properties model
-	static Model destroyedclassModel = ModelFactory.createDefaultModel();      //destroyed class model
+	static Model destroyedClassModel = ModelFactory.createDefaultModel();      //destroyed class model
 	static Model destroyedModel = ModelFactory.createDefaultModel();           //final destroyed model
 	static List<Property> properties = new ArrayList<Property>();
 	double destructionRatio = 0.5;
