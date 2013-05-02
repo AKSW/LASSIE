@@ -19,7 +19,7 @@ public class ClassDeleteModifier extends Modifier {
 		Model result = baseModel;
 		Model deletedClassModel = getClassModel(deleteClassUri);
 		result.remove(deletedClassModel);
-		destroyedclassModel.add(result);
+		destroyedClassModel.add(result);
 		return result;
 	}
 	public static void main(String[] args){
