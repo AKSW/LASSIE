@@ -52,10 +52,10 @@ public class BenchmarkGenerator extends Modifier{
 		if(properties.size()==0 && inputClassUri==null){   // If the modifier properties are not set and no Class is set then divide the whole Model
 			inputModel=baseModel;
 		}else if(inputClassUri!=null){ // if class is set the divide based on class
-			destroyedclassModel = getInputClassModel(inputClassUri);
-			inputModel=destroyedclassModel;
+			destroyedClassModel = getInputClassModel(inputClassUri);
+			inputModel=destroyedClassModel;
 			if(properties.size()>0){    // and if the modifier properties are set and Class is set then divide the the properties of that class 
-				destroyedPropertiesModel=getDestroyedPropertiesModel(destroyedclassModel);
+				destroyedPropertiesModel=getDestroyedPropertiesModel(destroyedClassModel);
 				inputModel=destroyedPropertiesModel;
 			}
 		}else if(properties.size()>0){						//Else if the properties is set then divide based on the properties Model
@@ -95,8 +95,8 @@ public class BenchmarkGenerator extends Modifier{
 			baseModel.remove(destroyedPropertiesModel);
 			destroyedModel.add(baseModel); 
 		}
-		if(destroyedclassModel.size()>0){
-			baseModel.remove(destroyedclassModel);
+		if(destroyedClassModel.size()>0){
+			baseModel.remove(destroyedClassModel);
 			destroyedModel.add(baseModel); 
 		}
 		if(inputClassUri!=null && outputClassUri!=null){
@@ -209,15 +209,41 @@ public class BenchmarkGenerator extends Modifier{
 		System.out.println();
 		properties.add(RDFS.label);
 		properties.add(FOAF.name);
+		inputClassUri="http://purl.org/ontology/mo/MusicArtist";
 		Map<? extends Modifier, Double> modefiersAndRates= getModefiersAndRates();
-		destroy(modefiersAndRates,0.51);
+		destroy(modefiersAndRates,0);
 		System.out.println();
 		System.out.println("----- Destroyed Model -----");
 		System.out.println("Size: "+ destroyedModel.size());
 		FileWriter outFile;
 		try {
 			outFile = new FileWriter(outputFilename);
-			destroyedModel.write(outFile, "N-TRIPLE");
+//			destroyedModel.write(System.out, "TTL");
+			destroyedModel.write(outFile, "TTL");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+	
+	void bmPeelClass(String inputFileName, String outputFilename){
+		loadBaseModel(inputFileName);
+		System.out.println("----- Base Model -----");
+		System.out.println("Size: "+baseModel.size());
+		//		Modifier.baseModel.write(System.out, "N-TRIPLE");
+		System.out.println();
+		inputClassUri="http://purl.org/ontology/mo/MusicArtist";
+		Map<? extends Modifier, Double> modefiersAndRates= getModefiersAndRates();
+		destroy(modefiersAndRates,0);
+		System.out.println();
+		System.out.println("----- Destroyed Model -----");
+		System.out.println("Size: "+ destroyedModel.size());
+		FileWriter outFile;
+		try {
+			outFile = new FileWriter(outputFilename);
+//			destroyedModel.write(System.out, "TTL");
+			destroyedModel.write(outFile, "TTL");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -228,24 +254,26 @@ public class BenchmarkGenerator extends Modifier{
 
 	public static void main(String args[]){
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator();
-		benchmarker.loadBaseModel(args[0]);
-		System.out.println("----- Base Model -----");
-		System.out.println("Size: "+baseModel.size());
-		baseModel.write(System.out, "TTL");
-		System.out.println();
-		properties.add(RDFS.label);
-		properties.add(FOAF.name);
-		benchmarker.inputClassUri = "http://purl.org/ontology/mo/MusicArtist";
-		benchmarker.outputClassUri = "http//example.com/Artist";
-		
-		Map<Modifier, Double> modefiersAndRates= new HashMap<Modifier, Double>();
-		Modifier mergeModifier= ModifierFactory.getModifier("merge");
-		modefiersAndRates.put(mergeModifier, 0.5d);
-		benchmarker.destroy(modefiersAndRates,0.0d);
-		System.out.println();
-		System.out.println("----- Destroyed Model -----");
-		System.out.println("Size: "+ destroyedModel.size());
-			destroyedModel.write(System.out, "TTL");
+		benchmarker.bmPeel(args[0], args[1]);
+
+//		benchmarker.loadBaseModel(args[0]);
+//		System.out.println("----- Base Model -----");
+//		System.out.println("Size: "+baseModel.size());
+//		baseModel.write(System.out, "TTL");
+//		System.out.println();
+//		properties.add(RDFS.label);
+//		properties.add(FOAF.name);
+//		benchmarker.inputClassUri = "http://purl.org/ontology/mo/MusicArtist";
+//		benchmarker.outputClassUri = "http//example.com/Artist";
+//		
+//		Map<Modifier, Double> modefiersAndRates= new HashMap<Modifier, Double>();
+//		Modifier mergeModifier= ModifierFactory.getModifier("merge");
+//		modefiersAndRates.put(mergeModifier, 0.5d);
+//		benchmarker.destroy(modefiersAndRates,0.0d);
+//		System.out.println();
+//		System.out.println("----- Destroyed Model -----");
+//		System.out.println("Size: "+ destroyedModel.size());
+//			destroyedModel.write(System.out, "TTL");
 	}
 }
 
