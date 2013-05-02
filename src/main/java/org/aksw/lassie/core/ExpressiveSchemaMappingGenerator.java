@@ -36,6 +36,7 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.learningproblems.PosNegLPStandard;
 import org.dllearner.learningproblems.PosOnlyLP;
 import org.dllearner.reasoning.FastInstanceChecker;
+import org.dllearner.utilities.datastructures.Datastructures;
 import org.dllearner.utilities.datastructures.SetManipulation;
 import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
@@ -135,7 +136,7 @@ public class ExpressiveSchemaMappingGenerator {
         int i = 1;
         do {
             //compute a set of links between each pair of class expressions (C_i, E_j)
-//			performUnsupervisedLinking(sourceClasses, targetClassExpressions);
+			performUnsupervisedLinking(sourceClasses, targetClassExpressions);
 
             //for each source class C_i, compute a mapping to a class expression in the target KB
             for (NamedClass sourceClass : sourceClasses) {
@@ -152,8 +153,35 @@ public class ExpressiveSchemaMappingGenerator {
             targetClassExpressions = mapping.values();
 
         } while (++i <= 1);
+    }
+    
+    public void run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+        //initially, the class expressions E_i in the target KB are the named classes D_i
+        Collection<Description> targetClassExpressions = new TreeSet<Description>();
+        targetClassExpressions.addAll(targetClasses);
 
+        //perform the iterative schema matching
+        Map<NamedClass, Description> mapping = new HashMap<NamedClass, Description>();
+        int i = 1;
+        do {
+            //compute a set of links between each pair of class expressions (C_i, E_j)
+			performUnsupervisedLinking(sourceClasses, targetClassExpressions);
 
+            //for each source class C_i, compute a mapping to a class expression in the target KB
+            for (NamedClass sourceClass : sourceClasses) {
+                try {
+                    EvaluatedDescription singleMapping = computeMapping(sourceClass);
+                    getTargetInstances(singleMapping.getDescription());
+                    mapping.put(sourceClass, singleMapping.getDescription());
+                } catch (NonExistingLinksException e) {
+                    logger.warn(e.getMessage() + "Skipped learning.");
+                }
+            }
+
+            //set the target class expressions
+            targetClassExpressions = mapping.values();
+
+        } while (++i <= 1);
     }
 
     /**
@@ -163,15 +191,19 @@ public class ExpressiveSchemaMappingGenerator {
      * @param targetClasses
      */
     private void performUnsupervisedLinking(Set<NamedClass> sourceClasses, Collection<Description> targetClasses) {
+    	 logger.info("Computing links...");
         //compute the Concise Bounded Description(CBD) for each instance
         //in each source class C_i, thus creating a model for each class
         Map<NamedClass, Model> sourceClassToModel = new HashMap<NamedClass, Model>();
         for (NamedClass sourceClass : sourceClasses) {
             //get all instances of C_i
             SortedSet<Individual> sourceInstances = getSourceInstances(sourceClass);
+            sourceInstances = SetManipulation.stableShrinkInd(sourceInstances, 10);
 
             //get the fragment describing the instances of C_i
+            logger.info("Computing fragment...");
             Model sourceFragment = getFragment(sourceInstances, source, 1);
+            logger.info("...got " + sourceFragment.size() + " triples.");
             sourceClassToModel.put(sourceClass, sourceFragment);
         }
 
@@ -181,9 +213,12 @@ public class ExpressiveSchemaMappingGenerator {
         for (Description targetClass : targetClasses) {
             // get all instances of D_i
             SortedSet<Individual> targetInstances = getTargetInstances(targetClass);
+            targetInstances = SetManipulation.stableShrinkInd(targetInstances, 10);
 
             // get the fragment describing the instances of D_i
+            logger.info("Computing fragment...");
             Model targetFragment = getFragment(targetInstances, target, 1);
+            logger.info("...got " + targetFragment.size() + " triples.");
             targetClassExpressionToModel.put(targetClass, targetFragment);
         }
 
@@ -416,7 +451,6 @@ public class ExpressiveSchemaMappingGenerator {
      * @return
      */
     private SortedSet<Individual> getTargetInstances(Description desc) {
-        logger.info("Retrieving instances of class expression " + desc + "...");
         return getInstances(desc, target);
     }
 

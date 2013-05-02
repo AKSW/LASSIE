@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.core.NonExistingLinksException;
@@ -27,6 +28,8 @@ import org.dllearner.kb.sparql.SparqlKnowledgeSource;
 import org.junit.Before;
 import org.junit.Test;
 import org.semanticweb.owlapi.io.ToStringRenderer;
+
+import com.google.common.collect.Sets;
 
 import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
 
@@ -96,6 +99,22 @@ public class OntologyMatchingTest {
 	public void testDBpediaLinkedGeoData() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
 		matcher.run();
+	}
+	
+	@Test
+	public void testDBpediaLinkedGeoData2() {
+		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
+		Set<NamedClass> sourceClasses = Sets.newHashSet(
+				new NamedClass("http://dbpedia.org/ontology/City"),
+				new NamedClass("http://dbpedia.org/ontology/Mountain"),
+				new NamedClass("http://dbpedia.org/ontology/River")
+				);
+		Set<NamedClass> targetClasses = Sets.newHashSet(
+				new NamedClass("http://linkedgeodata.org/ontology/Village"),
+				new NamedClass("http://linkedgeodata.org/ontology/City"),
+				new NamedClass("http://linkedgeodata.org/ontology/River")
+				);
+		matcher.run(sourceClasses, targetClasses);
 	}
 	
 	@Test
