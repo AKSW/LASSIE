@@ -39,6 +39,20 @@ public abstract class Modifier {
 	
 	abstract Model destroy(Model subModel);
 	
+	/**
+	 * @return the baseModel
+	 */
+	public static Model getBaseModel() {
+		return baseModel;
+	}
+
+
+	/**
+	 * @param baseModel the baseModel to set
+	 */
+	public static void setBaseModel(Model baseModel) {
+		Modifier.baseModel = baseModel;
+	}
 	
 	/**
 	 * @return a sub model contains the destroyed Properties

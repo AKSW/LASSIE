@@ -201,80 +201,94 @@ public class BenchmarkGenerator extends Modifier{
 	}
 
 
-	void bmPeel(String inputFileName, String outputFilename){
-		loadBaseModel(inputFileName);
+	public Model bmPeel(Model inModel, String inClassUri, Double dRatio) throws IOException{
+		baseModel = inModel;
 		System.out.println("----- Base Model -----");
 		System.out.println("Size: "+baseModel.size());
 		//		Modifier.baseModel.write(System.out, "N-TRIPLE");
 		System.out.println();
 		properties.add(RDFS.label);
 		properties.add(FOAF.name);
-		inputClassUri="http://purl.org/ontology/mo/MusicArtist";
-		Map<? extends Modifier, Double> modefiersAndRates= getModefiersAndRates();
+		inputClassUri=inClassUri;
+		
+		// 1. Destroy class instances
+		Double modRatio = dRatio/3d;
+		Map<Modifier, Double> modefiersAndRates= new HashMap<Modifier, Double>();
+		Modifier abbreviationModifier= ModifierFactory.getModifier("abbreviation");
+		modefiersAndRates.put(abbreviationModifier, modRatio);
+		Modifier misspelingModifier= ModifierFactory.getModifier("misspelling");
+		modefiersAndRates.put(misspelingModifier, modRatio);
+		Modifier permutationModifier= ModifierFactory.getModifier("permutation");
+		modefiersAndRates.put(permutationModifier, modRatio);
+		
 		destroy(modefiersAndRates,0);
 		System.out.println();
-		System.out.println("----- Destroyed Model -----");
+		System.out.println("----- Destroyed Instance Model -----");
 		System.out.println("Size: "+ destroyedModel.size());
-		FileWriter outFile;
-		try {
-			outFile = new FileWriter(outputFilename);
-//			destroyedModel.write(System.out, "TTL");
-			destroyedModel.write(outFile, "TTL");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+		
+		// 2. Destroy class
+		baseModel= destroyedModel;
+		destroyedModel= ModelFactory.createDefaultModel();
+		
+		System.out.println("destroyedModel: "+ destroyedModel.size());
+		destroyedModel.write(System.out, "TTL");
+		System.out.println("baseModel: "+ baseModel.size());
+//		baseModel.write(System.out, "TTL");
+		
+		
+		ClassSplitModifier classSpliter=new ClassSplitModifier();
+		classSpliter.splitSourceClassUri = inClassUri;
+		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit1");
+		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit2");
+		System.out.println("----- Split Model -----");
+		Model outModel = classSpliter.destroy(null);
+		System.out.println("Size: "+outModel.size());
+		return outModel;
 	}
+
+
+
+	/**
+	 * @param inFile
+	 * @param outFile
+	 * @author sherif
+	 */
+	private void bmPeel(String inFile, String outFile) throws IOException{
+		Model inModel=loadBaseModel(inFile);
+		String inClassUri = "http://purl.org/ontology/mo/MusicArtist";
+		Double dRatio = 0.1d; 
+		FileWriter outF = new FileWriter(outFile);
 	
-	void bmPeelClass(String inputFileName, String outputFilename){
-		loadBaseModel(inputFileName);
-		System.out.println("----- Base Model -----");
-		System.out.println("Size: "+baseModel.size());
-		//		Modifier.baseModel.write(System.out, "N-TRIPLE");
-		System.out.println();
-		inputClassUri="http://purl.org/ontology/mo/MusicArtist";
-		Map<? extends Modifier, Double> modefiersAndRates= getModefiersAndRates();
-		destroy(modefiersAndRates,0);
-		System.out.println();
-		System.out.println("----- Destroyed Model -----");
-		System.out.println("Size: "+ destroyedModel.size());
-		FileWriter outFile;
-		try {
-			outFile = new FileWriter(outputFilename);
-//			destroyedModel.write(System.out, "TTL");
-			destroyedModel.write(outFile, "TTL");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		bmPeel(inModel, inClassUri, dRatio).write(outF, "TTL");
 
 	}
 
-
-	public static void main(String args[]){
+	public static void main(String args[]) throws IOException{
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator();
 		benchmarker.bmPeel(args[0], args[1]);
 
-//		benchmarker.loadBaseModel(args[0]);
-//		System.out.println("----- Base Model -----");
-//		System.out.println("Size: "+baseModel.size());
-//		baseModel.write(System.out, "TTL");
-//		System.out.println();
-//		properties.add(RDFS.label);
-//		properties.add(FOAF.name);
-//		benchmarker.inputClassUri = "http://purl.org/ontology/mo/MusicArtist";
-//		benchmarker.outputClassUri = "http//example.com/Artist";
-//		
-//		Map<Modifier, Double> modefiersAndRates= new HashMap<Modifier, Double>();
-//		Modifier mergeModifier= ModifierFactory.getModifier("merge");
-//		modefiersAndRates.put(mergeModifier, 0.5d);
-//		benchmarker.destroy(modefiersAndRates,0.0d);
-//		System.out.println();
-//		System.out.println("----- Destroyed Model -----");
-//		System.out.println("Size: "+ destroyedModel.size());
-//			destroyedModel.write(System.out, "TTL");
+		//		benchmarker.loadBaseModel(args[0]);
+		//		System.out.println("----- Base Model -----");
+		//		System.out.println("Size: "+baseModel.size());
+		//		baseModel.write(System.out, "TTL");
+		//		System.out.println();
+		//		properties.add(RDFS.label);
+		//		properties.add(FOAF.name);
+		//		benchmarker.inputClassUri = "http://purl.org/ontology/mo/MusicArtist";
+		//		benchmarker.outputClassUri = "http//example.com/Artist";
+		//		
+		//		Map<Modifier, Double> modefiersAndRates= new HashMap<Modifier, Double>();
+		//		Modifier mergeModifier= ModifierFactory.getModifier("merge");
+		//		modefiersAndRates.put(mergeModifier, 0.5d);
+		//		benchmarker.destroy(modefiersAndRates,0.0d);
+		//		System.out.println();
+		//		System.out.println("----- Destroyed Model -----");
+		//		System.out.println("Size: "+ destroyedModel.size());
+		//			destroyedModel.write(System.out, "TTL");
 	}
+
+
+
 }
 
 

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.core.NonExistingLinksException;
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -39,12 +40,12 @@ import com.hp.hpl.jena.util.FileManager;
 import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
 
 public class OntologyMatchingTest {
-	
+
 	private KnowledgeBase dbpedia;
 	private KnowledgeBase worldFactBook;
 	private KnowledgeBase openCyc;
 	private KnowledgeBase linkedGeoData;
-	
+
 	private final int fragmentDepth = 3;
 
 	@Before
@@ -57,14 +58,14 @@ public class OntologyMatchingTest {
 		Logger.getLogger(org.dllearner.kb.extraction.Manager.class).setLevel(Level.WARN);
 		Logger.getRootLogger().removeAllAppenders();
 		Logger.getRootLogger().addAppender(new ConsoleAppender(new PatternLayout("%m%n")));
-//		Logger.getRootLogger().setLevel(Level.DEBUG);
-		
+		//		Logger.getRootLogger().setLevel(Level.DEBUG);
+
 		//DBpedia
 		SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 		ExtractionDBCache cache = new ExtractionDBCache("cache");
 		String namespace = "http://dbpedia.org/resource/";
 		dbpedia = new RemoteKnowledgeBase(endpoint, cache, namespace);
-		
+
 		//World Factbook
 		//TODO problem with World Factbook is that old FU Berlin server is useless because of bugs and current version
 		//is provide by University Of Mannheim now with another namespace http://wifo5-03.informatik.uni-mannheim.de/factbook/resource/
@@ -74,13 +75,13 @@ public class OntologyMatchingTest {
 		cache = new ExtractionDBCache("cache");
 		namespace = "http://www4.wiwiss.fu-berlin.de/factbook/resource/";
 		worldFactBook = new RemoteKnowledgeBase(endpoint, cache, namespace);
-		
+
 		//local OpenCyc
 		endpoint = new SparqlEndpoint(new URL("http://localhost:8890/sparql"));
 		cache = new ExtractionDBCache("cache");
 		namespace = "http://sw.cyc.com";
 		openCyc = new RemoteKnowledgeBase(endpoint, cache, namespace);
-		
+
 		//LinkedGeoData
 		endpoint = new SparqlEndpoint(new URL("http://linkedgeodata.org/sparql"));
 		cache = new ExtractionDBCache("cache");
@@ -93,19 +94,19 @@ public class OntologyMatchingTest {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, worldFactBook);
 		matcher.run();
 	}
-	
+
 	@Test
 	public void testDBpediaOpenCyc() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, openCyc);
 		matcher.run();
 	}
-	
+
 	@Test
 	public void testDBpediaLinkedGeoData() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
 		matcher.run();
 	}
-	
+
 	@Test
 	public void testDBpediaLinkedGeoData2() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
@@ -122,7 +123,7 @@ public class OntologyMatchingTest {
 				);
 		matcher.run(sourceClasses, targetClasses);
 	}
-	
+
 	@Test
 	public void testSingleClassOpenCycToDBpedia() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(openCyc, dbpedia);
@@ -136,7 +137,7 @@ public class OntologyMatchingTest {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Test
 	public void testSingleClassLinkedGeoDataToDBpedia() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(linkedGeoData, dbpedia);
@@ -151,7 +152,7 @@ public class OntologyMatchingTest {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Test
 	public void testSingleClassDBpediaToLinkedGeoData() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
@@ -165,26 +166,50 @@ public class OntologyMatchingTest {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Test
-	public void testSingleClassPeel_0ToPeel_1() {
+	public void testSingleClassPeel_0ToPeel_1() throws IOException {
 		java.io.InputStream peel0File = getClass().getClassLoader().getResourceAsStream("datasets/music/peel_0.ttl" );
 		java.io.InputStream peel1File = getClass().getClassLoader().getResourceAsStream("datasets/music/peel_2.ttl" );
 		KnowledgeBase peel_0 = new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel0File, null, "TTL"));
 		KnowledgeBase peel_1= new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel1File, null, "TTL"));
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_1);
 		matcher.run(Collections.singleton(new NamedClass("http://purl.org/ontology/mo/MusicArtist")));
-//		NamedClass nc = new NamedClass("http://purl.org/ontology/mo/MusicArtist");
-//		try {
-//			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);
-//			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
-//			alignment.put(nc, mapping);
-//			System.out.println(PrintUtils.toHTMLWithLabels(alignment, peel_0, peel_1));
-//		} catch (NonExistingLinksException e) {
-//			e.printStackTrace();
-//		}
+
+		System.in.read();
 	}
-	
+
+	/**
+	 * Tests the mapping from peel_0 to peel_k, where k 1, 2, ...,10
+	 * representing destruction ratio of 10%, 20%, ...,100% respectively
+	 * for one class "MusicArtist" in peel_0
+	 * splitted to MusicArtistSplit1, and MusicArtistSplit2 in peel_k
+	 * 
+	 * @throws IOException
+	 * @author sherif
+	 */
+	@Test
+	public void testSingleClassPeel_0ToPeel_k() throws IOException {
+		java.io.InputStream peel0File = getClass().getClassLoader().getResourceAsStream("datasets/music/peel_0.ttl" );
+		KnowledgeBase peel_0 = new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel0File, null, "TTL"));
+		BenchmarkGenerator benchmarker= new BenchmarkGenerator();
+		String inClassUri = "http://purl.org/ontology/mo/MusicArtist";
+		for(double dRatio = 0.1d; dRatio<=1d; dRatio+=0.1d){
+			System.out.println("Genarating Peel data with destruction ratio = "+dRatio*100+"% ...");
+			Model inModel = ModelFactory.createDefaultModel();
+			inModel.read(getClass().getClassLoader().getResourceAsStream("datasets/music/peel_0.ttl" ), null, "TTL");
+			Model peelKModel = benchmarker.bmPeel(inModel, inClassUri, dRatio); 
+			KnowledgeBase peel_k = new LocalKnowledgeBase(peelKModel);
+			ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_k);
+			matcher.run(Collections.singleton(new NamedClass("http://purl.org/ontology/mo/MusicArtist")));
+			System.out.println("\nPrevious results was for destruction ratio = "+dRatio*100+"%\n");
+			System.err.println("Press enter to run the next iteration ...");
+			System.in.read();
+		}
+
+		
+	}
+
 	private void save(String filename, Map<Description, List<? extends EvaluatedDescription>> mapping, KnowledgeBase source, KnowledgeBase target){
 		BufferedWriter out = null;
 		try {
@@ -202,7 +227,7 @@ public class OntologyMatchingTest {
 			}
 		}
 	}
-	
+
 	private void save(Map<Description, List<? extends EvaluatedDescription>> mapping, String filename){
 		BufferedWriter out = null;
 		try {

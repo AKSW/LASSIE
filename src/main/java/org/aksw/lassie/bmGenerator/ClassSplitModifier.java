@@ -25,27 +25,27 @@ public class ClassSplitModifier extends Modifier {
 	@Override
 	Model destroy(Model subModel) {
 		Model result = baseModel;
-		Model sourceClassModel = getClassModel(splitSourceClassUri);
+		Model sourceClassModel = getClassModel(splitSourceClassUri); 
 		result.remove(sourceClassModel);
 		//divide the source class instances equally to target classes
 		long targetClassSize = (long) Math.floor(sourceClassModel.size()/splitTargetClassUri.size());
 		long sourceClassModeloffset = 0L;
 		
 		for(String targetClassUri:splitTargetClassUri){
-			Model splitModel = getSubModel(sourceClassModel, targetClassSize, sourceClassModeloffset);
+			Model splitModel = getSubModel(sourceClassModel, targetClassSize, sourceClassModeloffset); 
 			sourceClassModeloffset += targetClassSize;
-			splitModel = renameClass(splitModel, splitSourceClassUri, targetClassUri);
-			destroyedClassModel.add(splitModel);
-			if(sourceClassModeloffset>sourceClassModel.size()){
-				//if some triples remains at the end just add them to the last split
-				sourceClassModeloffset=-targetClassSize; //go back to the last offset 
+			splitModel = renameClass(splitModel, splitSourceClassUri, targetClassUri);	
+			destroyedModel.add(splitModel);  
+			
+			//if some triples remains at end (<targetClassSize) add them to the last split
+			if( (sourceClassModel.size()-sourceClassModeloffset) < targetClassSize){
 				splitModel = getSubModel(sourceClassModel, sourceClassModel.size()-sourceClassModeloffset, sourceClassModeloffset); 
 				splitModel = renameClass(splitModel, splitSourceClassUri, targetClassUri);
-				destroyedClassModel.add(splitModel);
+				destroyedModel.add(splitModel);
 				break;
 			}
 		}
-		result.add(destroyedClassModel);
+		result.add(destroyedModel);
 		return result;
 	}
 	
