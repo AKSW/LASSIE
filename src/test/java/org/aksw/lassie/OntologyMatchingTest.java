@@ -167,8 +167,8 @@ public class OntologyMatchingTest {
 	
 	@Test
 	public void testSingleClassPeel_0ToPeel_1() {
-		java.io.InputStream peel0File = FileManager.get().open( "/mypartition2/musicDatasets/lassieDatasets/peel_0.ttl" );
-		java.io.InputStream peel1File = FileManager.get().open( "/mypartition2/musicDatasets/lassieDatasets/peel_2.ttl" );
+		java.io.InputStream peel0File = getClass().getClassLoader().getResourceAsStream("datasets/music/peel_0.ttl" );
+		java.io.InputStream peel1File = getClass().getClassLoader().getResourceAsStream("datasets/music/peel_1.ttl" );
 		KnowledgeBase peel_0 = new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel0File, null, "TTL"));
 		KnowledgeBase peel_1= new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel1File, null, "TTL"));
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_1);
