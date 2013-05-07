@@ -14,11 +14,11 @@ public class ClassDeleteModifier extends Modifier {
 	 * @param m
 	 *@author sherif
 	 */
-	ClassDeleteModifier(Model m) {
+	public ClassDeleteModifier(Model m) {
 		super(m);
 	}
 	
-	ClassDeleteModifier() {
+	public ClassDeleteModifier() {
 	}
 	String deleteClassUri = new String();
 	/* (non-Javadoc)

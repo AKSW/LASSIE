@@ -40,11 +40,11 @@ public abstract class Modifier {
 	public String outputClassUri = null;
 	
 	
-	Modifier(Model m){
+	public Modifier(Model m){
 		baseModel=m;
 	}
 	
-	Modifier(){
+	public Modifier(){
 	}
 	
 	abstract Model destroy(Model subModel);

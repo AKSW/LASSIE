@@ -17,9 +17,6 @@ public class ClassMergeModifier extends Modifier{
 	List<String> mergeSourceClassUris = new ArrayList<String>();
 	String mergeTargetClassuri = new String();
 
-
-
-
 	/**
 	 * @param m
 	 *@author sherif

@@ -29,11 +29,11 @@ public class BenchmarkGenerator extends Modifier{
 	 * @param m
 	 *@author sherif
 	 */
-	BenchmarkGenerator(Model m) {
+	public BenchmarkGenerator(Model m) {
 		super(m);
 	}
 
-	BenchmarkGenerator() {
+	public BenchmarkGenerator() {
 	}
 
 
@@ -43,13 +43,13 @@ public class BenchmarkGenerator extends Modifier{
 	 * @return destroyed model
 	 * @author Sherif
 	 */
-	Model destroy (Model m, Map<? extends Modifier, Double> modefiersAndRates){
+	public Model destroyInstances (Model m, Map<? extends Modifier, Double> modefiersAndRates){
 		baseModel= m;
 		return destroyInstances(modefiersAndRates);
 	}
 
 
-	Model destroyInstances (Map<? extends Modifier, Double> modefiersAndRates){
+	public Model destroyInstances (Map<? extends Modifier, Double> modefiersAndRates){
 		return destroyInstances (modefiersAndRates, 0d);
 	}
 
@@ -118,7 +118,7 @@ public class BenchmarkGenerator extends Modifier{
 	}
 
 
-	Model destroyClasses (Map<? extends Modifier, Double> modefiersAndRates){
+	public Model destroyClasses (Map<? extends Modifier, Double> modefiersAndRates){
 		Model resultModel = ModelFactory.createDefaultModel();
 		List<String> classNames = getClasses(baseModel);
 		int offset = 0; 
