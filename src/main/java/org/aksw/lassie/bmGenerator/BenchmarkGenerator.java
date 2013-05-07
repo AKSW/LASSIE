@@ -31,13 +31,13 @@ public class BenchmarkGenerator extends Modifier{
 	 * @return destroyed model
 	 * @author Sherif
 	 */
-	Model destroy (Model m, Map<? extends Modifier, Double> modefiersAndRates){
+	public Model destroy (Model m, Map<? extends Modifier, Double> modefiersAndRates){
 		baseModel= m;
 		return destroy(modefiersAndRates);
 	}
 
 
-	Model destroy (Map<? extends Modifier, Double> modefiersAndRates){
+	public Model destroy (Map<? extends Modifier, Double> modefiersAndRates){
 		return destroy (modefiersAndRates, 0d);
 	}
 
@@ -46,7 +46,7 @@ public class BenchmarkGenerator extends Modifier{
 	 * @return destroyed model
 	 * @author Sherif
 	 */
-	Model destroy (Map<? extends Modifier, Double> modefiersAndRates, double startPointRatio){
+	public Model destroy (Map<? extends Modifier, Double> modefiersAndRates, double startPointRatio){
 		Model inputModel= ModelFactory.createDefaultModel();
 
 		if(properties.size()==0 && inputClassUri==null){   // If the modifier properties are not set and no Class is set then divide the whole Model
