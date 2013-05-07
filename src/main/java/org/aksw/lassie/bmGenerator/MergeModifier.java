@@ -24,6 +24,17 @@ public class MergeModifier extends Modifier{
 	public Property mergeProperty;
 
 	/**
+	 * @param m
+	 *@author sherif
+	 */
+	public MergeModifier(Model m) {
+		super(m);
+	}
+
+	public MergeModifier() {
+	}
+
+	/**
 	 * @return the mergeProperty
 	 */
 	public Property getMergeProperty() {

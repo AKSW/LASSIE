@@ -20,13 +20,24 @@ public class ClassMergeModifier extends Modifier{
 
 
 
+	/**
+	 * @param m
+	 *@author sherif
+	 */
+	public ClassMergeModifier(Model m) {
+		super(m);
+	}
+	
+	public ClassMergeModifier() {
+	}
+
 	/* (non-Javadoc)
 	 * @see de.uni_leipzig.simba.bmGenerator.Modifier#destroy(com.hp.hpl.jena.rdf.model.Model)
 	 */
 	Model destroy(Model subModel) {
 		Model result = baseModel;
 		for(String sourceClassUri:mergeSourceClassUris){
-			Model sourceClassModel = getClassModel(sourceClassUri);
+			Model sourceClassModel = getClassInstancesModel(sourceClassUri);
 			result.remove(sourceClassModel);
 			sourceClassModel = renameClass(sourceClassModel, sourceClassUri, mergeTargetClassuri);
 			destroyedClassModel.add(sourceClassModel);

@@ -10,6 +10,16 @@ import com.hp.hpl.jena.rdf.model.Model;
  *
  */
 public class ClassDeleteModifier extends Modifier {
+	/**
+	 * @param m
+	 *@author sherif
+	 */
+	ClassDeleteModifier(Model m) {
+		super(m);
+	}
+	
+	ClassDeleteModifier() {
+	}
 	String deleteClassUri = new String();
 	/* (non-Javadoc)
 	 * @see de.uni_leipzig.simba.bmGenerator.Modifier#destroy(com.hp.hpl.jena.rdf.model.Model)
@@ -17,7 +27,7 @@ public class ClassDeleteModifier extends Modifier {
 	@Override
 	Model destroy(Model subModel) {
 		Model result = baseModel;
-		Model deletedClassModel = getClassModel(deleteClassUri);
+		Model deletedClassModel = getClassInstancesModel(deleteClassUri);
 		result.remove(deletedClassModel);
 		destroyedClassModel.add(result);
 		return result;

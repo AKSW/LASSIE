@@ -16,6 +16,18 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
 public class AcronymModifier extends Modifier{
 	
 	public int maxAcronymLength = 4;
+	/**
+	 * @param m
+	 *@author sherif
+	 */
+	public AcronymModifier(Model m) {
+		super(m);
+	}
+
+	public AcronymModifier() {
+	}
+
+
 	/* (non-Javadoc)
 	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy()
 	 */

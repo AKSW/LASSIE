@@ -11,6 +11,17 @@ import com.hp.hpl.jena.rdf.model.Model;
  */
 public class SynonymModifier extends Modifier {
 
+	/**
+	 * @param m
+	 *@author sherif
+	 */
+	public SynonymModifier(Model m) {
+		super(m);
+	}
+
+	public SynonymModifier() {
+	}
+	
 	/* (non-Javadoc)
 	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy()
 	 */

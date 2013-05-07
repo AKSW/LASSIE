@@ -10,6 +10,8 @@ import java.util.List;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -36,6 +38,14 @@ public abstract class Modifier {
 	
 	public String inputClassUri = null;
 	public String outputClassUri = null;
+	
+	
+	Modifier(Model m){
+		baseModel=m;
+	}
+	
+	Modifier(){
+	}
 	
 	abstract Model destroy(Model subModel);
 	
@@ -73,7 +83,7 @@ public abstract class Modifier {
 	 * @return Model containing all instances of the input class
 	 * @author sherif
 	 */
-	protected Model getClassModel(String classUri){
+	protected Model getClassInstancesModel(String classUri){
 		Model result=ModelFactory.createDefaultModel();
 		String sparqlQueryString= "CONSTRUCT {?s ?p ?o} WHERE {?s a <"+classUri+">. ?s ?p ?o}";
 		QueryFactory.create(sparqlQueryString);
@@ -114,6 +124,19 @@ public abstract class Modifier {
 		Modifier.destroyedPropertiesModel = destroyedPropertiesModel;
 	}
 
+	public List<String> getClasses(Model m){
+		List<String> classNames = new ArrayList<String>();
+		String sparqlQueryString= "select distinct ?class where {?s a ?class}";
+		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, m);
+		ResultSet results = qexec.execSelect();
+		
+		while (results.hasNext()) {
+		    QuerySolution row= results.next();
+		    RDFNode className= row.get("class");
+		    classNames.add(className.toString());
+		}
+		return classNames;
+	}
 	
 	/**
 	 * @param model

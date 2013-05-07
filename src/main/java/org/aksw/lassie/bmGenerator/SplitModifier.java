@@ -26,6 +26,17 @@ public class SplitModifier extends Modifier{
 	
 	
 	/**
+	 * @param m
+	 *@author sherif
+	 */
+	public SplitModifier(Model m) {
+		super(m);
+	}
+	
+	public SplitModifier() {
+	}
+
+	/**
 	 * @param splitProperties the splitProperties to set
 	 */
 	public void setSplitProperties(List<Property> splitProperties) {

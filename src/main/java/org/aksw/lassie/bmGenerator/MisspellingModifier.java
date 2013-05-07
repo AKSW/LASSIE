@@ -35,6 +35,17 @@ public class MisspellingModifier extends Modifier {
 	
 
 	/**
+	 * @param m
+	 *@author sherif
+	 */
+	public MisspellingModifier(Model m) {
+		super(m);
+	}
+
+	public MisspellingModifier() {
+	}
+
+	/**
 	 * @return the missplingRate
 	 */
 	public int getMissplingRate() {

@@ -7,6 +7,7 @@ package org.aksw.lassie.bmGenerator;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -16,7 +17,6 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.sparql.vocabulary.FOAF;
-import com.hp.hpl.jena.util.FileManager;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 /**
@@ -26,6 +26,18 @@ import com.hp.hpl.jena.vocabulary.RDFS;
 public class BenchmarkGenerator extends Modifier{
 
 	/**
+	 * @param m
+	 *@author sherif
+	 */
+	BenchmarkGenerator(Model m) {
+		super(m);
+	}
+
+	BenchmarkGenerator() {
+	}
+
+
+	/**
 	 * @param basemodel
 	 * @param modefiersAndRates
 	 * @return destroyed model
@@ -33,12 +45,12 @@ public class BenchmarkGenerator extends Modifier{
 	 */
 	Model destroy (Model m, Map<? extends Modifier, Double> modefiersAndRates){
 		baseModel= m;
-		return destroy(modefiersAndRates);
+		return destroyInstances(modefiersAndRates);
 	}
 
 
-	Model destroy (Map<? extends Modifier, Double> modefiersAndRates){
-		return destroy (modefiersAndRates, 0d);
+	Model destroyInstances (Map<? extends Modifier, Double> modefiersAndRates){
+		return destroyInstances (modefiersAndRates, 0d);
 	}
 
 	/**
@@ -46,7 +58,7 @@ public class BenchmarkGenerator extends Modifier{
 	 * @return destroyed model
 	 * @author Sherif
 	 */
-	Model destroy (Map<? extends Modifier, Double> modefiersAndRates, double startPointRatio){
+	Model destroyInstances (Map<? extends Modifier, Double> modefiersAndRates, double startPointRatio){
 		Model inputModel= ModelFactory.createDefaultModel();
 
 		if(properties.size()==0 && inputClassUri==null){   // If the modifier properties are not set and no Class is set then divide the whole Model
@@ -106,7 +118,31 @@ public class BenchmarkGenerator extends Modifier{
 	}
 
 
-
+	Model destroyClasses (Map<? extends Modifier, Double> modefiersAndRates){
+		Model resultModel = ModelFactory.createDefaultModel();
+		List<String> classNames = getClasses(baseModel);
+		int offset = 0; 
+		for(Entry<? extends Modifier, Double> mod2rat: modefiersAndRates.entrySet() ){
+			Modifier modifer = mod2rat.getKey();
+			Double   rate    = mod2rat.getValue();
+			Model subModel = ModelFactory.createDefaultModel();
+			System.out.println("Destroying classe(s):");
+			for(int i=offset ; i < (offset+(int) Math.floor(classNames.size()*rate)) ; i++){
+				subModel.add(getClassInstancesModel(classNames.get(i)));
+				System.out.println(classNames.get(i));
+			}
+			System.out.println("containing " + subModel.size() + " instances with modifier " + modifer.getClass().getSimpleName());
+			resultModel.add(modifer.destroy(subModel));
+			offset += Math.floor(classNames.size()*rate);
+		}
+		//add the rest of base model (if any)
+		if(offset<classNames.size()){
+			for(int i=offset ; i<classNames.size() ; i++){
+				resultModel.add(getClassInstancesModel(classNames.get(i)));
+			}
+		}
+		return resultModel;
+	}
 
 
 	/**
@@ -131,39 +167,6 @@ public class BenchmarkGenerator extends Modifier{
 	Model destroy(Model subModel) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-
-
-	/**
-	 * @param fileNameOrUri
-	 * @return Base model loaded from file or URI
-	 * @author Sherif
-	 */
-	public Model loadBaseModel(String fileNameOrUri){
-		baseModel=ModelFactory.createDefaultModel();
-		java.io.InputStream in = FileManager.get().open( fileNameOrUri );
-		if (in == null) {
-			throw new IllegalArgumentException(
-					"File/URI: " + fileNameOrUri + " not found");
-		}
-		if(fileNameOrUri.endsWith(".ttl")){
-			System.out.println("Opening Turtle file");
-			baseModel.read(in, null, "TTL");
-		}else if(fileNameOrUri.endsWith(".rdf")){
-			System.out.println("Opening RDFXML file");
-			baseModel.read(in, null);
-		}else if(fileNameOrUri.endsWith(".nt")){
-			System.out.println("Opening N-Triples file");
-			baseModel.read(in, null, "N-TRIPLE");
-		}else{
-			System.out.println("Content negotiation to get RDFXML from " + fileNameOrUri);
-			baseModel.read(fileNameOrUri);
-		}
-
-		System.out.println("loading "+ fileNameOrUri + " is done!!");
-		System.out.println();
-		return baseModel;
 	}
 
 
@@ -210,7 +213,7 @@ public class BenchmarkGenerator extends Modifier{
 		properties.add(RDFS.label);
 		properties.add(FOAF.name);
 		inputClassUri=inClassUri;
-		
+
 		// 1. Destroy class instances
 		Double modRatio = dRatio/3d;
 		Map<Modifier, Double> modefiersAndRates= new HashMap<Modifier, Double>();
@@ -220,26 +223,25 @@ public class BenchmarkGenerator extends Modifier{
 		modefiersAndRates.put(misspelingModifier, modRatio);
 		Modifier permutationModifier= ModifierFactory.getModifier("permutation");
 		modefiersAndRates.put(permutationModifier, modRatio);
-		
-		destroy(modefiersAndRates,0);
+
+		destroyInstances(modefiersAndRates,0);
 		System.out.println();
 		System.out.println("----- Destroyed Instance Model -----");
 		System.out.println("Size: "+ destroyedModel.size());
-		
+
 		// 2. Destroy class
 		baseModel= destroyedModel;
 		destroyedModel= ModelFactory.createDefaultModel();
-		
+
 		System.out.println("destroyedModel: "+ destroyedModel.size());
 		destroyedModel.write(System.out, "TTL");
 		System.out.println("baseModel: "+ baseModel.size());
-//		baseModel.write(System.out, "TTL");
-		
-		
+		//		baseModel.write(System.out, "TTL");
+
 		ClassSplitModifier classSpliter=new ClassSplitModifier();
-		classSpliter.splitSourceClassUri = inClassUri;
-		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit1");
-		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit2");
+		//		classSpliter.splitSourceClassUri = inClassUri;
+		//		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit1");
+		//		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit2");
 		System.out.println("----- Split Model -----");
 		Model outModel = classSpliter.destroy(null);
 		System.out.println("Size: "+outModel.size());
@@ -254,40 +256,25 @@ public class BenchmarkGenerator extends Modifier{
 	 * @author sherif
 	 */
 	private void bmPeel(String inFile, String outFile) throws IOException{
-		Model inModel=loadBaseModel(inFile);
+		Model inModel=loadModel(inFile);
 		String inClassUri = "http://purl.org/ontology/mo/MusicArtist";
 		Double dRatio = 0.1d; 
 		FileWriter outF = new FileWriter(outFile);
-	
+
 		bmPeel(inModel, inClassUri, dRatio).write(outF, "TTL");
 
 	}
 
 	public static void main(String args[]) throws IOException{
-		BenchmarkGenerator benchmarker= new BenchmarkGenerator();
-		benchmarker.bmPeel(args[0], args[1]);
+		Model m= loadModel(args[0]);
+		BenchmarkGenerator benchmarker= new BenchmarkGenerator(m);
+		System.out.println("m.size(): "+m.size());
+		Map<Modifier, Double> modefiersAndRates= new HashMap<Modifier, Double>();
+		modefiersAndRates.put(new ClassSplitModifier(), 1d);
+		Model desM = benchmarker.destroyClasses (modefiersAndRates);
+		System.out.println("desM.size(): "+desM.size());
 
-		//		benchmarker.loadBaseModel(args[0]);
-		//		System.out.println("----- Base Model -----");
-		//		System.out.println("Size: "+baseModel.size());
-		//		baseModel.write(System.out, "TTL");
-		//		System.out.println();
-		//		properties.add(RDFS.label);
-		//		properties.add(FOAF.name);
-		//		benchmarker.inputClassUri = "http://purl.org/ontology/mo/MusicArtist";
-		//		benchmarker.outputClassUri = "http//example.com/Artist";
-		//		
-		//		Map<Modifier, Double> modefiersAndRates= new HashMap<Modifier, Double>();
-		//		Modifier mergeModifier= ModifierFactory.getModifier("merge");
-		//		modefiersAndRates.put(mergeModifier, 0.5d);
-		//		benchmarker.destroy(modefiersAndRates,0.0d);
-		//		System.out.println();
-		//		System.out.println("----- Destroyed Model -----");
-		//		System.out.println("Size: "+ destroyedModel.size());
-		//			destroyedModel.write(System.out, "TTL");
 	}
-
-
 
 }
 
