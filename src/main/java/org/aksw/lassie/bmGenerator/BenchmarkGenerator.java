@@ -114,6 +114,7 @@ public class BenchmarkGenerator extends Modifier{
 		if(inputClassUri!=null && outputClassUri!=null){
 			destroyedModel = renameClass(destroyedModel, inputClassUri,outputClassUri);
 		}
+		baseModel=destroyedModel;
 		return destroyedModel;
 	}
 
@@ -126,12 +127,12 @@ public class BenchmarkGenerator extends Modifier{
 			Modifier modifer = mod2rat.getKey();
 			Double   rate    = mod2rat.getValue();
 			Model subModel = ModelFactory.createDefaultModel();
-			System.out.println("Destroying classe(s):");
+			System.out.println("\nDestroying class(es):");
 			for(int i=offset ; i < (offset+(int) Math.floor(classNames.size()*rate)) ; i++){
 				subModel.add(getClassInstancesModel(classNames.get(i)));
 				System.out.println(classNames.get(i));
 			}
-			System.out.println("containing " + subModel.size() + " instances with modifier " + modifer.getClass().getSimpleName());
+			System.out.println("containing total of " + subModel.size() + " instances with modifier " + modifer.getClass().getSimpleName()+"\n");
 			resultModel.add(modifer.destroy(subModel));
 			offset += Math.floor(classNames.size()*rate);
 		}
