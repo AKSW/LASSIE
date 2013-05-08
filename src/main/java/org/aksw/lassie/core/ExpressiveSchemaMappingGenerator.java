@@ -20,6 +20,7 @@ import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.aksw.lassie.util.PrintUtils;
+import org.apache.commons.math3.analysis.solvers.NewtonSolver;
 import org.apache.log4j.Logger;
 import org.dllearner.algorithms.celoe.CELOE;
 import org.dllearner.core.AbstractLearningProblem;
@@ -41,13 +42,21 @@ import org.dllearner.utilities.datastructures.SetManipulation;
 import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyChange;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 
+import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -82,6 +91,7 @@ public class ExpressiveSchemaMappingGenerator {
     private boolean posNegLearning = true;
     private final boolean performCrossValidation = true;
     private int fragmentDepth = 2;
+    private static final int maxNrOfIterations = 3;
     /**
      * The maximum number of positive examples, used for the SPARQL extraction
      * and learning algorithm
@@ -150,6 +160,7 @@ public class ExpressiveSchemaMappingGenerator {
         //perform the iterative schema matching
         Map<NamedClass, Description> mapping = new HashMap<NamedClass, Description>();
         int i = 1;
+        double totalCoverage = 0;
         do {
             //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
             //a map from C_i to a set of instances in the target KB
@@ -171,12 +182,34 @@ public class ExpressiveSchemaMappingGenerator {
 
             //set the target class expressions
             targetClassExpressions = mapping.values();
-
-        } while (++i <= 1);
+            double newTotalCoverage = computeCoverage(mapping, source);
+        } while (++i <= maxNrOfIterations);
     }
-
-    private void write2Disk() {
+    
+    double computeCoverage(Map<NamedClass, Description> mapping, KnowledgeBase kb){
+    	
+    	double totalCoverage = 0;
+    	
+		for (Entry<NamedClass, Description> entry : mapping.entrySet()) {
+			NamedClass source = entry.getKey();
+			Description target = entry.getValue();
+			
+			SortedSet<Individual> sourceInstances = getInstances(source, kb);
+			SortedSet<Individual> targetInstances = getInstances(target, kb);
+			
+			double coverage = computeJaccardDistance(sourceInstances, targetInstances);
+			totalCoverage += coverage;
+		}
+		
+		totalCoverage /= mapping.size();
+		return totalCoverage;
     }
+    
+    double computeJaccardDistance(Set<Individual> sourceInstances, Set<Individual> targetInstances){
+		// coverage = 2*|C_i n D_j|/(|C_i|+|D_j|)
+		SetView<Individual> intersection = Sets.intersection(sourceInstances, targetInstances);
+		return 2*((double)intersection.size())/(sourceInstances.size()+targetInstances.size());
+	}
     
     /**
      * Run LIMES to generate owl:sameAs links
@@ -469,241 +502,243 @@ public class ExpressiveSchemaMappingGenerator {
         return null;
     }
     
-    private String print(Collection<Individual> individuals, int n){
-    	StringBuilder sb = new StringBuilder();
-    	int i = 0;
-    	for (Individual individual : individuals) {
+    
+
+	private String print(Collection<Individual> individuals, int n){
+		StringBuilder sb = new StringBuilder();
+		int i = 0;
+		for (Individual individual : individuals) {
 			sb.append(individual.getName() + ",");
 		}
-    	sb.append("...");
-    	return sb.toString();
-    }
+		sb.append("...");
+		return sb.toString();
+	}
 
-    /**
-     * Return all instances of the given class in the source KB.
-     *
-     * @param cls
-     * @return
-     */
-    private SortedSet<Individual> getSourceInstances(NamedClass cls) {
-        logger.info("Retrieving instances of class " + cls + "...");
-        mon.start();
-        SortedSet<Individual> instances = new TreeSet<Individual>();
-        String query = String.format("SELECT DISTINCT ?s WHERE {?s a <%s>}", cls.getName());
-        ResultSet rs = source.executeSelect(query);
-        QuerySolution qs;
-        while (rs.hasNext()) {
-            qs = rs.next();
-            instances.add(new Individual(qs.getResource("s").getURI()));
-        }
-        mon.stop();
-        logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
-        return instances;
-    }
+	/**
+	 * Return all instances of the given class in the source KB.
+	 *
+	 * @param cls
+	 * @return
+	 */
+	private SortedSet<Individual> getSourceInstances(NamedClass cls) {
+		logger.info("Retrieving instances of class " + cls + "...");
+		mon.start();
+		SortedSet<Individual> instances = new TreeSet<Individual>();
+		String query = String.format("SELECT DISTINCT ?s WHERE {?s a <%s>}", cls.getName());
+		ResultSet rs = source.executeSelect(query);
+		QuerySolution qs;
+		while (rs.hasNext()) {
+			qs = rs.next();
+			instances.add(new Individual(qs.getResource("s").getURI()));
+		}
+		mon.stop();
+		logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
+		return instances;
+	}
 
-    /**
-     * Return all instances which are (assumed to be) contained in the target
-     * KB. Here we should apply a namespace filter on the URIs such that we get
-     * only instances which are really contained in the target KB.
-     *
-     * @param cls
-     * @return
-     */
-    private SortedSet<Individual> getTargetInstances(Description desc) {
-        return getInstances(desc, target);
-    }
+	/**
+	 * Return all instances which are (assumed to be) contained in the target
+	 * KB. Here we should apply a namespace filter on the URIs such that we get
+	 * only instances which are really contained in the target KB.
+	 *
+	 * @param cls
+	 * @return
+	 */
+	private SortedSet<Individual> getTargetInstances(Description desc) {
+		return getInstances(desc, target);
+	}
 
-    private SortedSet<Individual> getInstances(Description desc, KnowledgeBase kb) {
-        logger.info("Retrieving instances of class expression " + desc + "...");
-        mon.start();
-        SortedSet<Individual> instances = new TreeSet<Individual>();
-        OWLClassExpressionToSPARQLConverter converter = new OWLClassExpressionToSPARQLConverter();
-        OWLClassExpression classExpression = OWLAPIDescriptionConvertVisitor.getOWLClassExpression(desc);
-        Query query = converter.asQuery("?x", classExpression);
-        ResultSet rs = kb.executeSelect(query.toString());
-        QuerySolution qs;
-        while (rs.hasNext()) {
-            qs = rs.next();
-            instances.add(new Individual(qs.getResource("x").getURI()));
-        }
-        mon.stop();
-        logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
-        return instances;
-    }
+	private SortedSet<Individual> getInstances(Description desc, KnowledgeBase kb) {
+		logger.info("Retrieving instances of class expression " + desc + "...");
+		mon.start();
+		SortedSet<Individual> instances = new TreeSet<Individual>();
+		OWLClassExpressionToSPARQLConverter converter = new OWLClassExpressionToSPARQLConverter();
+		OWLClassExpression classExpression = OWLAPIDescriptionConvertVisitor.getOWLClassExpression(desc);
+		Query query = converter.asQuery("?x", classExpression);
+		ResultSet rs = kb.executeSelect(query.toString());
+		QuerySolution qs;
+		while (rs.hasNext()) {
+			qs = rs.next();
+			instances.add(new Individual(qs.getResource("x").getURI()));
+		}
+		mon.stop();
+		logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
+		return instances;
+	}
 
-    /**
-     * Return all instances which are (assumed to be) contained in the target
-     * KB. Here we should apply a namespace filter on the URIs such that we get
-     * only instances which are really contained in the target KB.
-     *
-     * @param cls
-     * @return
-     */
-    private SortedSet<Individual> getTargetInstances(NamedClass cls) {
-        logger.info("Retrieving instances to which instances of class " + cls + " are linked to via property " + linkingProperty + "...");
-        mon.start();
-        SortedSet<Individual> instances = new TreeSet<Individual>();
-        String query = String.format("SELECT DISTINCT ?o WHERE {?s a <%s>. ?s <%s> ?o. FILTER(REGEX(?o,'^%s'))}", cls.getName(), linkingProperty, target.getNamespace());
-        ResultSet rs = source.executeSelect(query);
-        QuerySolution qs;
-        while (rs.hasNext()) {
-            qs = rs.next();
-            instances.add(new Individual(qs.getResource("o").getURI()));
-        }
-        mon.stop();
-        logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
-        return instances;
-    }
+	/**
+	 * Return all instances which are (assumed to be) contained in the target
+	 * KB. Here we should apply a namespace filter on the URIs such that we get
+	 * only instances which are really contained in the target KB.
+	 *
+	 * @param cls
+	 * @return
+	 */
+	private SortedSet<Individual> getTargetInstances(NamedClass cls) {
+		logger.info("Retrieving instances to which instances of class " + cls + " are linked to via property " + linkingProperty + "...");
+		mon.start();
+		SortedSet<Individual> instances = new TreeSet<Individual>();
+		String query = String.format("SELECT DISTINCT ?o WHERE {?s a <%s>. ?s <%s> ?o. FILTER(REGEX(?o,'^%s'))}", cls.getName(), linkingProperty, target.getNamespace());
+		ResultSet rs = source.executeSelect(query);
+		QuerySolution qs;
+		while (rs.hasNext()) {
+			qs = rs.next();
+			instances.add(new Individual(qs.getResource("o").getURI()));
+		}
+		mon.stop();
+		logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
+		return instances;
+	}
 
-    private KnowledgeSource convert(Model model) {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            model.write(baos, "TURTLE", null);
-            OWLOntologyManager man = OWLManager.createOWLOntologyManager();
-            OWLOntology ontology = man.loadOntologyFromOntologyDocument(new ByteArrayInputStream(baos.toByteArray()));
-            return new OWLAPIOntology(ontology);
-        } catch (OWLOntologyCreationException e) {
-            e.printStackTrace();
-            try {
-                model.write(new FileOutputStream("errors/" + PrintUtils.prettyPrint(currentClass) + "_conversion_error.ttl"), "TURTLE", null);
-            } catch (FileNotFoundException e1) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
+	private KnowledgeSource convert(Model model) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			model.write(baos, "TURTLE", null);
+			OWLOntologyManager man = OWLManager.createOWLOntologyManager();
+			OWLOntology ontology = man.loadOntologyFromOntologyDocument(new ByteArrayInputStream(baos.toByteArray()));
+			return new OWLAPIOntology(ontology);
+		} catch (OWLOntologyCreationException e) {
+			e.printStackTrace();
+			try {
+				model.write(new FileOutputStream("errors/" + PrintUtils.prettyPrint(currentClass) + "_conversion_error.ttl"), "TURTLE", null);
+			} catch (FileNotFoundException e1) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
 
-    /**
-     * Computes a fragment containing hopefully useful information about the
-     * resources.
-     *
-     * @param ind
-     */
-    private Model getFragment(SortedSet<Individual> individuals, KnowledgeBase kb) {
-        return getFragment(individuals, kb, maxRecursionDepth);
-    }
+	/**
+	 * Computes a fragment containing hopefully useful information about the
+	 * resources.
+	 *
+	 * @param ind
+	 */
+	private Model getFragment(SortedSet<Individual> individuals, KnowledgeBase kb) {
+		return getFragment(individuals, kb, maxRecursionDepth);
+	}
 
-    /**
-     * Computes a fragment containing hopefully useful information about the
-     * resources.
-     *
-     * @param ind
-     */
-    private Model getFragment(SortedSet<Individual> individuals, KnowledgeBase kb, int recursionDepth) {
-//        OntModel fullFragment = ModelFactory.createOntologyModel();
-        Model fullFragment = ModelFactory.createDefaultModel();
-        int i = 1;
-        for (Individual ind : individuals) {
-//			logger.info(i++  + "/" + individuals.size());
-            fullFragment.add(getFragment(ind, kb, recursionDepth));
-        }
-//        cleanUpModel(fullFragment);
-        return fullFragment;
-    }
+	/**
+	 * Computes a fragment containing hopefully useful information about the
+	 * resources.
+	 *
+	 * @param ind
+	 */
+	private Model getFragment(SortedSet<Individual> individuals, KnowledgeBase kb, int recursionDepth) {
+		//        OntModel fullFragment = ModelFactory.createOntologyModel();
+		Model fullFragment = ModelFactory.createDefaultModel();
+		int i = 1;
+		for (Individual ind : individuals) {
+			//			logger.info(i++  + "/" + individuals.size());
+			fullFragment.add(getFragment(ind, kb, recursionDepth));
+		}
+		//        cleanUpModel(fullFragment);
+		return fullFragment;
+	}
 
-    /**
-     * Computes a fragment containing hopefully useful information about the
-     * resource.
-     *
-     * @param ind
-     */
-    private Model getFragment(Individual ind, KnowledgeBase kb) {
-        return getFragment(ind, kb, maxRecursionDepth);
-    }
+	/**
+	 * Computes a fragment containing hopefully useful information about the
+	 * resource.
+	 *
+	 * @param ind
+	 */
+	private Model getFragment(Individual ind, KnowledgeBase kb) {
+		return getFragment(ind, kb, maxRecursionDepth);
+	}
 
-    /**
-     * Computes a fragment containing hopefully useful information about the
-     * resource.
-     *
-     * @param ind
-     */
-    private Model getFragment(Individual ind, KnowledgeBase kb, int recursionDepth) {
-        logger.debug("Loading fragment for " + ind.getName());
-        ConciseBoundedDescriptionGenerator cbdGen;
-        if (kb.isRemote()) {
-            cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint());
-        } else {
-            cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((LocalKnowledgeBase) kb).getModel());
-        }
+	/**
+	 * Computes a fragment containing hopefully useful information about the
+	 * resource.
+	 *
+	 * @param ind
+	 */
+	private Model getFragment(Individual ind, KnowledgeBase kb, int recursionDepth) {
+		logger.debug("Loading fragment for " + ind.getName());
+		ConciseBoundedDescriptionGenerator cbdGen;
+		if (kb.isRemote()) {
+			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint());
+		} else {
+			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((LocalKnowledgeBase) kb).getModel());
+		}
 
-        Model cbd = cbdGen.getConciseBoundedDescription(ind.getName(), recursionDepth);
-        logger.debug("Got " + cbd.size() + " triples.");
-        return cbd;
-    }
+		Model cbd = cbdGen.getConciseBoundedDescription(ind.getName(), recursionDepth);
+		logger.debug("Got " + cbd.size() + " triples.");
+		return cbd;
+	}
 
-    private void cleanUpModel(Model model) {
-        // filter out triples with String literals, as therein often occur
-        // some syntax errors and they are not relevant for learning
-        List<Statement> statementsToRemove = new ArrayList<Statement>();
-        for (Iterator<Statement> iter = model.listStatements().toList().iterator(); iter.hasNext();) {
-            Statement st = iter.next();
-            RDFNode object = st.getObject();
-            if (object.isLiteral()) {
-                // statementsToRemove.add(st);
-                Literal lit = object.asLiteral();
-                if (lit.getDatatype() == null || lit.getDatatype().equals(XSD.xstring)) {
-                    st.changeObject("shortened", "en");
-                }
-            }
-            //remove statements like <x a owl:Class>
-            if (st.getPredicate().equals(RDF.type)) {
-                if (object.equals(RDFS.Class.asNode()) || object.equals(OWL.Class.asNode()) || object.equals(RDFS.Literal.asNode())
-                        || object.equals(RDFS.Resource)) {
-                    statementsToRemove.add(st);
-                }
-            }
-        }
-        model.remove(statementsToRemove);
-    }
+	private void cleanUpModel(Model model) {
+		// filter out triples with String literals, as therein often occur
+		// some syntax errors and they are not relevant for learning
+		List<Statement> statementsToRemove = new ArrayList<Statement>();
+		for (Iterator<Statement> iter = model.listStatements().toList().iterator(); iter.hasNext();) {
+			Statement st = iter.next();
+			RDFNode object = st.getObject();
+			if (object.isLiteral()) {
+				// statementsToRemove.add(st);
+				Literal lit = object.asLiteral();
+				if (lit.getDatatype() == null || lit.getDatatype().equals(XSD.xstring)) {
+					st.changeObject("shortened", "en");
+				}
+			}
+			//remove statements like <x a owl:Class>
+			if (st.getPredicate().equals(RDF.type)) {
+				if (object.equals(RDFS.Class.asNode()) || object.equals(OWL.Class.asNode()) || object.equals(RDFS.Literal.asNode())
+						|| object.equals(RDFS.Resource)) {
+					statementsToRemove.add(st);
+				}
+			}
+		}
+		model.remove(statementsToRemove);
+	}
 
-    private Set<NamedClass> getClasses(KnowledgeBase kb) {
-        Set<NamedClass> classes = new HashSet<NamedClass>();
+	private Set<NamedClass> getClasses(KnowledgeBase kb) {
+		Set<NamedClass> classes = new HashSet<NamedClass>();
 
-        //get all OWL classes
-        String query = String.format("SELECT ?type WHERE {?type a <%s>.}", OWL.Class.getURI());
-        ResultSet rs = kb.executeSelect(query);
-        QuerySolution qs;
-        while (rs.hasNext()) {
-            qs = rs.next();
-            if (qs.get("type").isURIResource()) {
-                classes.add(new NamedClass(qs.get("type").asResource().getURI()));
-            }
-        }
+		//get all OWL classes
+		String query = String.format("SELECT ?type WHERE {?type a <%s>.}", OWL.Class.getURI());
+		ResultSet rs = kb.executeSelect(query);
+		QuerySolution qs;
+		while (rs.hasNext()) {
+			qs = rs.next();
+			if (qs.get("type").isURIResource()) {
+				classes.add(new NamedClass(qs.get("type").asResource().getURI()));
+			}
+		}
 
-        //fallback: check for ?s a ?type where ?type is not asserted to owl:Class
-        if (classes.isEmpty()) {
-            query = "SELECT ?type WHERE {?s a ?type.}";
-            rs = kb.executeSelect(query);
-            while (rs.hasNext()) {
-                qs = rs.next();
-                if (qs.get("type").isURIResource()) {
-                    classes.add(new NamedClass(qs.get("type").asResource().getURI()));
-                }
-            }
-        }
-        return classes;
-    }
+		//fallback: check for ?s a ?type where ?type is not asserted to owl:Class
+		if (classes.isEmpty()) {
+			query = "SELECT ?type WHERE {?s a ?type.}";
+			rs = kb.executeSelect(query);
+			while (rs.hasNext()) {
+				qs = rs.next();
+				if (qs.get("type").isURIResource()) {
+					classes.add(new NamedClass(qs.get("type").asResource().getURI()));
+				}
+			}
+		}
+		return classes;
+	}
 
-    private SortedSet<Individual> getRelatedIndividualsNamespaceAware(KnowledgeBase kb, NamedClass nc, String targetNamespace) {
-        SortedSet<Individual> relatedIndividuals = new TreeSet<Individual>();
-        //get all individuals o which are connected to individuals s belonging to class nc
-//		String query = String.format("SELECT ?o WHERE {?s a <%s>. ?s <http://www.w3.org/2002/07/owl#sameAs> ?o. FILTER(REGEX(STR(?o),'%s'))}", nc.getName(), targetNamespace);
-//		ResultSet rs = executeSelect(kb, query);
-//		QuerySolution qs;
-//		while(rs.hasNext()){
-//			qs = rs.next();
-//			RDFNode object = qs.get("o");
-//			if(object.isURIResource()){
-//				
-//				String uri = object.asResource().getURI();
-//				//workaround for World Factbook - should be removed later
-//				uri = uri.replace("http://www4.wiwiss.fu-berlin.de/factbook/resource/", "http://wifo5-03.informatik.uni-mannheim.de/factbook/resource/");
-//				//workaround for OpenCyc - should be removed later
-//				uri = uri.replace("http://sw.cyc.com", "http://sw.opencyc.org");
-//				
-//				relatedIndividuals.add(new Individual(uri));
-//			}
-//		}
-        return relatedIndividuals;
-    }
+	private SortedSet<Individual> getRelatedIndividualsNamespaceAware(KnowledgeBase kb, NamedClass nc, String targetNamespace) {
+		SortedSet<Individual> relatedIndividuals = new TreeSet<Individual>();
+		//get all individuals o which are connected to individuals s belonging to class nc
+		//		String query = String.format("SELECT ?o WHERE {?s a <%s>. ?s <http://www.w3.org/2002/07/owl#sameAs> ?o. FILTER(REGEX(STR(?o),'%s'))}", nc.getName(), targetNamespace);
+		//		ResultSet rs = executeSelect(kb, query);
+		//		QuerySolution qs;
+		//		while(rs.hasNext()){
+		//			qs = rs.next();
+		//			RDFNode object = qs.get("o");
+		//			if(object.isURIResource()){
+		//				
+		//				String uri = object.asResource().getURI();
+		//				//workaround for World Factbook - should be removed later
+		//				uri = uri.replace("http://www4.wiwiss.fu-berlin.de/factbook/resource/", "http://wifo5-03.informatik.uni-mannheim.de/factbook/resource/");
+		//				//workaround for OpenCyc - should be removed later
+		//				uri = uri.replace("http://sw.cyc.com", "http://sw.opencyc.org");
+		//				
+		//				relatedIndividuals.add(new Individual(uri));
+		//			}
+		//		}
+		return relatedIndividuals;
+	}
 }
