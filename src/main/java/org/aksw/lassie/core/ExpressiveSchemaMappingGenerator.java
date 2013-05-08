@@ -138,33 +138,7 @@ public class ExpressiveSchemaMappingGenerator {
     	 // get all classes D_i in target KB
         Set<NamedClass> targetClasses = getClasses(target);
         
-        //initially, the class expressions E_i in the target KB are the named classes D_i
-        Collection<Description> targetClassExpressions = new TreeSet<Description>();
-        targetClassExpressions.addAll(targetClasses);
-
-        //perform the iterative schema matching
-        Map<NamedClass, Description> mapping = new HashMap<NamedClass, Description>();
-        int i = 1;
-        do {
-            //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
-        	//a map from C_i to a set of instances in the target KB
-			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
-
-            //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
-            for (NamedClass sourceClass : sourceClasses) {
-                try {
-                	SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
-                    EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
-                    mapping.put(sourceClass, singleMapping.getDescription());
-                } catch (NonExistingLinksException e) {
-                    logger.warn(e.getMessage() + "Skipped learning.");
-                }
-            }
-
-            //set the target class expressions
-            targetClassExpressions = mapping.values();
-
-        } while (++i <= 1);
+        run(sourceClasses, targetClasses);
     }
     
     public void run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
@@ -182,12 +156,15 @@ public class ExpressiveSchemaMappingGenerator {
 
             //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
             for (NamedClass sourceClass : sourceClasses) {
+            	currentClass = sourceClass;
                 try {
                 	SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
                     EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
                     mapping.put(sourceClass, singleMapping.getDescription());
                 } catch (NonExistingLinksException e) {
                     logger.warn(e.getMessage() + "Skipped learning.");
+                } catch (Exception e){
+                	e.printStackTrace();
                 }
             }
 
@@ -195,6 +172,10 @@ public class ExpressiveSchemaMappingGenerator {
             targetClassExpressions = mapping.values();
 
         } while (++i <= 1);
+    }
+    
+    private void write2Disk(){
+    	
     }
 
     /**
@@ -325,6 +306,10 @@ public class ExpressiveSchemaMappingGenerator {
         } else {
             //compute a mapping
             List<? extends EvaluatedDescription> schemaMapping = initSchemaMapping(targetInstances);
+            logger.info("Generated class expressions for " + cls + ":");
+            for (EvaluatedDescription ed : schemaMapping) {
+            	  logger.info(ed);
+			}
             return schemaMapping;
         }
     }
@@ -420,6 +405,7 @@ public class ExpressiveSchemaMappingGenerator {
 
     private List<? extends EvaluatedDescription> learnClassExpressions(Model model, SortedSet<Individual> positiveExamples, SortedSet<Individual> negativeExamples) {
         try {
+        	cleanUpModel(model);
             KnowledgeSource ks = convert(model);
 
             //initialize the reasoner
@@ -576,7 +562,7 @@ public class ExpressiveSchemaMappingGenerator {
 //			logger.info(i++  + "/" + individuals.size());
             fullFragment.add(getFragment(ind, kb, recursionDepth));
         }
-        filter(fullFragment);
+        cleanUpModel(fullFragment);
         return fullFragment;
     }
 
@@ -610,7 +596,7 @@ public class ExpressiveSchemaMappingGenerator {
         return cbd;
     }
 
-    private void filter(Model model) {
+    private void cleanUpModel(Model model) {
         // filter out triples with String literals, as therein often occur
         // some syntax errors and they are not relevant for learning
         List<Statement> statementsToRemove = new ArrayList<Statement>();
@@ -626,7 +612,8 @@ public class ExpressiveSchemaMappingGenerator {
             }
             //remove statements like <x a owl:Class>
             if (st.getPredicate().equals(RDF.type)) {
-                if (object.equals(RDFS.Class.asNode()) || object.equals(OWL.Class.asNode()) || object.equals(RDFS.Literal.asNode())) {
+                if (object.equals(RDFS.Class.asNode()) || object.equals(OWL.Class.asNode()) || object.equals(RDFS.Literal.asNode())
+                		|| object.equals(RDFS.Resource)) {
                     statementsToRemove.add(st);
                 }
             }

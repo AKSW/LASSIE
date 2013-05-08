@@ -7,13 +7,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
-import org.aksw.lassie.bmGenerator.MisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -47,11 +52,16 @@ public class Evaluation {
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
-	private String referenceModelFile = "dbpedia-sample.ttl";
-	private String dbpediaNamespace = "http://dbpedia.org/ontology/";
 	
-	private int maxNrOfInstances = 100;
+	private String dbpediaNamespace = "http://dbpedia.org/ontology/";
+	private OWLOntology dbpediaOntology;
+	
+	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
+	private int maxNrOfClasses = 10;//-1 all classes
+	private int maxNrOfInstancesPerClass = 100;
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
+	
+	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
 	
 	/**
 	 * Create a sample of DBpedia, i.e. the schema + for each class for max n instances the CBD.
@@ -59,25 +69,37 @@ public class Evaluation {
 	 */
 	private Model createReferenceDataset(){
 		try {
+			//load schema
+			BZip2CompressorInputStream is = new BZip2CompressorInputStream(new URL(ontologyURL).openStream());
+			OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+			dbpediaOntology = manager.loadOntologyFromOntologyDocument(is);
+			
+			//extract DBpedia classes
+			for (OWLClass cls : dbpediaOntology.getClassesInSignature()) {
+				if(!cls.toStringID().startsWith(dbpediaNamespace)) continue;
+				dbpediaClasses.add(new NamedClass(cls.toStringID()));
+			}
+			if(maxNrOfClasses > 0){
+				List<NamedClass> tmp = new ArrayList<NamedClass>(dbpediaClasses);
+				Collections.shuffle(tmp, new Random(123));
+				dbpediaClasses = new TreeSet<NamedClass>(tmp.subList(0, maxNrOfClasses));
+			}
+			
 			Model model = ModelFactory.createDefaultModel();
 			//try to load sample from cache
 			File file = new File(referenceModelFile);
 			if(file.exists()){
-				model.read(new FileInputStream(file), "TURTLE");
+				model.read(new FileInputStream(file), null, "TURTLE");
 				return model;
 			} 
-			//load schema
-			BZip2CompressorInputStream is = new BZip2CompressorInputStream(new URL(ontologyURL).openStream());
-			OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-			OWLOntology ontology = manager.loadOntologyFromOntologyDocument(is);
 			
 			is = new BZip2CompressorInputStream(new URL(ontologyURL).openStream());
 			model.read(is, "RDF/XML");
+			
 			//for each class c_i get n random instances + their CBD
-			for (OWLClass cls : ontology.getClassesInSignature()) {
-				if(!cls.toStringID().startsWith(dbpediaNamespace)) continue;
+			for (NamedClass cls : dbpediaClasses) {
 				logger.info("Generating sample for " + cls + "...");
-				SortedSet<Individual> individuals = reasoner.getIndividuals(new NamedClass(cls.toStringID()), maxNrOfInstances);
+				SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass);
 				for (Individual individual : individuals) {
 					Model cbd = cbdGenerator.getConciseBoundedDescription(individual.getName(), maxCBDDepth);
 					model.add(cbd);
@@ -102,6 +124,10 @@ public class Evaluation {
 		return null;
 	}
 	
+	private void loadDBpediaSchema(){
+		
+	}
+	
 	private Model createTestDataset(Model referenceDataset){
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(referenceDataset);
 //		//  if we want to destroy some instances
@@ -124,7 +150,7 @@ public class Evaluation {
 		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
 		
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
-		generator.run();
+		generator.run(dbpediaClasses, dbpediaClasses);
 	}
 	
 	public static void main(String[] args) throws Exception {
