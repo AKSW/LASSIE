@@ -100,7 +100,7 @@ public class ExpressiveSchemaMappingGenerator {
     /**
      * LIMES Config
      */
-    static double coverage = 0.8d;
+    static double coverage = 1d;
     static double beta = 1d;
     static String fmeasure = "own";
     private final int linkingMaxNrOfExamples = 100;
@@ -226,9 +226,6 @@ public class ExpressiveSchemaMappingGenerator {
         for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
             NamedClass sourceClass = entry.getKey();
             Model sourceClassModel = entry.getValue();
-            for (Statement st : sourceClassModel.listStatements().toList()) {
-				System.out.println(st);
-			}
 
             //for each D_i
             for (Entry<Description, Model> entry2 : targetClassExpressionToModel.entrySet()) {
@@ -629,7 +626,7 @@ public class ExpressiveSchemaMappingGenerator {
             cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((LocalKnowledgeBase) kb).getModel());
         }
 
-        Model cbd = cbdGen.getConciseBoundedDescription(ind.getName(), fragmentDepth);
+        Model cbd = cbdGen.getConciseBoundedDescription(ind.getName(), recursionDepth);
         logger.debug("Got " + cbd.size() + " triples.");
         return cbd;
     }
