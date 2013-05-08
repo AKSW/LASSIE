@@ -57,8 +57,8 @@ public class Evaluation {
 	private OWLOntology dbpediaOntology;
 	
 	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
-	private int maxNrOfClasses = 1;//-1 all classes
-	private int maxNrOfInstancesPerClass = 50;
+	private int maxNrOfClasses = 20;//-1 all classes
+	private int maxNrOfInstancesPerClass = 100;
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 	
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
@@ -67,7 +67,7 @@ public class Evaluation {
 	 * Create a sample of DBpedia, i.e. the schema + for each class for max n instances the CBD.
 	 * @return
 	 */
-	private Model createReferenceDataset(){
+	private Model createDBpediaReferenceDataset(){
 		try {
 			//load schema
 			BZip2CompressorInputStream is = new BZip2CompressorInputStream(new URL(ontologyURL).openStream());
@@ -143,7 +143,7 @@ public class Evaluation {
 	}
 	
 	public void run(){
-		Model referenceDataset = createReferenceDataset();
+		Model referenceDataset = createDBpediaReferenceDataset();
 		Model testDataset = createTestDataset(referenceDataset);
 		
 		KnowledgeBase source = new LocalKnowledgeBase(testDataset);

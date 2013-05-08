@@ -177,7 +177,7 @@ public class ExpressiveSchemaMappingGenerator {
 
     private void write2Disk() {
     }
-
+    
     /**
      * Run LIMES to generate owl:sameAs links
      *
