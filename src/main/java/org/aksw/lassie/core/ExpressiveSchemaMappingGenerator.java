@@ -60,6 +60,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.vocabulary.OWL;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
@@ -197,6 +198,7 @@ public class ExpressiveSchemaMappingGenerator {
             //get the fragment describing the instances of C_i
             logger.info("Computing fragment...");
             Model sourceFragment = getFragment(sourceInstances, source, linkingMaxRecursionDepth);
+            removeNonLiteralStatements(sourceFragment);
             logger.info("...got " + sourceFragment.size() + " triples.");
             sourceClassToModel.put(sourceClass, sourceFragment);
         }
@@ -212,9 +214,12 @@ public class ExpressiveSchemaMappingGenerator {
             // get the fragment describing the instances of D_i
             logger.info("Computing fragment...");
             Model targetFragment = getFragment(targetInstances, target, linkingMaxRecursionDepth);
+            removeNonLiteralStatements(targetFragment);
             logger.info("...got " + targetFragment.size() + " triples.");
             targetClassExpressionToModel.put(targetClass, targetFragment);
         }
+        
+        
 
         Multimap<NamedClass, String> map = HashMultimap.create();
         
@@ -238,6 +243,18 @@ public class ExpressiveSchemaMappingGenerator {
             }
         }
         return map;
+    }
+    
+    private void removeNonLiteralStatements(Model m){
+    	StmtIterator iterator = m.listStatements();
+    	List<Statement> statements2Remove = new ArrayList<Statement>();
+    	while(iterator.hasNext()){
+    		Statement st = iterator.next();
+    		if(!st.getObject().isLiteral()){
+    			statements2Remove.add(st);
+    		}
+    	}
+    	m.remove(statements2Remove);
     }
 
     public Set<String> getAllProperties(Cache c) {
@@ -332,7 +349,7 @@ public class ExpressiveSchemaMappingGenerator {
     private List<? extends EvaluatedDescription> initSchemaMapping(SortedSet<Individual> positiveExamples) {
         //get a sample of the positive examples
         SortedSet<Individual> positiveExamplesSample = SetManipulation.stableShrinkInd(positiveExamples, maxNrOfPositiveExamples);
-
+        
         //starting from the positive examples, we first extract the fragment for them
         logger.info("Extracting fragment for positive examples...");
         mon.start();
@@ -391,8 +408,8 @@ public class ExpressiveSchemaMappingGenerator {
         logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
 
         logger.info("Learning input:");
-        logger.info("Positive examples: " + positiveExamplesSample.size() + " with " + positiveFragment.size() + " triples.");
-        logger.info("Negative examples: " + negativeExamplesSample.size() + " with " + negativeFragment.size() + " triples.");
+        logger.info("Positive examples: " + positiveExamplesSample.size() + " with " + positiveFragment.size() + " triples, e.g. \n" + print(positiveExamplesSample, 3));
+        logger.info("Negative examples: " + negativeExamplesSample.size() + " with " + negativeFragment.size() + " triples, e.g. \n" + print(negativeExamplesSample, 3));
 
         //create fragment consisting of both
         OntModel fullFragment = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM);
@@ -440,9 +457,19 @@ public class ExpressiveSchemaMappingGenerator {
 
             return la.getCurrentlyBestEvaluatedDescriptions(10);
         } catch (ComponentInitException e) {
-            e.printStackTrace();
+        	logger.error(e);
         }
         return null;
+    }
+    
+    private String print(Collection<Individual> individuals, int n){
+    	StringBuilder sb = new StringBuilder();
+    	int i = 0;
+    	for (Individual individual : individuals) {
+			sb.append(individual.getName() + ",");
+		}
+    	sb.append("...");
+    	return sb.toString();
     }
 
     /**

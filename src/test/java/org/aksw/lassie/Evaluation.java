@@ -47,7 +47,7 @@ public class Evaluation {
 	
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 	
-	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
@@ -57,8 +57,8 @@ public class Evaluation {
 	private OWLOntology dbpediaOntology;
 	
 	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
-	private int maxNrOfClasses = 10;//-1 all classes
-	private int maxNrOfInstancesPerClass = 100;
+	private int maxNrOfClasses = 1;//-1 all classes
+	private int maxNrOfInstancesPerClass = 50;
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 	
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
