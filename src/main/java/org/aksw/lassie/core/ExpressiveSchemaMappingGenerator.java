@@ -100,8 +100,8 @@ public class ExpressiveSchemaMappingGenerator {
     /**
      * LIMES Config
      */
-    static double coverage = 0.6;
-    static double beta = 2d;
+    static double coverage = 1d;
+    static double beta = 1d;
     static String fmeasure = "own";
     private final int linkingMaxNrOfExamples = 100;
     private final int linkingMaxRecursionDepth = 0;
@@ -128,20 +128,20 @@ public class ExpressiveSchemaMappingGenerator {
     public void run() {
         // get all classes C_i in source KB
         Set<NamedClass> sourceClasses = getClasses(source);
-        
+
         // get all classes D_i in target KB
         Set<NamedClass> targetClasses = getClasses(target);
 
         run(sourceClasses, targetClasses);
     }
-    
+
     public void run(Set<NamedClass> sourceClasses) {
-    	 // get all classes D_i in target KB
+        // get all classes D_i in target KB
         Set<NamedClass> targetClasses = getClasses(target);
-        
+
         run(sourceClasses, targetClasses);
     }
-    
+
     public void run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
         //initially, the class expressions E_i in the target KB are the named classes D_i
         Collection<Description> targetClassExpressions = new TreeSet<Description>();
@@ -152,20 +152,20 @@ public class ExpressiveSchemaMappingGenerator {
         int i = 1;
         do {
             //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
-        	//a map from C_i to a set of instances in the target KB
-			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
+            //a map from C_i to a set of instances in the target KB
+            Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
 
             //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
             for (NamedClass sourceClass : sourceClasses) {
-            	currentClass = sourceClass;
+                currentClass = sourceClass;
                 try {
-                	SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
+                    SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
                     EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
                     mapping.put(sourceClass, singleMapping.getDescription());
                 } catch (NonExistingLinksException e) {
                     logger.warn(e.getMessage() + "Skipped learning.");
-                } catch (Exception e){
-                	e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
 
@@ -174,9 +174,8 @@ public class ExpressiveSchemaMappingGenerator {
 
         } while (++i <= 1);
     }
-    
-    private void write2Disk(){
-    	
+
+    private void write2Disk() {
     }
 
     /**
@@ -186,7 +185,7 @@ public class ExpressiveSchemaMappingGenerator {
      * @param targetClasses
      */
     private Multimap<NamedClass, String> performUnsupervisedLinking(Set<NamedClass> sourceClasses, Collection<Description> targetClasses) {
-    	 logger.info("Computing links...");
+        logger.info("Computing links...");
         //compute the Concise Bounded Description(CBD) for each instance
         //in each source class C_i, thus creating a model for each class
         Map<NamedClass, Model> sourceClassToModel = new HashMap<NamedClass, Model>();
@@ -222,7 +221,7 @@ public class ExpressiveSchemaMappingGenerator {
         
 
         Multimap<NamedClass, String> map = HashMultimap.create();
-        
+
         //for each C_i
         for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
             NamedClass sourceClass = entry.getKey();
@@ -232,14 +231,14 @@ public class ExpressiveSchemaMappingGenerator {
             for (Entry<Description, Model> entry2 : targetClassExpressionToModel.entrySet()) {
                 Description targetClassExpression = entry2.getKey();
                 Model targetClassExpressionModel = entry2.getValue();
-                
+
                 Mapping result = getDeterministicUnsupervisedMappings(getCache(sourceClassModel), getCache(targetClassExpressionModel));
-                
-				for (Entry<String, HashMap<String, Double>> mappingEntry : result.map.entrySet()) {
-					String key = mappingEntry.getKey();
-					HashMap<String, Double> value = mappingEntry.getValue();
-					map.put(sourceClass, value.keySet().iterator().next());
-				}
+
+                for (Entry<String, HashMap<String, Double>> mappingEntry : result.map.entrySet()) {
+                    String key = mappingEntry.getKey();
+                    HashMap<String, Double> value = mappingEntry.getValue();
+                    map.put(sourceClass, value.keySet().iterator().next());
+                }
             }
         }
         return map;
@@ -310,12 +309,12 @@ public class ExpressiveSchemaMappingGenerator {
         logger.info("*******************************************************\nComputing mapping for class " + cls + "...");
         return computeMappings(cls).get(0);
     }
-    
+
     public EvaluatedDescription computeMapping(NamedClass cls, SortedSet<Individual> targetInstances) throws NonExistingLinksException {
         logger.info("*******************************************************\nComputing mapping for class " + cls + "...");
         return computeMappings(cls, targetInstances).get(0);
     }
-    
+
     public List<? extends EvaluatedDescription> computeMappings(NamedClass cls, SortedSet<Individual> targetInstances) throws NonExistingLinksException {
         //if there are no links to the target KB, then we can skip learning
         if (targetInstances.isEmpty()) {
@@ -325,8 +324,8 @@ public class ExpressiveSchemaMappingGenerator {
             List<? extends EvaluatedDescription> schemaMapping = initSchemaMapping(targetInstances);
             logger.info("Generated class expressions for " + cls + ":");
             for (EvaluatedDescription ed : schemaMapping) {
-            	  logger.info(ed);
-			}
+                logger.info(ed);
+            }
             return schemaMapping;
         }
     }
@@ -422,7 +421,7 @@ public class ExpressiveSchemaMappingGenerator {
 
     private List<? extends EvaluatedDescription> learnClassExpressions(Model model, SortedSet<Individual> positiveExamples, SortedSet<Individual> negativeExamples) {
         try {
-        	cleanUpModel(model);
+            cleanUpModel(model);
             KnowledgeSource ks = convert(model);
 
             //initialize the reasoner
@@ -640,7 +639,7 @@ public class ExpressiveSchemaMappingGenerator {
             //remove statements like <x a owl:Class>
             if (st.getPredicate().equals(RDF.type)) {
                 if (object.equals(RDFS.Class.asNode()) || object.equals(OWL.Class.asNode()) || object.equals(RDFS.Literal.asNode())
-                		|| object.equals(RDFS.Resource)) {
+                        || object.equals(RDFS.Resource)) {
                     statementsToRemove.add(st);
                 }
             }
