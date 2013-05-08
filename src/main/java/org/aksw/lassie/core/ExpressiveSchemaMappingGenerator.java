@@ -206,7 +206,7 @@ public class ExpressiveSchemaMappingGenerator {
     }
     
     double computeJaccardDistance(Set<Individual> sourceInstances, Set<Individual> targetInstances){
-		// coverage = 2*|C_i n D_j|/(|C_i|+|D_j|)
+		// JaccardDistance = 2*|C_i n D_j|/(|C_i|+|D_j|)
 		SetView<Individual> intersection = Sets.intersection(sourceInstances, targetInstances);
 		return 2*((double)intersection.size())/(sourceInstances.size()+targetInstances.size());
 	}
