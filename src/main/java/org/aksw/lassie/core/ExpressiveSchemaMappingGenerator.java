@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -92,7 +93,7 @@ public class ExpressiveSchemaMappingGenerator {
     private final boolean performCrossValidation = true;
     private int fragmentDepth = 2;
     private static final int maxNrOfIterations = 10;
-    private static final int coverageThreshold = 3;
+    private static final int coverageThreshold = 0;
     /** 
      * The maximum number of positive examples, used for the SPARQL extraction
      * and learning algorithm
@@ -153,7 +154,7 @@ public class ExpressiveSchemaMappingGenerator {
         run(sourceClasses, targetClasses);
     }
 
-    public Map<NamedClass, Description> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+    public Map<Integer, Double> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
         //initially, the class expressions E_i in the target KB are the named classes D_i
         Collection<Description> targetClassExpressions = new TreeSet<Description>();
         targetClassExpressions.addAll(targetClasses);
@@ -162,7 +163,10 @@ public class ExpressiveSchemaMappingGenerator {
         Map<NamedClass, Description> mapping = new HashMap<NamedClass, Description>();
         int i = 1;
         double totalCoverage = 0;
+        Map<Integer, Double> coverageMap = new TreeMap<Integer, Double>();
         do {
+        	coverageMap.put(i, totalCoverage);
+        	
             //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
             //a map from C_i to a set of instances in the target KB
             Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
@@ -185,14 +189,14 @@ public class ExpressiveSchemaMappingGenerator {
             targetClassExpressions = mapping.values();
             double newTotalCoverage = computeCoverage(mapping, source);
             
-            if((newTotalCoverage-totalCoverage)< coverageThreshold){
+            if((newTotalCoverage-totalCoverage) < coverageThreshold){
             	break;
             }
             totalCoverage = newTotalCoverage;
             
         } while (++i <= maxNrOfIterations);
         
-        return mapping;
+        return coverageMap;
     }
     
     double computeCoverage(Map<NamedClass, Description> mapping, KnowledgeBase kb){

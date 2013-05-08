@@ -44,26 +44,26 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 public class Evaluation {
-	
-	
+
+
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
-	
+
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
-	
+
 	private String dbpediaNamespace = "http://dbpedia.org/ontology/";
 	private OWLOntology dbpediaOntology;
-	
+
 	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
 	private int maxNrOfClasses = 20;//-1 all classes
 	private int maxNrOfInstancesPerClass = 100;
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
-	
+
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
-	
+
 	/**
 	 * Create a sample of DBpedia, i.e. the schema + for each class for max n instances the CBD.
 	 * @return
@@ -74,7 +74,7 @@ public class Evaluation {
 			BZip2CompressorInputStream is = new BZip2CompressorInputStream(new URL(ontologyURL).openStream());
 			OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
 			dbpediaOntology = manager.loadOntologyFromOntologyDocument(is);
-			
+
 			//extract DBpedia classes
 			for (OWLClass cls : dbpediaOntology.getClassesInSignature()) {
 				if(!cls.toStringID().startsWith(dbpediaNamespace)) continue;
@@ -85,7 +85,7 @@ public class Evaluation {
 				Collections.shuffle(tmp, new Random(123));
 				dbpediaClasses = new TreeSet<NamedClass>(tmp.subList(0, maxNrOfClasses));
 			}
-			
+
 			Model model = ModelFactory.createDefaultModel();
 			//try to load sample from cache
 			File file = new File(referenceModelFile);
@@ -93,10 +93,10 @@ public class Evaluation {
 				model.read(new FileInputStream(file), null, "TURTLE");
 				return model;
 			} 
-			
+
 			is = new BZip2CompressorInputStream(new URL(ontologyURL).openStream());
 			model.read(is, "RDF/XML");
-			
+
 			//for each class c_i get n random instances + their CBD
 			for (NamedClass cls : dbpediaClasses) {
 				logger.info("Generating sample for " + cls + "...");
@@ -124,41 +124,47 @@ public class Evaluation {
 		}
 		return null;
 	}
-	
+
 	private void loadDBpediaSchema(){
-		
+
 	}
-	
-	private Model createTestDataset(Model referenceDataset){
+
+	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates){
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(referenceDataset);
-//		//  if we want to destroy some instances
-//		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
-//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
-//		Model testDataset = benchmarker.destroyInstances(instanceModefiersAndRates);
+		Model testDataset = ModelFactory.createDefaultModel();
 		
-		// if we want to  destroy some classes
-		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-		classModefiersAndRates.put(new ClassSplitModifier(), 0.6d);
-		Model testDataset = benchmarker.destroyClasses (classModefiersAndRates);
+		if(!instanceModefiersAndRates.isEmpty()){
+			testDataset = benchmarker.destroyInstances(instanceModefiersAndRates);
+		}
+		
+		if(!classModefiersAndRates.isEmpty()){
+			testDataset = benchmarker.destroyClasses (classModefiersAndRates);
+		}
 		return testDataset;
 	}
-	
-	public Map<NamedClass, Description> run(){
+
+	public Map<Integer, Double> run(){
 		Model referenceDataset = createDBpediaReferenceDataset();
-		Model testDataset = createTestDataset(referenceDataset);
-		
+
+		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
+		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
+		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
+		classModefiersAndRates.put(new ClassSplitModifier(), 0.6d);
+		Model testDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
+
 		KnowledgeBase source = new LocalKnowledgeBase(testDataset);
 		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
-		
+
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
-		Map<NamedClass, Description> mapping = generator.run(dbpediaClasses, dbpediaClasses);
-		
-		return mapping;
+		Map<Integer, Double> coverage = generator.run(dbpediaClasses, dbpediaClasses);
+
+		return coverage;
 	}
-	
+
 	public static void main(String[] args) throws Exception {
-		Map<NamedClass, Description> mapping = new Evaluation().run();
-		System.out.println(mapping);
+		Map<Integer, Double> coverage = new Evaluation().run();
+		System.out.println("----------- RESULTS -----------");
+		System.out.println(coverage);
 	}
 
 }
