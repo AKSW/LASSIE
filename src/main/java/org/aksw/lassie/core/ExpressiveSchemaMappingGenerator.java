@@ -91,8 +91,9 @@ public class ExpressiveSchemaMappingGenerator {
     private boolean posNegLearning = true;
     private final boolean performCrossValidation = true;
     private int fragmentDepth = 2;
-    private static final int maxNrOfIterations = 3;
-    /**
+    private static final int maxNrOfIterations = 10;
+    private static final int coverageThreshold = 3;
+    /** 
      * The maximum number of positive examples, used for the SPARQL extraction
      * and learning algorithm
      */
@@ -152,7 +153,7 @@ public class ExpressiveSchemaMappingGenerator {
         run(sourceClasses, targetClasses);
     }
 
-    public void run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+    public Map<NamedClass, Description> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
         //initially, the class expressions E_i in the target KB are the named classes D_i
         Collection<Description> targetClassExpressions = new TreeSet<Description>();
         targetClassExpressions.addAll(targetClasses);
@@ -183,7 +184,15 @@ public class ExpressiveSchemaMappingGenerator {
             //set the target class expressions
             targetClassExpressions = mapping.values();
             double newTotalCoverage = computeCoverage(mapping, source);
+            
+            if((newTotalCoverage-totalCoverage)< coverageThreshold){
+            	break;
+            }
+            totalCoverage = newTotalCoverage;
+            
         } while (++i <= maxNrOfIterations);
+        
+        return mapping;
     }
     
     double computeCoverage(Map<NamedClass, Description> mapping, KnowledgeBase kb){

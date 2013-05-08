@@ -25,6 +25,7 @@ import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
+import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 import org.dllearner.kb.SparqlEndpointKS;
@@ -142,7 +143,7 @@ public class Evaluation {
 		return testDataset;
 	}
 	
-	public void run(){
+	public Map<NamedClass, Description> run(){
 		Model referenceDataset = createDBpediaReferenceDataset();
 		Model testDataset = createTestDataset(referenceDataset);
 		
@@ -150,11 +151,14 @@ public class Evaluation {
 		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
 		
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
-		generator.run(dbpediaClasses, dbpediaClasses);
+		Map<NamedClass, Description> mapping = generator.run(dbpediaClasses, dbpediaClasses);
+		
+		return mapping;
 	}
 	
 	public static void main(String[] args) throws Exception {
-		new Evaluation().run();
+		Map<NamedClass, Description> mapping = new Evaluation().run();
+		System.out.println(mapping);
 	}
 
 }
