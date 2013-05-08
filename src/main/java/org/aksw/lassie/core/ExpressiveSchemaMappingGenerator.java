@@ -112,11 +112,11 @@ public class ExpressiveSchemaMappingGenerator {
     /**
      * LIMES Config
      */
-    static double coverage = 1d;
-    static double beta = 1d;
-    static String fmeasure = "own";
-    private final int linkingMaxNrOfExamples = 100;
-    private final int linkingMaxRecursionDepth = 0;
+    static double coverage_LIMES = 1d;
+    static double beta_LIMES = 1d;
+    static String fmeasure_LIMES = "own";
+    private final int linkingMaxNrOfExamples_LIMES = 100;
+    private final int linkingMaxRecursionDepth_LIMES = 0;
 
     public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target) {
         this.source = source;
@@ -238,11 +238,11 @@ public class ExpressiveSchemaMappingGenerator {
         for (NamedClass sourceClass : sourceClasses) {
             //get all instances of C_i
             SortedSet<Individual> sourceInstances = getSourceInstances(sourceClass);
-            sourceInstances = SetManipulation.stableShrinkInd(sourceInstances, linkingMaxNrOfExamples);
+            sourceInstances = SetManipulation.stableShrinkInd(sourceInstances, linkingMaxNrOfExamples_LIMES);
 
             //get the fragment describing the instances of C_i
             logger.info("Computing fragment...");
-            Model sourceFragment = getFragment(sourceInstances, source, linkingMaxRecursionDepth);
+            Model sourceFragment = getFragment(sourceInstances, source, linkingMaxRecursionDepth_LIMES);
             removeNonLiteralStatements(sourceFragment);
             logger.info("...got " + sourceFragment.size() + " triples.");
             sourceClassToModel.put(sourceClass, sourceFragment);
@@ -254,11 +254,11 @@ public class ExpressiveSchemaMappingGenerator {
         for (Description targetClass : targetClasses) {
             // get all instances of D_i
             SortedSet<Individual> targetInstances = getTargetInstances(targetClass);
-            targetInstances = SetManipulation.stableShrinkInd(targetInstances, linkingMaxNrOfExamples);
+            targetInstances = SetManipulation.stableShrinkInd(targetInstances, linkingMaxNrOfExamples_LIMES);
 
             // get the fragment describing the instances of D_i
             logger.info("Computing fragment...");
-            Model targetFragment = getFragment(targetInstances, target, linkingMaxRecursionDepth);
+            Model targetFragment = getFragment(targetInstances, target, linkingMaxRecursionDepth_LIMES);
             removeNonLiteralStatements(targetFragment);
             logger.info("...got " + targetFragment.size() + " triples.");
             targetClassExpressionToModel.put(targetClass, targetFragment);
@@ -323,8 +323,8 @@ public class ExpressiveSchemaMappingGenerator {
         logger.info("Source size = "+source.getAllUris().size());
         logger.info("Target size = "+target.getAllUris().size());
 
-        MeshBasedSelfConfigurator bsc = new MeshBasedSelfConfigurator(source, target, coverage, beta);
-        bsc.setMeasure(fmeasure);
+        MeshBasedSelfConfigurator bsc = new MeshBasedSelfConfigurator(source, target, coverage_LIMES, beta_LIMES);
+        bsc.setMeasure(fmeasure_LIMES);
 //        Set<String> sProperties = getAllProperties(source);
 //        Set<String> tProperties = getAllProperties(target);
         List<SimpleClassifier> cp = bsc.getBestInitialClassifiers();
