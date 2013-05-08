@@ -226,6 +226,9 @@ public class ExpressiveSchemaMappingGenerator {
         for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
             NamedClass sourceClass = entry.getKey();
             Model sourceClassModel = entry.getValue();
+            for (Statement st : sourceClassModel.listStatements().toList()) {
+				System.out.println(st);
+			}
 
             //for each D_i
             for (Entry<Description, Model> entry2 : targetClassExpressionToModel.entrySet()) {
@@ -582,13 +585,14 @@ public class ExpressiveSchemaMappingGenerator {
      * @param ind
      */
     private Model getFragment(SortedSet<Individual> individuals, KnowledgeBase kb, int recursionDepth) {
-        OntModel fullFragment = ModelFactory.createOntologyModel();
+//        OntModel fullFragment = ModelFactory.createOntologyModel();
+        Model fullFragment = ModelFactory.createDefaultModel();
         int i = 1;
         for (Individual ind : individuals) {
 //			logger.info(i++  + "/" + individuals.size());
             fullFragment.add(getFragment(ind, kb, recursionDepth));
         }
-        cleanUpModel(fullFragment);
+//        cleanUpModel(fullFragment);
         return fullFragment;
     }
 
