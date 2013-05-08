@@ -47,7 +47,7 @@ public class Evaluation {
 	
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 	
-	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
+	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);

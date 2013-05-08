@@ -100,7 +100,7 @@ public class ExpressiveSchemaMappingGenerator {
     /**
      * LIMES Config
      */
-    static double coverage = 1d;
+    static double coverage = 0.8d;
     static double beta = 1d;
     static String fmeasure = "own";
     private final int linkingMaxNrOfExamples = 100;
@@ -274,11 +274,19 @@ public class ExpressiveSchemaMappingGenerator {
      *
      */
     public Mapping getDeterministicUnsupervisedMappings(Cache source, Cache target) {
+        logger.info("Source size = "+source.getAllUris().size());
+        logger.info("Target size = "+target.getAllUris().size());
+
         MeshBasedSelfConfigurator bsc = new MeshBasedSelfConfigurator(source, target, coverage, beta);
         bsc.setMeasure(fmeasure);
 //        Set<String> sProperties = getAllProperties(source);
 //        Set<String> tProperties = getAllProperties(target);
         List<SimpleClassifier> cp = bsc.getBestInitialClassifiers();
+        if(cp.size() == 0) 
+        {
+            logger.warn("No property mapping found");
+            return new Mapping();
+        }
 //        List<SimpleClassifier> cp = new ArrayList<SimpleClassifier>();
 //        for (String property : sProperties) {
 //            for(String )
