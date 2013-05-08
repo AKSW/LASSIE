@@ -105,7 +105,8 @@ public class ExpressiveSchemaMappingGenerator {
     static String fmeasure = "own";
     private final int linkingMaxNrOfExamples = 100;
     private final int linkingMaxRecursionDepth = 0;
-
+    private final int numberOfIterations = 2;
+    private final int gridSize = 5;
     public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target) {
         this.source = source;
         this.target = target;
@@ -294,7 +295,7 @@ public class ExpressiveSchemaMappingGenerator {
 //            cp.add(new SimpleClassifier("levenshtein", 1.0, property, property));
 //            cp.add(new SimpleClassifier("trigrams", 1.0, property, property));
 //        }
-        ComplexClassifier cc = bsc.getZoomedHillTop(5, 5, cp);
+        ComplexClassifier cc = bsc.getZoomedHillTop(gridSize, numberOfIterations, cp);
         Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
         logger.info("Mapping size is " + map.getNumberofMappings());
         logger.info("Pseudo F-measure is " + cc.fMeasure);
