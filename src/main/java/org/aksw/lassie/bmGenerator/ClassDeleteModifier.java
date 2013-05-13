@@ -26,9 +26,8 @@ public class ClassDeleteModifier extends Modifier {
 	 */
 	@Override
 	Model destroy(Model subModel) {
-		Model result = ModelFactory.createDefaultModel();
-		result.remove(subModel);
-		return result;
+		baseModel.remove(subModel);
+		return ModelFactory.createDefaultModel();
 	}
 	public static void main(String[] args){
 

@@ -18,6 +18,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
+import org.aksw.lassie.bmGenerator.ClassDeleteModifier;
+import org.aksw.lassie.bmGenerator.ClassMergeModifier;
+import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
@@ -58,7 +61,7 @@ public class Evaluation {
 	private OWLOntology dbpediaOntology;
 
 	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
-	private int maxNrOfClasses = 20;//-1 all classes
+	private int maxNrOfClasses = 5;//20;//-1 all classes
 	private int maxNrOfInstancesPerClass = 100;
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 
@@ -149,7 +152,9 @@ public class Evaluation {
 		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
 		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
 		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-		classModefiersAndRates.put(new ClassSplitModifier(), 0.6d);
+		classModefiersAndRates.put(new ClassSplitModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassMergeModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassRenameModifier(), 0.2d);
 		Model testDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 
 		KnowledgeBase source = new LocalKnowledgeBase(testDataset);

@@ -189,7 +189,7 @@ public class ExpressiveSchemaMappingGenerator {
             targetClassExpressions = mapping.values();
             double newTotalCoverage = computeCoverage(mapping, source);
             
-            if((newTotalCoverage-totalCoverage) < coverageThreshold){
+            if((newTotalCoverage-totalCoverage) <= coverageThreshold){
             	break;
             }
             totalCoverage = newTotalCoverage;
