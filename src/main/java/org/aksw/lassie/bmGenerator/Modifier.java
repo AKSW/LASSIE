@@ -124,7 +124,7 @@ public abstract class Modifier {
 		Modifier.destroyedPropertiesModel = destroyedPropertiesModel;
 	}
 
-	public List<String> getClasses(Model m){
+	public static List<String> getClasses(Model m){
 		List<String> classNames = new ArrayList<String>();
 		String sparqlQueryString= "select distinct ?class where {?s a ?class}";
 		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, m);

@@ -22,6 +22,7 @@ import org.aksw.lassie.bmGenerator.ClassDeleteModifier;
 import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
+import org.aksw.lassie.bmGenerator.ClassTypeDeleteModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -61,8 +62,11 @@ public class Evaluation {
 	private OWLOntology dbpediaOntology;
 
 	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
+	
+	private static Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
 	private int maxNrOfClasses = 5;//20;//-1 all classes
 	private int maxNrOfInstancesPerClass = 100;
+	
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
@@ -135,41 +139,73 @@ public class Evaluation {
 	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates){
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(referenceDataset);
 		Model testDataset = ModelFactory.createDefaultModel();
-		
+
 		if(!instanceModefiersAndRates.isEmpty()){
 			testDataset = benchmarker.destroyInstances(instanceModefiersAndRates);
 		}
-		
+
 		if(!classModefiersAndRates.isEmpty()){
 			testDataset = benchmarker.destroyClasses (classModefiersAndRates);
 		}
 		return testDataset;
 	}
 
-	public Map<Integer, Double> run(){
+	//	public Map<Integer, Double> run(){
+	public Map<String, Object> run(){
 		Model referenceDataset = createDBpediaReferenceDataset();
-
+		
 		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
 		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
-		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-		classModefiersAndRates.put(new ClassSplitModifier(), 0.2d);
-		classModefiersAndRates.put(new ClassMergeModifier(), 0.2d);
-		classModefiersAndRates.put(new ClassRenameModifier(), 0.2d);
+//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
+//		classModefiersAndRates.put(new ClassSplitModifier(), 0.1d);
+//		classModefiersAndRates.put(new ClassMergeModifier(), 1d);
+				classModefiersAndRates.put(new ClassRenameModifier(), 1d);
+		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
 		Model testDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 
 		KnowledgeBase source = new LocalKnowledgeBase(testDataset);
 		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
-		Map<Integer, Double> coverage = generator.run(dbpediaClasses, dbpediaClasses);
+		//		Map<Integer, Double> coverage = generator.run(dbpediaClasses, dbpediaClasses);
+		//		return coverage;
+		Map<String, Object> result = generator.run(dbpediaClasses, dbpediaClasses);
+		return result;
 
-		return coverage;
 	}
 
-	public static void main(String[] args) throws Exception {
-		Map<Integer, Double> coverage = new Evaluation().run();
+	/**
+	 * @param result
+	 * @author sherif
+	 */
+	private static void printResults(Map<String, Object> result) {
 		System.out.println("----------- RESULTS -----------");
-		System.out.println(coverage);
+		System.out.println("MODIFIER(S):");
+		for(Modifier m: classModefiersAndRates.keySet()){
+			System.out.println(m.getClass().getSimpleName() + "\t" + classModefiersAndRates.get(m)*100 + "%");
+		}
+		for(String key:result.keySet()){
+			if(key.equals("mapping")){
+				System.out.println("\nMAPPING:");
+				Map<NamedClass, Description> map = (Map<NamedClass, Description>) result.get(key);
+				for(NamedClass nC: map.keySet()){
+					System.out.println(nC + "\t" + map.get(nC));
+				}
+			}
+			if(key.equals("coverage")){
+				System.out.println("\nCOVERAGE:");
+				Map<Integer, Double> map = (Map<Integer, Double>) result.get(key);
+				for(Integer i: map.keySet()){
+					System.out.println(i + "\t" + map.get(i));
+				}
+			}
+		}
+	}
+	
+	
+	public static void main(String[] args) throws Exception {
+		Map<String, Object> result = new Evaluation().run();
+		printResults(result);
 	}
 
 }
