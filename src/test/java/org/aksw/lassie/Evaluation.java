@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -152,11 +153,11 @@ public class Evaluation {
 
 	public Map<String, Object> run(){
 		Model referenceDataset = createDBpediaReferenceDataset();
-		
+
 		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
 		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
 		//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-				classModefiersAndRates.put(new ClassSplitModifier(), 0.5d);
+		classModefiersAndRates.put(new ClassSplitModifier(), 0.5d);
 		//		classModefiersAndRates.put(new ClassMergeModifier(), 1d);
 		//		classModefiersAndRates.put(new ClassRenameModifier(), 1d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
@@ -168,9 +169,10 @@ public class Evaluation {
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		//		Map<Integer, Double> coverage = generator.run(dbpediaClasses, dbpediaClasses);
 		//		return coverage;
+		
 		Map<String, Object> result = generator.run(dbpediaClasses, dbpediaClasses);
-		return result;
 
+		return result;
 	}
 
 	/**

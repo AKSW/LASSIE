@@ -2,8 +2,12 @@ package org.aksw.lassie.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -153,7 +157,8 @@ public class ExpressiveSchemaMappingGenerator {
 
 		run(sourceClasses, targetClasses);
 	}
-
+	
+	
 	public Map<String, Object> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
 		Map<String, Object> result = new HashMap<String, Object>();
 		//initially, the class expressions E_i in the target KB are the named classes D_i
@@ -177,6 +182,15 @@ public class ExpressiveSchemaMappingGenerator {
 				currentClass = sourceClass;
 				try {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
+
+//					*********************************************************************************************
+//					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass.ser"));
+//					out.writeObject(sourceClass);
+//					
+//					out = new ObjectOutputStream(new FileOutputStream("targetInstances.ser"));
+//					out.writeObject(targetInstances);
+//					System.exit(1);
+//					*********************************************************************************************
 					EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
 					mapping.put(sourceClass, singleMapping.getDescription());
 				} catch (NonExistingLinksException e) {
@@ -403,7 +417,7 @@ public class ExpressiveSchemaMappingGenerator {
 		}
 	}
 
-	private List<? extends EvaluatedDescription> initSchemaMapping(SortedSet<Individual> positiveExamples) {
+	protected List<? extends EvaluatedDescription> initSchemaMapping(SortedSet<Individual> positiveExamples) {
 		//get a sample of the positive examples
 		SortedSet<Individual> positiveExamplesSample = SetManipulation.stableShrinkInd(positiveExamples, maxNrOfPositiveExamples);
 
