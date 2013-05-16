@@ -45,6 +45,7 @@ import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.dllearner.utilities.datastructures.SetManipulation;
+import org.junit.Test;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -89,7 +90,6 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	 */
 	public  TestDLLearnerConfig(KnowledgeBase source, KnowledgeBase target) {
 		super(source, target);
-		// TODO Auto-generated constructor stub
 	}
 
 
@@ -118,7 +118,6 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -210,14 +209,17 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		}
 		return null;
 	}
+	
+	
+
 
 	/**
 	 * @param args
 	 * @author sherif
 	 */
-	public void main(String[] args) {
-		Model referenceDataset = createDBpediaReferenceDataset();
-		
+	public static void main(String[] args) {
+
+		Model referenceDataset = new TestDLLearnerConfig(null,null).createDBpediaReferenceDataset();
 		
 		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
 		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
@@ -227,13 +229,14 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		//		classModefiersAndRates.put(new ClassMergeModifier(), 1d);
 		//		classModefiersAndRates.put(new ClassRenameModifier(), 1d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
-		Model testDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
+		Model testDataset = new TestDLLearnerConfig(null,null).createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 
 		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
 		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 
 		TestDLLearnerConfig tester = new TestDLLearnerConfig(source,target);
 		tester.test();
+		
 
 	}
 }
