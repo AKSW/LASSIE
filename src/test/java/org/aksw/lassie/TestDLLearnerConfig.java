@@ -220,19 +220,20 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	public static void main(String[] args) {
 
 		Model referenceDataset = new TestDLLearnerConfig(null,null).createDBpediaReferenceDataset();
-		
-		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
-		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
-		//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-				classModefiersAndRates.put(new ClassSplitModifier(), 0.5d);
-		//		classModefiersAndRates.put(new ClassMergeModifier(), 1d);
-		//		classModefiersAndRates.put(new ClassRenameModifier(), 1d);
-		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
-		Model testDataset = new TestDLLearnerConfig(null,null).createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
+//		
+//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
+//		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
+//		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
+//		//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
+//				classModefiersAndRates.put(new ClassSplitModifier(), 0.5d);
+//		//		classModefiersAndRates.put(new ClassMergeModifier(), 1d);
+//		//		classModefiersAndRates.put(new ClassRenameModifier(), 1d);
+//		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
+//		Model testDataset = new TestDLLearnerConfig(null,null).createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 
 		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
-		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
+		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
+//		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 
 		TestDLLearnerConfig tester = new TestDLLearnerConfig(source,target);
 		tester.test();

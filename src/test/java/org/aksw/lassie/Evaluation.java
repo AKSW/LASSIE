@@ -157,23 +157,23 @@ public class Evaluation {
 		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
 		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
 		//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-		classModefiersAndRates.put(new ClassSplitModifier(), 0.5d);
-		//		classModefiersAndRates.put(new ClassMergeModifier(), 1d);
+		//classModefiersAndRates.put(new ClassSplitModifier(), 0.5d);
+		classModefiersAndRates.put(new ClassMergeModifier(), 0.5d);
 		//		classModefiersAndRates.put(new ClassRenameModifier(), 1d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
 		Model testDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 
 		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
+//		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
 		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
-		//		Map<Integer, Double> coverage = generator.run(dbpediaClasses, dbpediaClasses);
-		//		return coverage;
 		
 		Map<String, Object> result = generator.run(dbpediaClasses, dbpediaClasses);
 
 		return result;
 	}
+	
 
 	/**
 	 * @param result

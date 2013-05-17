@@ -161,6 +161,7 @@ public class ExpressiveSchemaMappingGenerator {
 	
 	public Map<String, Object> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
 		Map<String, Object> result = new HashMap<String, Object>();
+		
 		//initially, the class expressions E_i in the target KB are the named classes D_i
 		Collection<Description> targetClassExpressions = new TreeSet<Description>();
 		targetClassExpressions.addAll(targetClasses);
@@ -184,10 +185,10 @@ public class ExpressiveSchemaMappingGenerator {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
 
 //					*********************************************************************************************
-//					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass.ser"));
+//					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass"+i+".ser"));
 //					out.writeObject(sourceClass);
 //					
-//					out = new ObjectOutputStream(new FileOutputStream("targetInstances.ser"));
+//					out = new ObjectOutputStream(new FileOutputStream("targetInstances"+i+".ser"));
 //					out.writeObject(targetInstances);
 //					System.exit(1);
 //					*********************************************************************************************
@@ -447,60 +448,53 @@ public class ExpressiveSchemaMappingGenerator {
 				}
 			}
 		}
-
+		
+		final int NrOfnegExampleTechniques = 3;
+		
 		//get the negative examples
 		// 1. Sibling classes
 		logger.debug("Computing sibling classes...");
-		mon.start();
 		Set<NamedClass> parallelClasses = new HashSet<NamedClass>();
 		for (NamedClass nc : positiveExamplesClasses) {
 			parallelClasses.addAll(target.getReasoner().getSiblingClasses(nc));
 		}
-		mon.stop();
-		logger.debug("...got " + parallelClasses.size() + " sibling classes in " + mon.getLastValue() + "ms.");
 		
 		for (NamedClass parallelClass : parallelClasses) {
 			negativeExamples.addAll(target.getReasoner().getIndividuals(parallelClass, 5));
-			if (negativeExamples.size() >= maxNrOfNegativeExamples) {
-				break;
+			if (negativeExamples.size() >= maxNrOfNegativeExamples/NrOfnegExampleTechniques) {  
+ 				break;
 			}
 		}
 		
-		// 2. Parent classes
-		logger.debug("Computing parent classes...");
-		mon.start();
-		Set<NamedClass> parentClasses = new HashSet<NamedClass>();
+		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
+		System.out.println(negativeExamples);
+	
+		// 2. Parent classes individuals
+		logger.debug("Computing parent classes individuals ...");
 		for (NamedClass nc : positiveExamplesClasses) {
-			parentClasses.addAll(target.getReasoner().getParentClasses(nc));
-		}
-		mon.stop();
-		logger.debug("...got " + parentClasses.size() + " parent classes in " + mon.getLastValue() + "ms.");
-		
-		for (NamedClass parentClass : parentClasses) {
-			negativeExamples.addAll(target.getReasoner().getIndividuals(parentClass, 5));
-			if (negativeExamples.size() >= maxNrOfNegativeExamples) {
-				break;
+			negativeExamples.addAll(target.getReasoner().getSuperClassIndividuals(nc, 15));
+			if (negativeExamples.size() >= 2*maxNrOfNegativeExamples/NrOfnegExampleTechniques) {  
+ 				break;
 			}
 		}
 		
-		// 3. Child classes
-		logger.debug("Computing child classes...");
-		mon.start();
-		Set<NamedClass> childClasses = new HashSet<NamedClass>();
-		for (NamedClass nc : positiveExamplesClasses) {
-			childClasses.addAll(target.getReasoner().getChildClasses(nc));
-		}
-		mon.stop();
-		logger.debug("...got " + childClasses.size() + " child classes in " + mon.getLastValue() + "ms.");
+		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
+		System.out.println(negativeExamples);
 		
-		for (NamedClass childClass : childClasses) {
-			negativeExamples.addAll(target.getReasoner().getIndividuals(childClass, 5));
-			if (negativeExamples.size() >= maxNrOfNegativeExamples) {
-				break;
+		// 3. Random individuals
+		logger.debug("Computing random classes individuals ...");
+		for (NamedClass nc : positiveExamplesClasses) {
+			negativeExamples.addAll(target.getReasoner().getRandomIndividuals(nc, maxNrOfNegativeExamples/NrOfnegExampleTechniques));
+			if (negativeExamples.size() >= maxNrOfNegativeExamples) {  
+ 				break;
 			}
 		}
 		
 		negativeExamples.removeAll(positiveExamples);
+		
+		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
+		System.out.println(negativeExamples);
+//		System.exit(1);
 		
 		MonitorFactory.getTimeMonitor("negative examples").stop();
 		logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
