@@ -164,8 +164,8 @@ public class Evaluation {
 		Model testDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 
 		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
-//		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
-		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
+		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
+//		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		

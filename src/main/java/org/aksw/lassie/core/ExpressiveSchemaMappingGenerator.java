@@ -10,13 +10,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -25,6 +30,7 @@ import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.aksw.lassie.util.PrintUtils;
+import org.apache.commons.collections15.multimap.MultiHashMap;
 import org.apache.commons.math3.analysis.solvers.NewtonSolver;
 import org.apache.log4j.Logger;
 import org.dllearner.algorithms.celoe.CELOE;
@@ -75,6 +81,7 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.sparql.function.library.max;
 import com.hp.hpl.jena.vocabulary.OWL;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
@@ -91,36 +98,36 @@ import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 
 public class ExpressiveSchemaMappingGenerator {
 
-	private static final Logger logger = Logger.getLogger(ExpressiveSchemaMappingGenerator.class.getName());
-	private final Monitor mon;
-	private boolean posNegLearning = true;
-	private final boolean performCrossValidation = true;
-	private int fragmentDepth = 2;
-	private static final int maxNrOfIterations = 10;
-	private static final int coverageThreshold = 0;
+	protected static final Logger logger = Logger.getLogger(ExpressiveSchemaMappingGenerator.class.getName());
+	protected final Monitor mon;
+	protected boolean posNegLearning = true;
+	protected final boolean performCrossValidation = true;
+	protected int fragmentDepth = 2;
+	protected static final int maxNrOfIterations = 10;
+	protected static final int coverageThreshold = 0;
 	/** 
 	 * The maximum number of positive examples, used for the SPARQL extraction
 	 * and learning algorithm
 	 */
-	private int maxNrOfPositiveExamples = 100;// 20;
+	protected int maxNrOfPositiveExamples = 100;// 20;
 	/**
 	 * The maximum number of negative examples, used for the SPARQL extraction
 	 * and learning algorithm
 	 */
-	private int maxNrOfNegativeExamples = 100;//20;
-	private NamedClass currentClass;
-	private KnowledgeBase source;
-	private KnowledgeBase target;
-	private String linkingProperty = OWL.sameAs.getURI();
-	private int maxRecursionDepth = 2;
+	protected int maxNrOfNegativeExamples = 100;//20;
+	protected NamedClass currentClass;
+	protected KnowledgeBase source;
+	protected KnowledgeBase target;
+	protected String linkingProperty = OWL.sameAs.getURI();
+	protected int maxRecursionDepth = 2;
 	/**
 	 * LIMES Config
 	 */
 	static double coverage_LIMES = 1d;
 	static double beta_LIMES = 1d;
 	static String fmeasure_LIMES = "own";
-	private final int linkingMaxNrOfExamples_LIMES = 100;
-	private final int linkingMaxRecursionDepth_LIMES = 0;
+	protected final int linkingMaxNrOfExamples_LIMES = 100;
+	protected final int linkingMaxRecursionDepth_LIMES = 0;
 
 	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target) {
 		this.source = source;
@@ -177,7 +184,7 @@ public class ExpressiveSchemaMappingGenerator {
 			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
 			//a map from C_i to a set of instances in the target KB
 			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
-
+			int j=1;
 			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
 			for (NamedClass sourceClass : sourceClasses) {
 				currentClass = sourceClass;
@@ -185,11 +192,13 @@ public class ExpressiveSchemaMappingGenerator {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
 
 //					*********************************************************************************************
-//					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass"+i+".ser"));
+					
+//					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass"+j+".ser"));
 //					out.writeObject(sourceClass);
 //					
-//					out = new ObjectOutputStream(new FileOutputStream("targetInstances"+i+".ser"));
+//					out = new ObjectOutputStream(new FileOutputStream("targetInstances"+j+".ser"));
 //					out.writeObject(targetInstances);
+//					j++;
 //					System.exit(1);
 //					*********************************************************************************************
 					EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
@@ -433,8 +442,10 @@ public class ExpressiveSchemaMappingGenerator {
 		SortedSet<Individual> negativeExamples = new TreeSet<Individual>();
 		logger.info("Computing negative examples...");
 		MonitorFactory.getTimeMonitor("negative examples").start();
+		
 		//find the classes the positive examples are asserted to
-		Set<NamedClass> positiveExamplesClasses = new HashSet<NamedClass>();
+		//Also, compute positiveExamplesClasses priorities (number of instances of each class by number of all instances)
+		Map<NamedClass, Integer> positiveExamplesClasses = new HashMap<NamedClass, Integer>();
 		ParameterizedSparqlString template = new ParameterizedSparqlString("SELECT ?type WHERE {?s a ?type.}");
 		for (Individual pos : positiveExamples) {
 			template.clearParams();
@@ -444,57 +455,103 @@ public class ExpressiveSchemaMappingGenerator {
 			while (rs.hasNext()) {
 				qs = rs.next();
 				if (qs.get("type").isURIResource()) {
-					positiveExamplesClasses.add(new NamedClass(qs.getResource("type").getURI()));
+					if(positiveExamplesClasses.containsKey(new NamedClass(qs.getResource("type").getURI()))){
+						positiveExamplesClasses.put(new NamedClass(qs.getResource("type").getURI()), positiveExamplesClasses.get(new NamedClass(qs.getResource("type").getURI()))+1);
+					}else{
+						positiveExamplesClasses.put(new NamedClass(qs.getResource("type").getURI()), 1);
+					}
 				}
 			}
 		}
 		
-		final int NrOfnegExampleTechniques = 3;
+
+
+		System.out.println("***************** positiveExamplesClasses ******************");  
+		System.out.println(positiveExamplesClasses);
+
+		
 		
 		//get the negative examples
+		final int NrOfnegExampleTechniques = 3;
+		
 		// 1. Sibling classes
 		logger.debug("Computing sibling classes...");
 		Set<NamedClass> parallelClasses = new HashSet<NamedClass>();
-		for (NamedClass nc : positiveExamplesClasses) {
-			parallelClasses.addAll(target.getReasoner().getSiblingClasses(nc));
-		}
+		Map<NamedClass, Integer> tmpPositiveExamplesClasses = new HashMap<NamedClass, Integer>(positiveExamplesClasses);
 		
-		for (NamedClass parallelClass : parallelClasses) {
-			negativeExamples.addAll(target.getReasoner().getIndividuals(parallelClass, 5));
-			if (negativeExamples.size() >= maxNrOfNegativeExamples/NrOfnegExampleTechniques) {  
- 				break;
+		// get top n most redundant +ve classes' sibling classes individuals
+		while(negativeExamples.size() < maxNrOfNegativeExamples/NrOfnegExampleTechniques){
+			int maxPrority=0;
+			NamedClass maxProrityClass = null;
+			
+			for (NamedClass nc : tmpPositiveExamplesClasses.keySet()){
+				if(maxPrority < tmpPositiveExamplesClasses.get(nc)){
+					maxPrority = tmpPositiveExamplesClasses.get(nc);
+					maxProrityClass = nc;
+				}
 			}
-		}
-		
+
+			if(maxProrityClass==null){
+				logger.debug("No more classes ...");
+				break;
+			}
+
+			parallelClasses.addAll(target.getReasoner().getSiblingClasses(maxProrityClass));
+
+			for (NamedClass parallelClass : parallelClasses) {
+				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(parallelClass, currentClass, 5));
+				if (negativeExamples.size() >= maxNrOfNegativeExamples/NrOfnegExampleTechniques) {  
+					break;
+				}
+			}
+			tmpPositiveExamplesClasses.remove(maxProrityClass);
+		}	
+
 		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
 		System.out.println(negativeExamples);
 	
-		// 2. Parent classes individuals
-		logger.debug("Computing parent classes individuals ...");
-		for (NamedClass nc : positiveExamplesClasses) {
-			negativeExamples.addAll(target.getReasoner().getSuperClassIndividuals(nc, 15));
-			if (negativeExamples.size() >= 2*maxNrOfNegativeExamples/NrOfnegExampleTechniques) {  
- 				break;
+		// 2. Super classes individuals
+		logger.debug("Computing super classes individuals ...");
+		tmpPositiveExamplesClasses = new HashMap<NamedClass, Integer>(positiveExamplesClasses);
+		
+		// get top n most redundant +ve classes' super classes individuals
+		while(negativeExamples.size() < 2*maxNrOfNegativeExamples/NrOfnegExampleTechniques){
+			int maxPrority=0;
+			NamedClass maxProrityClass = null;
+			
+			for (NamedClass nc : tmpPositiveExamplesClasses.keySet()){
+				if(maxPrority < tmpPositiveExamplesClasses.get(nc)){
+					maxPrority = tmpPositiveExamplesClasses.get(nc);
+					maxProrityClass = nc;
+				}
 			}
-		}
+			
+			if(maxProrityClass==null){
+				logger.debug("No more classes ...");
+				break;
+			}
+			
+			Set<NamedClass> superClasses = new HashSet<NamedClass>();
+			superClasses.addAll(target.getReasoner().getParentClasses(maxProrityClass));
+			
+			for (NamedClass sc : superClasses) {
+				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(sc, currentClass,15));
+				System.out.println("negativeExamples.size():  ("+negativeExamples.size()+ ") maxProrityClass: "+ maxProrityClass);
+			}
+			tmpPositiveExamplesClasses.remove(maxProrityClass);
+		}	
 		
 		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
 		System.out.println(negativeExamples);
 		
 		// 3. Random individuals
 		logger.debug("Computing random classes individuals ...");
-		for (NamedClass nc : positiveExamplesClasses) {
-			negativeExamples.addAll(target.getReasoner().getRandomIndividuals(nc, maxNrOfNegativeExamples/NrOfnegExampleTechniques));
-			if (negativeExamples.size() >= maxNrOfNegativeExamples) {  
- 				break;
-			}
-		}
+		negativeExamples.addAll(target.getReasoner().getRandomIndividuals(positiveExamplesClasses.keySet(), maxNrOfNegativeExamples/NrOfnegExampleTechniques));
 		
 		negativeExamples.removeAll(positiveExamples);
 		
 		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
 		System.out.println(negativeExamples);
-//		System.exit(1);
 		
 		MonitorFactory.getTimeMonitor("negative examples").stop();
 		logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
@@ -522,6 +579,8 @@ public class ExpressiveSchemaMappingGenerator {
 		return learnClassExpressions(fullFragment, positiveExamplesSample, negativeExamplesSample);
 	}
 
+	
+	
 	private List<? extends EvaluatedDescription> learnClassExpressions(Model model, SortedSet<Individual> positiveExamples, SortedSet<Individual> negativeExamples) {
 		try {
 			cleanUpModel(model);

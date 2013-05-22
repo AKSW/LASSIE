@@ -103,12 +103,12 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		SortedSet<Individual> targetInstances = null ;
 		ObjectInputStream in;
 		try {
-			in = new ObjectInputStream(new FileInputStream("sourceClass.ser"));
+			in = new ObjectInputStream(new FileInputStream("sourceClass1.ser"));
 			sourceClass = (NamedClass) in.readObject();
 			System.out.println("\n---------- sourceClass.ser ----------");
 			System.out.println(sourceClass);
 
-			in = new ObjectInputStream(new FileInputStream("targetInstances.ser"));
+			in = new ObjectInputStream(new FileInputStream("targetInstances1.ser"));
 			targetInstances = (SortedSet<Individual>) in.readObject();
 			System.out.println("\n---------- targetInstances.ser ----------");
 			System.out.println(targetInstances);
@@ -123,6 +123,8 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 
 		//2. Compute Mapping
 		try {
+			currentClass = sourceClass;
+			
 			EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
 			System.out.println("\n---------- EvaluatedDescription ----------");
 			System.out.println(singleMapping);
