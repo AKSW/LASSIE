@@ -1,0 +1,64 @@
+/**
+ * 
+ */
+package org.aksw.lassie.bmGenerator;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.vocabulary.RDF;
+import com.hp.hpl.jena.vocabulary.RDFS;
+
+/**
+ * @author sherif
+ *
+ */
+public class ClassTypeDeleteModifier extends Modifier{
+
+	/**
+	 * 
+	 *@author sherif
+	 */
+	public ClassTypeDeleteModifier() {
+		// TODO Auto-generated constructor stub
+	}
+	/**
+	 * @param m
+	 *@author sherif
+	 */
+	public ClassTypeDeleteModifier(Model m) {
+		super(m);
+	}
+
+	public static void main(String[] args) {
+		Model m= loadModel(args[0]);
+		ClassTypeDeleteModifier typeDeleter = new ClassTypeDeleteModifier(m);
+		System.out.println("----- Base Model -----");
+		System.out.println("Size: "+baseModel.size());
+		System.out.println();
+		System.out.println("----- Deleted Type Model -----");
+		Model destM = typeDeleter.destroy(m);
+		System.out.println("Size: "+destM.size());
+		destM.write(System.out,"TTL");
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.aksw.lassie.bmGenerator.Modifier#destroy(com.hp.hpl.jena.rdf.model.Model)
+	 */
+	@Override
+	Model destroy(Model subModel) {
+		Model result = ModelFactory.createDefaultModel();
+		List<String> classNames = getClasses(subModel);
+		for(String className: classNames){
+			Model sourceClassModel = getClassInstancesModel(className);
+
+			sourceClassModel.removeAll(null, RDF.type, null);
+			result.add(sourceClassModel);
+			}
+		return result;
+	}
+
+}

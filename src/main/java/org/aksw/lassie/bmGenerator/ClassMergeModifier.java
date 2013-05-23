@@ -12,6 +12,9 @@ import org.apache.xerces.util.URI.MalformedURIException;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import com.hp.hpl.jena.sparql.engine.Rename;
+import com.hp.hpl.jena.vocabulary.RDF;
 
 /**
  * @author sherif
@@ -74,5 +77,22 @@ public class ClassMergeModifier extends Modifier{
 		Model desM = classMerger.destroy(m);
 		System.out.println("Size: "+desM.size());
 		desM.write(System.out,"TTL");
+		
+//		Model test= ModelFactory.createDefaultModel();
+//		test.add(ResourceFactory.createResource("aaaa"),RDF.type,ResourceFactory.createResource("a"));
+//		test.add(ResourceFactory.createResource("bbbb"),RDF.type,ResourceFactory.createResource("b"));
+//		test.add(ResourceFactory.createResource("cccc"),RDF.type,ResourceFactory.createResource("c"));
+//		test.add(ResourceFactory.createResource("aaaa1"),RDF.type,ResourceFactory.createResource("a"));
+//		test.add(ResourceFactory.createResource("bbbb1"),RDF.type,ResourceFactory.createResource("b"));
+//		test.add(ResourceFactory.createResource("cccc1"),RDF.type,ResourceFactory.createResource("c"));
+//		test.write(System.out,"TTL");
+//		System.out.println("----------------------------------");
+//		ClassMergeModifier classMerger=new ClassMergeModifier(test);
+//		Model desM = classMerger.destroy(test);
+//		System.out.println(desM.size());
+//		desM.write(System.out,"TTL");
+////		classMerger.renameClass(test, "a", "X").write(System.out,"TTL");
+	
+		
 	}
 }
