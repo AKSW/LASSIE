@@ -59,7 +59,7 @@ public class Evaluation {
 
 	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
 	private int maxNrOfClasses = 20;//-1 all classes
-	private int maxNrOfInstancesPerClass = 100;
+	private int maxNrOfInstancesPerClass = 10;
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
