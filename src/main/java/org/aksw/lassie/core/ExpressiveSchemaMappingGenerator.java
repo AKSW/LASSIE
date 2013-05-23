@@ -2,26 +2,17 @@ package org.aksw.lassie.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -30,8 +21,6 @@ import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.aksw.lassie.util.PrintUtils;
-import org.apache.commons.collections15.multimap.MultiHashMap;
-import org.apache.commons.math3.analysis.solvers.NewtonSolver;
 import org.apache.log4j.Logger;
 import org.dllearner.algorithms.celoe.CELOE;
 import org.dllearner.core.AbstractLearningProblem;
@@ -39,6 +28,7 @@ import org.dllearner.core.AbstractReasonerComponent;
 import org.dllearner.core.ComponentInitException;
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.KnowledgeSource;
+import org.dllearner.core.owl.ClassHierarchy;
 import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
@@ -49,24 +39,21 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.learningproblems.PosNegLPStandard;
 import org.dllearner.learningproblems.PosOnlyLP;
 import org.dllearner.reasoning.FastInstanceChecker;
-import org.dllearner.utilities.datastructures.Datastructures;
 import org.dllearner.utilities.datastructures.SetManipulation;
 import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
+import org.dllearner.utilities.owl.OWLEntityTypeAdder;
 import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClassExpression;
-import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyChange;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 
-import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multisets;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -82,13 +69,13 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
-import com.hp.hpl.jena.sparql.function.library.max;
 import com.hp.hpl.jena.vocabulary.OWL;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import com.hp.hpl.jena.vocabulary.XSD;
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
+
 import de.uni_leipzig.simba.cache.Cache;
 import de.uni_leipzig.simba.cache.MemoryCache;
 import de.uni_leipzig.simba.data.Instance;
@@ -446,7 +433,7 @@ public class ExpressiveSchemaMappingGenerator {
 		
 		//find the classes the positive examples are asserted to
 		//Also, compute positiveExamplesClasses priorities (number of instances of each class by number of all instances)
-		Map<NamedClass, Integer> positiveExamplesClasses = new HashMap<NamedClass, Integer>();
+		Multiset<NamedClass> positiveExamplesClasses = HashMultiset.create();
 		ParameterizedSparqlString template = new ParameterizedSparqlString("SELECT ?type WHERE {?s a ?type.}");
 		for (Individual pos : positiveExamples) {
 			template.clearParams();
@@ -457,18 +444,15 @@ public class ExpressiveSchemaMappingGenerator {
 				qs = rs.next();
 				if (qs.get("type").isURIResource()) {
 					NamedClass nc = new NamedClass(qs.getResource("type").getURI());
-					if(!nc.getURI().equals(Thing.uri)){
-						if(positiveExamplesClasses.containsKey(nc)){
-							positiveExamplesClasses.put(nc, positiveExamplesClasses.get(nc)+1);
-						}else{
-							positiveExamplesClasses.put(nc, 1);
-						}
+					if(!nc.getURI().equals(Thing.uri) && !nc.getName().contains("yago")){
+						positiveExamplesClasses.add(nc);
 					}
 				}
 			}
 		}
-		
-
+		keepMostSpecificClasses(positiveExamplesClasses);
+		positiveExamplesClasses = Multisets.copyHighestCountFirst(positiveExamplesClasses);
+	
 
 		System.out.println("***************** positiveExamplesClasses ******************");  
 		System.out.println(positiveExamplesClasses);
@@ -477,72 +461,45 @@ public class ExpressiveSchemaMappingGenerator {
 		
 		//get the negative examples
 		final int NrOfnegExampleTechniques = 3;
-		
+		int chunkSize = maxNrOfNegativeExamples/NrOfnegExampleTechniques;
 		// 1. Sibling classes
-		logger.debug("Computing sibling classes...");
-		Set<NamedClass> parallelClasses = new HashSet<NamedClass>();
-		Map<NamedClass, Integer> tmpPositiveExamplesClasses = new HashMap<NamedClass, Integer>(positiveExamplesClasses);
+		logger.info("Computing sibling classes individuals ...");
 		
 		// get top n most redundant +ve classes' sibling classes individuals
-		while(negativeExamples.size() < maxNrOfNegativeExamples/NrOfnegExampleTechniques){
-			int maxPrority=0;
-			NamedClass maxProrityClass = null;
-			
-			for (NamedClass nc : tmpPositiveExamplesClasses.keySet()){
-				if(maxPrority < tmpPositiveExamplesClasses.get(nc)){
-					maxPrority = tmpPositiveExamplesClasses.get(nc);
-					maxProrityClass = nc;
-				}
+		Iterator<NamedClass> iter = positiveExamplesClasses.iterator();
+		while (iter.hasNext() && negativeExamples.size() < chunkSize) {
+			NamedClass nc = (NamedClass) iter.next();
+			Set<NamedClass> siblingClasses = target.getReasoner().getSiblingClasses(nc);
+			Iterator<NamedClass> iterator = siblingClasses.iterator();
+			while (iterator.hasNext() && negativeExamples.size() < maxNrOfNegativeExamples/NrOfnegExampleTechniques) {
+				NamedClass siblingClass = (NamedClass) iterator.next();
+				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(siblingClass, currentClass, 5));
 			}
-
-			if(maxProrityClass==null){
-				logger.debug("No more classes ...");
-				break;
-			}
-
-			parallelClasses.addAll(target.getReasoner().getSiblingClasses(maxProrityClass));
-
-			for (NamedClass parallelClass : parallelClasses) {
-				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(parallelClass, currentClass, 5));
-				if (negativeExamples.size() >= maxNrOfNegativeExamples/NrOfnegExampleTechniques) {  
-					break;
-				}
-			}
-			tmpPositiveExamplesClasses.remove(maxProrityClass);
-		}	
+		}
 
 		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
 		System.out.println(negativeExamples);
 	
 		// 2. Super classes individuals
-		logger.debug("Computing super classes individuals ...");
-		tmpPositiveExamplesClasses = new HashMap<NamedClass, Integer>(positiveExamplesClasses);
+		logger.info("Computing super classes individuals ...");
 		
 		// get top n most redundant +ve classes' super classes individuals
-		while(negativeExamples.size() < 2*maxNrOfNegativeExamples/NrOfnegExampleTechniques){
-			int maxPrority=0;
-			NamedClass maxProrityClass = null;
-			
-			for (NamedClass nc : tmpPositiveExamplesClasses.keySet()){
-				if(maxPrority < tmpPositiveExamplesClasses.get(nc)){
-					maxPrority = tmpPositiveExamplesClasses.get(nc);
-					maxProrityClass = nc;
-				}
-			}
-			
-			if(maxProrityClass==null){
-				logger.debug("No more classes ...");
-				break;
-			}
+		iter = positiveExamplesClasses.elementSet().iterator();
+		while (iter.hasNext() && negativeExamples.size() < 2*chunkSize) {
+			NamedClass nc = (NamedClass) iter.next();
 			
 			Set<NamedClass> superClasses = new HashSet<NamedClass>();
-			superClasses.addAll(target.getReasoner().getParentClasses(maxProrityClass));
+			for (Description superClass : target.getReasoner().getSuperClasses(nc)) {
+				superClasses.add((NamedClass) superClass);
+			}
+			superClasses.remove(new NamedClass(Thing.uri));
+			superClasses.remove(new NamedClass("http://www.w3.org/2000/01/rdf-schema#Resource"));
+			
 			
 			for (NamedClass sc : superClasses) {
 				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(sc, currentClass,15));
-				System.out.println("negativeExamples.size():  ("+negativeExamples.size()+ ") maxProrityClass: "+ maxProrityClass);
+				System.out.println("negativeExamples.size():  ("+negativeExamples.size()+ ") maxProrityClass: "+ nc);
 			}
-			tmpPositiveExamplesClasses.remove(maxProrityClass);
 		}	
 		
 		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
@@ -550,7 +507,7 @@ public class ExpressiveSchemaMappingGenerator {
 		
 		// 3. Random individuals
 		logger.debug("Computing random classes individuals ...");
-		negativeExamples.addAll(target.getReasoner().getRandomIndividuals(positiveExamplesClasses.keySet(), maxNrOfNegativeExamples/NrOfnegExampleTechniques));
+		negativeExamples.addAll(target.getReasoner().getRandomIndividuals(positiveExamplesClasses.elementSet(), chunkSize));
 		
 		negativeExamples.removeAll(positiveExamples);
 		
@@ -583,11 +540,27 @@ public class ExpressiveSchemaMappingGenerator {
 		return learnClassExpressions(fullFragment, positiveExamplesSample, negativeExamplesSample);
 	}
 
+	private void keepMostSpecificClasses(Multiset<NamedClass> classes){
+		HashMultiset<NamedClass> copy = HashMultiset.create(classes);
+		final ClassHierarchy hierarchy = target.getReasoner().getClassHierarchy();
+		for (NamedClass nc1 : copy.elementSet()) {
+			for (NamedClass nc2 : copy.elementSet()) {
+				if(!nc1.equals(nc2)){
+					//remove class nc1 if it is superclass of another class nc2
+					if(hierarchy.isSubclassOf(nc2, nc1)){
+						classes.remove(nc1, classes.count(nc1));
+						break;
+					}
+				}
+			}
+		}
+	}
 	
 	
 	private List<? extends EvaluatedDescription> learnClassExpressions(Model model, SortedSet<Individual> positiveExamples, SortedSet<Individual> negativeExamples) {
 		try {
 			cleanUpModel(model);
+			OWLEntityTypeAdder.addEntityTypes(model);
 			KnowledgeSource ks = convert(model);
 
 			//initialize the reasoner
@@ -813,6 +786,7 @@ public class ExpressiveSchemaMappingGenerator {
 				}
 			}
 		}
+		
 		model.remove(statementsToRemove);
 	}
 

@@ -13,20 +13,16 @@ import java.io.ObjectInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
-import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.core.NonExistingLinksException;
@@ -35,7 +31,6 @@ import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
-import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 import org.dllearner.kb.SparqlEndpointKS;
@@ -44,24 +39,19 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.reasoning.SPARQLReasoner;
-import org.dllearner.utilities.datastructures.SetManipulation;
-import org.junit.Test;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
-import com.google.common.collect.Multimap;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.jamonapi.MonitorFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.vocabulary.OWL;
+import com.hp.hpl.jena.vocabulary.RDF;
+import com.hp.hpl.jena.vocabulary.RDFS;
 
 /**
  * @author sherif
@@ -103,12 +93,12 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		SortedSet<Individual> targetInstances = null ;
 		ObjectInputStream in;
 		try {
-			in = new ObjectInputStream(new FileInputStream("sourceClass.ser"));
+			in = new ObjectInputStream(new FileInputStream("sourceClass1.ser"));
 			sourceClass = (NamedClass) in.readObject();
 			System.out.println("\n---------- sourceClass.ser ----------");
 			System.out.println(sourceClass);
 
-			in = new ObjectInputStream(new FileInputStream("targetInstances.ser"));
+			in = new ObjectInputStream(new FileInputStream("targetInstances1.ser"));
 			targetInstances = (SortedSet<Individual>) in.readObject();
 			System.out.println("\n---------- targetInstances.ser ----------");
 			System.out.println(targetInstances);
@@ -174,10 +164,19 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 			}
 
 			Model model = ModelFactory.createDefaultModel();
+			//add schema
+			is = new BZip2CompressorInputStream(new URL(ontologyURL).openStream());
+			model.read(is, null, "RDF/XML");
+			
 			//try to load sample from cache
 			File file = new File(referenceModelFile);
 			if(file.exists()){
 				model.read(new FileInputStream(file), null, "TURTLE");
+				Model remove = ModelFactory.createDefaultModel();
+				for (Statement st : model.listStatements(null, RDF.type, OWL.FunctionalProperty).toList()) {
+					remove.add(st);
+				}
+				model.remove(remove);
 				return model;
 			} 
 
@@ -235,6 +234,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 
 		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
 		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
+		target.getReasoner().prepareSubsumptionHierarchy();
 //		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 
 		TestDLLearnerConfig tester = new TestDLLearnerConfig(source,target);
