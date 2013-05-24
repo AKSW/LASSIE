@@ -6,7 +6,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>LASSIE</name>
 
-<build>
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -49,6 +49,22 @@
 					<artifactId>jena</artifactId>
 					<groupId>com.hp.hpl.jena</groupId>
 				</exclusion>
+				<exclusion>
+					<groupId>net.sourceforge.owlapi</groupId>
+					<artifactId>owlapi-debugging</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>net.sourceforge.owlapi</groupId>
+					<artifactId>owlapi-distribution</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>net.sourceforge.owlapi</groupId>
+					<artifactId>owlapi-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>net.sourceforge.owlapi</groupId>
+					<artifactId>owlapi-impl</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -78,10 +94,16 @@
 			<version>0.6RC2</version>
 		</dependency>
 		<dependency>
-      <groupId>de.uni_leipzig.simba.limes</groupId>
-      <artifactId>limes-core</artifactId>
-      <version>0.6-SNAPSHOT</version>
-      <type>pom</type>
-    </dependency>
+			<groupId>de.uni_leipzig.simba.limes</groupId>
+			<artifactId>limes-core</artifactId>
+			<version>0.6-SNAPSHOT</version>
+			<type>pom</type>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-distribution</artifactId>
+			<version>3.4.4</version>
+		</dependency>
 	</dependencies>
 </project>

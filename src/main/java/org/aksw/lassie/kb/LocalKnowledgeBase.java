@@ -39,8 +39,4 @@ public class LocalKnowledgeBase extends AbstractKnowledgeBase {
 	public boolean isRemote() {
 		return false;
 	}
-
-	public SPARQLReasoner getReasoner() {
-		return reasoner;
-	}
 }

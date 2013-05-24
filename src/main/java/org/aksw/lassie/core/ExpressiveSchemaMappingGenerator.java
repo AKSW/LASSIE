@@ -87,7 +87,7 @@ import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 public class ExpressiveSchemaMappingGenerator {
 
 	protected static final Logger logger = Logger.getLogger(ExpressiveSchemaMappingGenerator.class.getName());
-	protected final Monitor mon;
+	protected  Monitor mon;
 	protected boolean posNegLearning = true;
 	protected final boolean performCrossValidation = true;
 	protected int fragmentDepth = 2;
@@ -116,6 +116,9 @@ public class ExpressiveSchemaMappingGenerator {
 	static String fmeasure_LIMES = "own";
 	protected final int linkingMaxNrOfExamples_LIMES = 100;
 	protected final int linkingMaxRecursionDepth_LIMES = 0;
+	
+	public ExpressiveSchemaMappingGenerator() {
+	}
 
 	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target) {
 		this(source, target, OWL.sameAs.getURI());
@@ -474,7 +477,7 @@ public class ExpressiveSchemaMappingGenerator {
 			Iterator<NamedClass> iterator = siblingClasses.iterator();
 			while (iterator.hasNext() && negativeExamples.size() < chunkSize) {
 				NamedClass siblingClass = (NamedClass) iterator.next();
-				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(siblingClass, currentClass, 5));
+//				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(siblingClass, currentClass, 5));
 			}
 		}
 
@@ -510,7 +513,7 @@ public class ExpressiveSchemaMappingGenerator {
 		// 3. Random individuals
 		logger.debug("Computing random classes individuals ...");
 		System.out.println("\n---------- Computing random classes individuals ----------\n");
-		negativeExamples.addAll(target.getReasoner().getRandomIndividuals(positiveExamplesClasses.elementSet(), chunkSize));
+//		negativeExamples.addAll(target.getReasoner().getRandomIndividuals(positiveExamplesClasses.elementSet(), chunkSize));
 		
 		negativeExamples.removeAll(positiveExamples);
 		
@@ -698,9 +701,9 @@ public class ExpressiveSchemaMappingGenerator {
 			OWLOntologyManager man = OWLManager.createOWLOntologyManager();
 			OWLOntology ontology = man.loadOntologyFromOntologyDocument(new ByteArrayInputStream(baos.toByteArray()));
 			return new OWLAPIOntology(ontology);
-		} catch (OWLOntologyCreationException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			try {
+			try {model.write(new FileOutputStream("error.ttl"), "TURTLE", null);
 				model.write(new FileOutputStream("errors/" + PrintUtils.prettyPrint(currentClass) + "_conversion_error.ttl"), "TURTLE", null);
 			} catch (FileNotFoundException e1) {
 				e.printStackTrace();

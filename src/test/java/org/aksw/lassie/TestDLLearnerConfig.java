@@ -81,9 +81,10 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	public  TestDLLearnerConfig(KnowledgeBase source, KnowledgeBase target) {
 		super(source, target);
 	}
-
-
 	
+	public  TestDLLearnerConfig() {
+		
+	}
 
 	public Map<String, Object> test() {
 		Map<String, Object> result = new HashMap<String, Object>();
@@ -172,6 +173,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 			File file = new File(referenceModelFile);
 			if(file.exists()){
 				model.read(new FileInputStream(file), null, "TURTLE");
+				//remove owl:FunctionalProperty axioms to avoid inconsistencies
 				Model remove = ModelFactory.createDefaultModel();
 				for (Statement st : model.listStatements(null, RDF.type, OWL.FunctionalProperty).toList()) {
 					remove.add(st);
@@ -188,7 +190,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 				logger.info("Generating sample for " + cls + "...");
 				SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass);
 				for (Individual individual : individuals) {
-					Model cbd = cbdGenerator.getConciseBoundedDescription(individual.getName(), maxCBDDepth);
+					Model cbd = cbdGenerator.getConciseBoundedDescription(individual.getName(), maxCBDDepth+2);
 					model.add(cbd);
 					try {
 						Thread.sleep(500);
@@ -220,7 +222,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	 */
 	public static void main(String[] args) {
 
-		Model referenceDataset = new TestDLLearnerConfig(null,null).createDBpediaReferenceDataset();
+		Model referenceDataset = new TestDLLearnerConfig().createDBpediaReferenceDataset();
 //		
 //		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
 //		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
@@ -234,7 +236,6 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 
 		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
 		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
-		target.getReasoner().prepareSubsumptionHierarchy();
 //		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 
 		TestDLLearnerConfig tester = new TestDLLearnerConfig(source,target);

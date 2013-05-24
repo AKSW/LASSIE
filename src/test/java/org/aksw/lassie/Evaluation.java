@@ -66,7 +66,7 @@ public class Evaluation {
 
 
 	private static Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-	private int maxNrOfClasses = 5;//20;//-1 all classes
+	private int maxNrOfClasses = 6;//20;//-1 all classes
 	private int maxNrOfInstancesPerClass = 10;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
