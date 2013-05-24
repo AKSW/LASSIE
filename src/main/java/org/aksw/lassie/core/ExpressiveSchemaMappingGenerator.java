@@ -464,6 +464,7 @@ public class ExpressiveSchemaMappingGenerator {
 		int chunkSize = maxNrOfNegativeExamples/NrOfnegExampleTechniques;
 		// 1. Sibling classes
 		logger.info("Computing sibling classes individuals ...");
+		System.out.println("\n---------- Computing sibling classes individuals ----------\n");
 		
 		// get top n most redundant +ve classes' sibling classes individuals
 		Iterator<NamedClass> iter = positiveExamplesClasses.iterator();
@@ -471,7 +472,7 @@ public class ExpressiveSchemaMappingGenerator {
 			NamedClass nc = (NamedClass) iter.next();
 			Set<NamedClass> siblingClasses = target.getReasoner().getSiblingClasses(nc);
 			Iterator<NamedClass> iterator = siblingClasses.iterator();
-			while (iterator.hasNext() && negativeExamples.size() < maxNrOfNegativeExamples/NrOfnegExampleTechniques) {
+			while (iterator.hasNext() && negativeExamples.size() < chunkSize) {
 				NamedClass siblingClass = (NamedClass) iterator.next();
 				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(siblingClass, currentClass, 5));
 			}
@@ -482,6 +483,7 @@ public class ExpressiveSchemaMappingGenerator {
 	
 		// 2. Super classes individuals
 		logger.info("Computing super classes individuals ...");
+		System.out.println("\n---------- Computing super classes individuals ----------\n");
 		
 		// get top n most redundant +ve classes' super classes individuals
 		iter = positiveExamplesClasses.elementSet().iterator();
@@ -493,7 +495,7 @@ public class ExpressiveSchemaMappingGenerator {
 				superClasses.add((NamedClass) superClass);
 			}
 			superClasses.remove(new NamedClass(Thing.uri));
-			superClasses.remove(new NamedClass("http://www.w3.org/2000/01/rdf-schema#Resource"));
+			superClasses.remove(new NamedClass(RDFS.Resource.getURI()));
 			
 			
 			for (NamedClass sc : superClasses) {
@@ -507,6 +509,7 @@ public class ExpressiveSchemaMappingGenerator {
 		
 		// 3. Random individuals
 		logger.debug("Computing random classes individuals ...");
+		System.out.println("\n---------- Computing random classes individuals ----------\n");
 		negativeExamples.addAll(target.getReasoner().getRandomIndividuals(positiveExamplesClasses.elementSet(), chunkSize));
 		
 		negativeExamples.removeAll(positiveExamples);
