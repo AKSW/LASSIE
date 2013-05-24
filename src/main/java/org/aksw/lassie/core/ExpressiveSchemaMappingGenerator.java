@@ -118,10 +118,7 @@ public class ExpressiveSchemaMappingGenerator {
 	protected final int linkingMaxRecursionDepth_LIMES = 0;
 
 	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target) {
-		this.source = source;
-		this.target = target;
-
-		mon = MonitorFactory.getTimeMonitor("time");
+		this(source, target, OWL.sameAs.getURI());
 	}
 
 	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, String linkingProperty) {
@@ -130,6 +127,9 @@ public class ExpressiveSchemaMappingGenerator {
 		this.linkingProperty = linkingProperty;
 
 		mon = MonitorFactory.getTimeMonitor("time");
+		
+		source.getReasoner().prepareSubsumptionHierarchy();
+		target.getReasoner().prepareSubsumptionHierarchy();
 	}
 
 	public void setFragmentDepth(int fragmentDepth) {
