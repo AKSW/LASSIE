@@ -30,6 +30,7 @@ import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
+import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
@@ -66,8 +67,8 @@ public class Evaluation {
 
 
 	private static Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-	private int maxNrOfClasses = 6;//20;//-1 all classes
-	private int maxNrOfInstancesPerClass = 10;
+	private int maxNrOfClasses = 5;//-1 all classes
+	private int maxNrOfInstancesPerClass = 100;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 
@@ -180,24 +181,45 @@ public class Evaluation {
 	 * @param result
 	 * @author sherif
 	 */
-	private static void printResults(Map<String, Object> result) {
+	@SuppressWarnings("unchecked")
+	private void printResults(Map<String, Object> result) {
 		System.out.println("\n----------- RESULTS -----------");
+		System.out.println("No of Classes:              " + maxNrOfClasses);
+		System.out.println("No of Instance per Classes: " + maxNrOfInstancesPerClass);
 		System.out.println("MODIFIER(S):");
+		int j=1;
 		for(Modifier m: classModefiersAndRates.keySet()){
-			System.out.println(m.getClass().getSimpleName() + "\t" + classModefiersAndRates.get(m)*100 + "%");
+			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + classModefiersAndRates.get(m)*100 + "%");
 		}
 		for(String key:result.keySet()){
 			if(key.equals("mapping")){
-				System.out.println("\nMAPPING:");
+				System.out.println("\nFINAL MAPPING:");
+				
 				Map<NamedClass, Description> map = (Map<NamedClass, Description>) result.get(key);
 				for(NamedClass nC: map.keySet()){
 					System.out.println(nC + "\t" + map.get(nC));
 				}
 			}
+			if(key.equals("mappingTop10")){
+				System.out.println("\nTOP 10 MAPPINGS:");
+
+				Map<NamedClass, List<? extends EvaluatedDescription>> map = (Map<NamedClass, List<? extends EvaluatedDescription>>) result.get(key);
+				for(NamedClass nC: map.keySet()){
+					System.out.println("\n"+ nC);
+					List<? extends EvaluatedDescription> mapList = map.get(nC);
+					int i=1;
+					for (EvaluatedDescription ed : mapList) {
+						System.out.println("\t" + i + ". " + ed.toString());
+						if(i>10) 
+							break;
+						i++;
+					}
+				}
+			}
 			if(key.equals("coverage")){
 				System.out.println("\nCOVERAGE:");
 				Map<Integer, Double> map = (Map<Integer, Double>) result.get(key);
-				for(Integer i: map.keySet()){
+				for(Integer i : map.keySet()){
 					System.out.println(i + "\t" + map.get(i));
 				}
 			}
@@ -206,8 +228,9 @@ public class Evaluation {
 
 
 	public static void main(String[] args) throws Exception {
-		Map<String, Object> result = new Evaluation().run();
-		printResults(result);
+		Evaluation evaluator = new Evaluation();
+		Map<String, Object> result = evaluator.run();
+		evaluator.printResults(result);
 	}
 
 }

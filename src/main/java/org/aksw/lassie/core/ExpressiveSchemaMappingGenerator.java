@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -166,6 +167,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 		//perform the iterative schema matching
 		Map<NamedClass, Description> mapping = new HashMap<NamedClass, Description>();
+		Map<NamedClass, List<? extends EvaluatedDescription>> mappingTop10 = new HashMap<NamedClass, List<? extends EvaluatedDescription>>();
 		int i = 1;
 		double totalCoverage = 0;
 		Map<Integer, Double> coverageMap = new TreeMap<Integer, Double>();
@@ -184,15 +186,20 @@ public class ExpressiveSchemaMappingGenerator {
 
 //					*********************************************************************************************
 					
-//					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass"+j+".ser"));
-//					out.writeObject(sourceClass);
-//					
-//					out = new ObjectOutputStream(new FileOutputStream("targetInstances"+j+".ser"));
-//					out.writeObject(targetInstances);
-//					j++;
+					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass"+j+".ser"));
+					out.writeObject(sourceClass);
+					
+					out = new ObjectOutputStream(new FileOutputStream("targetInstances"+j+".ser"));
+					out.writeObject(targetInstances);
+					j++;
 //					System.exit(1);
 //					*********************************************************************************************
-					EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
+					
+//					EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
+					List<? extends EvaluatedDescription> mappingList = computeMappings(sourceClass, targetInstances);
+					mappingTop10.put(sourceClass, mappingList);
+					EvaluatedDescription singleMapping = mappingList.get(0);
+					
 					mapping.put(sourceClass, singleMapping.getDescription());
 				} catch (NonExistingLinksException e) {
 					logger.warn(e.getMessage() + "Skipped learning.");
@@ -214,6 +221,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 		//        return result;
 		result.put("mapping", mapping);
+		result.put("mappingTop10", mappingTop10);
 		result.put("coverage", coverageMap);
 		return result;
 	}
@@ -455,13 +463,10 @@ public class ExpressiveSchemaMappingGenerator {
 		}
 		keepMostSpecificClasses(positiveExamplesClasses);
 		positiveExamplesClasses = Multisets.copyHighestCountFirst(positiveExamplesClasses);
-	
 
 		System.out.println("***************** positiveExamplesClasses ******************");  
 		System.out.println(positiveExamplesClasses);
 
-		
-		
 		//get the negative examples
 		final int NrOfnegExampleTechniques = 3;
 		int chunkSize = maxNrOfNegativeExamples/NrOfnegExampleTechniques;
@@ -477,7 +482,7 @@ public class ExpressiveSchemaMappingGenerator {
 			Iterator<NamedClass> iterator = siblingClasses.iterator();
 			while (iterator.hasNext() && negativeExamples.size() < chunkSize) {
 				NamedClass siblingClass = (NamedClass) iterator.next();
-//				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(siblingClass, currentClass, 5));
+				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(siblingClass, currentClass, 5));
 			}
 		}
 
@@ -513,7 +518,7 @@ public class ExpressiveSchemaMappingGenerator {
 		// 3. Random individuals
 		logger.debug("Computing random classes individuals ...");
 		System.out.println("\n---------- Computing random classes individuals ----------\n");
-//		negativeExamples.addAll(target.getReasoner().getRandomIndividuals(positiveExamplesClasses.elementSet(), chunkSize));
+		negativeExamples.addAll(target.getReasoner().getRandomIndividuals(positiveExamplesClasses.elementSet(), chunkSize));
 		
 		negativeExamples.removeAll(positiveExamples);
 		

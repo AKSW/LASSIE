@@ -86,6 +86,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		
 	}
 
+	@SuppressWarnings("unchecked")
 	public Map<String, Object> test() {
 		Map<String, Object> result = new HashMap<String, Object>();
 
