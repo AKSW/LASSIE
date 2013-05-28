@@ -185,13 +185,12 @@ public class ExpressiveSchemaMappingGenerator {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
 
 //					*********************************************************************************************
-					
-					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass"+j+".ser"));
-					out.writeObject(sourceClass);
-					
-					out = new ObjectOutputStream(new FileOutputStream("targetInstances"+j+".ser"));
-					out.writeObject(targetInstances);
-					j++;
+//					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass"+j+".ser"));
+//					out.writeObject(sourceClass);
+//					
+//					out = new ObjectOutputStream(new FileOutputStream("targetInstances"+j+".ser"));
+//					out.writeObject(targetInstances);
+//					j++;
 //					System.exit(1);
 //					*********************************************************************************************
 					
