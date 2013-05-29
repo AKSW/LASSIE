@@ -45,6 +45,9 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
@@ -95,12 +98,12 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		SortedSet<Individual> targetInstances = null ;
 		ObjectInputStream in;
 		try {
-			in = new ObjectInputStream(new FileInputStream("sourceClass2.ser"));
+			in = new ObjectInputStream(new FileInputStream("sourceClass1.ser"));
 			sourceClass = (NamedClass) in.readObject();
 			System.out.println("\n---------- sourceClass.ser ----------");
 			System.out.println(sourceClass);
 
-			in = new ObjectInputStream(new FileInputStream("targetInstances2.ser"));
+			in = new ObjectInputStream(new FileInputStream("targetInstances1.ser"));
 			targetInstances = (SortedSet<Individual>) in.readObject();
 			System.out.println("\n---------- targetInstances.ser ----------");
 			System.out.println(targetInstances);
@@ -174,12 +177,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 			File file = new File(referenceModelFile);
 			if(file.exists()){
 				model.read(new FileInputStream(file), null, "TURTLE");
-				//remove owl:FunctionalProperty axioms to avoid inconsistencies
-				Model remove = ModelFactory.createDefaultModel();
-				for (Statement st : model.listStatements(null, RDF.type, OWL.FunctionalProperty).toList()) {
-					remove.add(st);
-				}
-				model.remove(remove);
+				filterModel(model);
 				return model;
 			} 
 
@@ -200,6 +198,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 					}
 				}
 			}
+			filterModel(model);
 			model.write(new FileOutputStream(file), "TURTLE");
 			return model;
 		} catch (OWLOntologyCreationException e) {
@@ -214,6 +213,23 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		return null;
 	}
 	
+	private void filterModel(Model model){
+		//remove owl:FunctionalProperty axioms to avoid inconsistencies
+		Model remove = ModelFactory.createDefaultModel();
+		for (Statement st : model.listStatements(null, RDF.type, OWL.FunctionalProperty).toList()) {
+			remove.add(st);
+		}
+//		//keep only ?s a <http://dbpedia.org/ontology/$> statements
+//		for (Statement st : model.listStatements(null, RDF.type, (RDFNode)null).toList()) {
+//			if(!st.getObject().equals(model.getResource("http://dbpedia.org/ontology"))){
+//				remove.add(st);
+//			}
+//		}
+		
+		
+		model.remove(remove);
+	}
+	
 	
 
 
@@ -224,6 +240,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	public static void main(String[] args) {
 
 		Model referenceDataset = new TestDLLearnerConfig().createDBpediaReferenceDataset();
+		referenceDataset = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM_RDFS_INF, referenceDataset);
 //		
 //		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
 //		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
@@ -237,6 +254,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 
 		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
 		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
+		
 //		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 
 		TestDLLearnerConfig tester = new TestDLLearnerConfig(source,target);

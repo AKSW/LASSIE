@@ -34,6 +34,7 @@ import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 import org.dllearner.core.owl.Thing;
+import org.dllearner.kb.LocalModelBasedSparqlEndpointKS;
 import org.dllearner.kb.OWLAPIOntology;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
@@ -44,6 +45,7 @@ import org.dllearner.utilities.datastructures.SetManipulation;
 import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
+import org.dllearner.utilities.owl.OWLVocabulary;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -64,6 +66,7 @@ import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -71,6 +74,7 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.vocabulary.OWL;
+import com.hp.hpl.jena.vocabulary.OWL2;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import com.hp.hpl.jena.vocabulary.XSD;
@@ -454,7 +458,7 @@ public class ExpressiveSchemaMappingGenerator {
 				qs = rs.next();
 				if (qs.get("type").isURIResource()) {
 					NamedClass nc = new NamedClass(qs.getResource("type").getURI());
-					if(!nc.getURI().equals(Thing.uri) && !nc.getName().contains("yago")){
+					if(!nc.getURI().equals(Thing.uri) && !nc.getName().equals(RDFS.Resource.getURI()) && !nc.getName().contains("yago")){
 						positiveExamplesClasses.add(nc);
 					}
 				}
@@ -487,7 +491,6 @@ public class ExpressiveSchemaMappingGenerator {
 
 		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
 		System.out.println(negativeExamples);
-	
 		// 2. Super classes individuals
 		logger.info("Computing super classes individuals ...");
 		System.out.println("\n---------- Computing super classes individuals ----------\n");
@@ -513,7 +516,7 @@ public class ExpressiveSchemaMappingGenerator {
 		
 		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
 		System.out.println(negativeExamples);
-		
+	
 		// 3. Random individuals
 		logger.debug("Computing random classes individuals ...");
 		System.out.println("\n---------- Computing random classes individuals ----------\n");
@@ -529,7 +532,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 		//get a sample of the negative examples
 		SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);
-
+		System.out.println( ((LocalKnowledgeBase)target).getModel().size());
 		//create fragment for negative examples
 		logger.info("Extracting fragment for negative examples...");
 		mon.start();
@@ -736,9 +739,12 @@ public class ExpressiveSchemaMappingGenerator {
 		//        OntModel fullFragment = ModelFactory.createOntologyModel();
 		Model fullFragment = ModelFactory.createDefaultModel();
 		int i = 1;
+		Model fragment;
 		for (Individual ind : individuals) {
+			fragment = getFragment(ind, kb, recursionDepth);
+			System.out.println(ind + ": " + fragment.size() + " triples");
 			//			logger.info(i++  + "/" + individuals.size());
-			fullFragment.add(getFragment(ind, kb, recursionDepth));
+			fullFragment.add(fragment);
 		}
 		//        cleanUpModel(fullFragment);
 		return fullFragment;
@@ -768,8 +774,7 @@ public class ExpressiveSchemaMappingGenerator {
 		} else {
 			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((LocalKnowledgeBase) kb).getModel());
 		}
-
-		Model cbd = cbdGen.getConciseBoundedDescription(ind.getName(), recursionDepth);
+		Model cbd = cbdGen.getConciseBoundedDescription(ind.getName(), 1);
 		logger.debug("Got " + cbd.size() + " triples.");
 		return cbd;
 	}
