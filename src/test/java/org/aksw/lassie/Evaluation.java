@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,7 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
+import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
@@ -67,7 +69,7 @@ public class Evaluation {
 
 
 	private static Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-	private int maxNrOfClasses = 20;//-1 all classes
+	private int maxNrOfClasses = 5;//-1 all classes
 	private int maxNrOfInstancesPerClass = 100;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
@@ -156,21 +158,21 @@ public class Evaluation {
 	public Map<String, Object> run(){
 		Model referenceDataset = createDBpediaReferenceDataset();
 
-		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
-		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
-		//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-		//classModefiersAndRates.put(new ClassSplitModifier(), 0.5d);
-		classModefiersAndRates.put(new ClassMergeModifier(), 0.5d);
-		//		classModefiersAndRates.put(new ClassRenameModifier(), 1d);
-		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
-		Model testDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
+//		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
+//		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
+//		//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
+//		//classModefiersAndRates.put(new ClassSplitModifier(), 0.5d);
+//		classModefiersAndRates.put(new ClassMergeModifier(), 0.5d);
+//		//		classModefiersAndRates.put(new ClassRenameModifier(), 1d);
+//		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
+//		Model testDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 
 		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
 		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
 //		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
-		
+		generator.setTargetDomainNameSpace(dbpediaNamespace);
 		Map<String, Object> result = generator.run(dbpediaClasses, dbpediaClasses);
 
 		return result;
@@ -221,6 +223,19 @@ public class Evaluation {
 				Map<Integer, Double> map = (Map<Integer, Double>) result.get(key);
 				for(Integer i : map.keySet()){
 					System.out.println(i + "\t" + map.get(i));
+				}
+			}
+			if(key.equals("posExamples")){
+				System.out.println("\nPOSITIVE EXAMPLES:");
+
+				Multimap<NamedClass, String> map = (Multimap<NamedClass, String>) result.get(key);
+				for(NamedClass nC: map.keySet()){
+					System.out.println("\n"+ nC);
+					Collection<String> mapList = map.get(nC);
+					int i=1;
+					for (String str : mapList) {
+						System.out.println("\t" + i++ + ". " + str);
+					}
 				}
 			}
 		}

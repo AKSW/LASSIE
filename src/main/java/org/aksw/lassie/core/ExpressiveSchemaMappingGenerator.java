@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -121,7 +122,16 @@ public class ExpressiveSchemaMappingGenerator {
 	static String fmeasure_LIMES = "own";
 	protected final int linkingMaxNrOfExamples_LIMES = 100;
 	protected final int linkingMaxRecursionDepth_LIMES = 0;
+	private String targetDomainNameSpace = "";
 	
+
+	/**
+	 * @param domainOntolog the domainOntolog to set
+	 */
+	public void setTargetDomainNameSpace(String uri) {
+		this.targetDomainNameSpace = uri;
+	}
+
 	public ExpressiveSchemaMappingGenerator() {
 	}
 
@@ -181,6 +191,9 @@ public class ExpressiveSchemaMappingGenerator {
 			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
 			//a map from C_i to a set of instances in the target KB
 			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
+			result.put("posExamples", links);
+//			System.out.println(links.size());
+//			System.exit(1);
 			int j=1;
 			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
 			for (NamedClass sourceClass : sourceClasses) {
@@ -223,6 +236,7 @@ public class ExpressiveSchemaMappingGenerator {
 		} while (++i <= maxNrOfIterations);
 
 		//        return result;
+		
 		result.put("mapping", mapping);
 		result.put("mappingTop10", mappingTop10);
 		result.put("coverage", coverageMap);
@@ -309,7 +323,7 @@ public class ExpressiveSchemaMappingGenerator {
 				Model targetClassExpressionModel = entry2.getValue();
 
 				Mapping result = getDeterministicUnsupervisedMappings(getCache(sourceClassModel), getCache(targetClassExpressionModel));
-
+				
 				for (Entry<String, HashMap<String, Double>> mappingEntry : result.map.entrySet()) {
 					String key = mappingEntry.getKey();
 					HashMap<String, Double> value = mappingEntry.getValue();
@@ -445,7 +459,7 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.info("Computing negative examples...");
 		MonitorFactory.getTimeMonitor("negative examples").start();
 		
-		//find the classes the positive examples are asserted to
+		//find the classes that the positive examples are asserted to
 		//Also, compute positiveExamplesClasses priorities (number of instances of each class by number of all instances)
 		Multiset<NamedClass> positiveExamplesClasses = HashMultiset.create();
 		ParameterizedSparqlString template = new ParameterizedSparqlString("SELECT ?type WHERE {?s a ?type.}");
@@ -458,12 +472,14 @@ public class ExpressiveSchemaMappingGenerator {
 				qs = rs.next();
 				if (qs.get("type").isURIResource()) {
 					NamedClass nc = new NamedClass(qs.getResource("type").getURI());
-					if(!nc.getURI().equals(Thing.uri) && !nc.getName().equals(RDFS.Resource.getURI()) && !nc.getName().contains("yago")){
+					if(!nc.getURI().equals(Thing.uri) && !nc.getName().equals(RDFS.Resource.getURI()) && !nc.getName().contains("yago") 
+							&& nc.getName().startsWith(targetDomainNameSpace) ){
 						positiveExamplesClasses.add(nc);
 					}
 				}
 			}
 		}
+
 		keepMostSpecificClasses(positiveExamplesClasses);
 		positiveExamplesClasses = Multisets.copyHighestCountFirst(positiveExamplesClasses);
 
@@ -477,7 +493,7 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.info("Computing sibling classes individuals ...");
 		System.out.println("\n---------- Computing sibling classes individuals ----------\n");
 		
-		// get top n most redundant +ve classes' sibling classes individuals
+		// get top n most specific positive classes' sibling classes individuals
 		Iterator<NamedClass> iter = positiveExamplesClasses.iterator();
 		while (iter.hasNext() && negativeExamples.size() < chunkSize) {
 			NamedClass nc = (NamedClass) iter.next();
@@ -495,7 +511,7 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.info("Computing super classes individuals ...");
 		System.out.println("\n---------- Computing super classes individuals ----------\n");
 		
-		// get top n most redundant +ve classes' super classes individuals
+		// get top n most specific positive classes' super classes individuals
 		iter = positiveExamplesClasses.elementSet().iterator();
 		while (iter.hasNext() && negativeExamples.size() < 2*chunkSize) {
 			NamedClass nc = (NamedClass) iter.next();
@@ -509,7 +525,7 @@ public class ExpressiveSchemaMappingGenerator {
 			
 			
 			for (NamedClass sc : superClasses) {
-				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(sc, currentClass,15));
+				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(sc, currentClass,10));
 				System.out.println("negativeExamples.size():  ("+negativeExamples.size()+ ") maxProrityClass: "+ nc);
 			}
 		}	
