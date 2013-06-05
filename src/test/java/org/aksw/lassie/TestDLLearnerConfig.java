@@ -91,30 +91,42 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> test() {
+		
+		String sourceClassUri="http://dbpedia.org/ontology/Ambassador";
+//		String sourceClassUri="http://dbpedia.org/ontology/Town";
+//		String sourceClassUri="http://dbpedia.org/ontology/Continent";
+//		String sourceClassUri="http://dbpedia.org/ontology/ProtectedArea";
+//		String sourceClassUri="http://dbpedia.org/ontology/HistoricBuilding";
+		
 		Map<String, Object> result = new HashMap<String, Object>();
 
 		//1. read class and instances
-		NamedClass sourceClass = null;
-		SortedSet<Individual> targetInstances = null ;
-		ObjectInputStream in;
-		try {
-			in = new ObjectInputStream(new FileInputStream("sourceClass2.ser"));
-			sourceClass = (NamedClass) in.readObject();
-			System.out.println("\n---------- sourceClass.ser ----------");
-			System.out.println(sourceClass);
-
-			in = new ObjectInputStream(new FileInputStream("targetInstances2.ser"));
-			targetInstances = (SortedSet<Individual>) in.readObject();
-			System.out.println("\n---------- targetInstances.ser ----------");
-			System.out.println(targetInstances);
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
+		NamedClass sourceClass = new NamedClass(sourceClassUri);
+		// get perfect positive examples as some instance of the source class directly without using LIMES
+		SortedSet<Individual> targetInstances = source.getReasoner().getIndividuals(sourceClass,maxNrOfInstancesPerClass);
+		
+		
+//		NamedClass sourceClass = null;
+//		SortedSet<Individual> targetInstances = null ;
+//		ObjectInputStream in;
+//		try {
+//			in = new ObjectInputStream(new FileInputStream("sourceClass1.ser"));
+//			sourceClass = (NamedClass) in.readObject();
+//			System.out.println("\n---------- sourceClass.ser ----------");
+//			System.out.println(sourceClass);
+//
+//			in = new ObjectInputStream(new FileInputStream("targetInstances1.ser"));
+//			targetInstances = (SortedSet<Individual>) in.readObject();
+//			System.out.println("\n---------- targetInstances.ser ----------");
+//			System.out.println(targetInstances);
+//
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}catch (ClassNotFoundException e) {
+//			e.printStackTrace();
+//		}
 
 		//2. Compute Mapping
 		try {
@@ -129,7 +141,6 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		}
 		return result;
 	}
-
 
 
 

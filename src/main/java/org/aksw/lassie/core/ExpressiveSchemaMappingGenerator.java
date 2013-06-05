@@ -192,8 +192,6 @@ public class ExpressiveSchemaMappingGenerator {
 			//a map from C_i to a set of instances in the target KB
 			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
 			result.put("posExamples", links);
-//			System.out.println(links.size());
-//			System.exit(1);
 			int j=1;
 			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
 			for (NamedClass sourceClass : sourceClasses) {
@@ -201,15 +199,7 @@ public class ExpressiveSchemaMappingGenerator {
 				try {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
 
-//					*********************************************************************************************
-//					ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass"+j+".ser"));
-//					out.writeObject(sourceClass);
-//					
-//					out = new ObjectOutputStream(new FileOutputStream("targetInstances"+j+".ser"));
-//					out.writeObject(targetInstances);
-//					j++;
-//					System.exit(1);
-//					*********************************************************************************************
+//					serializeCurrentObjects(j, sourceClass, targetInstances);
 					
 //					EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
 					List<? extends EvaluatedDescription> mappingList = computeMappings(sourceClass, targetInstances);
@@ -235,12 +225,30 @@ public class ExpressiveSchemaMappingGenerator {
 
 		} while (++i <= maxNrOfIterations);
 
-		//        return result;
-		
 		result.put("mapping", mapping);
 		result.put("mappingTop10", mappingTop10);
 		result.put("coverage", coverageMap);
 		return result;
+	}
+
+	/**
+	 * @param j
+	 * @param sourceClass
+	 * @param targetInstances
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 * @author sherif
+	 */
+	public void serializeCurrentObjects(int j, NamedClass sourceClass,
+			SortedSet<Individual> targetInstances) throws IOException,
+			FileNotFoundException {
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass"+j+".ser"));
+		out.writeObject(sourceClass);
+		
+		out = new ObjectOutputStream(new FileOutputStream("targetInstances"+j+".ser"));
+		out.writeObject(targetInstances);
+		j++;
+//		System.exit(1);
 	}
 
 	double computeCoverage(Map<NamedClass, Description> mapping, KnowledgeBase kb){
