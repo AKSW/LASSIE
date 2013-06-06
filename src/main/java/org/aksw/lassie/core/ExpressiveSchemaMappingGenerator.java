@@ -30,12 +30,9 @@ import org.dllearner.core.AbstractReasonerComponent;
 import org.dllearner.core.ComponentInitException;
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.KnowledgeSource;
-import org.dllearner.core.owl.ClassHierarchy;
 import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
-import org.dllearner.core.owl.Thing;
-import org.dllearner.kb.LocalModelBasedSparqlEndpointKS;
 import org.dllearner.kb.OWLAPIOntology;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
@@ -43,39 +40,33 @@ import org.dllearner.learningproblems.PosNegLPStandard;
 import org.dllearner.learningproblems.PosOnlyLP;
 import org.dllearner.reasoning.FastInstanceChecker;
 import org.dllearner.utilities.datastructures.SetManipulation;
+import org.dllearner.utilities.examples.AutomaticNegativeExampleFinderSPARQL2;
 import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
-import org.dllearner.utilities.owl.OWLVocabulary;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Multisets;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.vocabulary.OWL;
-import com.hp.hpl.jena.vocabulary.OWL2;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 import com.hp.hpl.jena.vocabulary.XSD;
@@ -96,7 +87,6 @@ public class ExpressiveSchemaMappingGenerator {
 	protected  Monitor mon;
 	protected boolean posNegLearning = true;
 	protected final boolean performCrossValidation = true;
-	protected int fragmentDepth = 2;
 	protected static final int maxNrOfIterations = 10;
 	protected static final int coverageThreshold = 0;
 	/** 
@@ -150,10 +140,6 @@ public class ExpressiveSchemaMappingGenerator {
 		target.getReasoner().prepareSubsumptionHierarchy();
 	}
 
-	public void setFragmentDepth(int fragmentDepth) {
-		this.fragmentDepth = fragmentDepth;
-	}
-
 	public void run() {
 		// get all classes C_i in source KB
 		Set<NamedClass> sourceClasses = getClasses(source);
@@ -201,8 +187,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 //					serializeCurrentObjects(j, sourceClass, targetInstances);
 					
-//					EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
-					List<? extends EvaluatedDescription> mappingList = computeMappings(sourceClass, targetInstances);
+					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
 					mappingTop10.put(sourceClass, mappingList);
 					EvaluatedDescription singleMapping = mappingList.get(0);
 					
@@ -410,189 +395,68 @@ public class ExpressiveSchemaMappingGenerator {
 		}
 		return c;
 	}
-
-	public EvaluatedDescription computeMapping(NamedClass cls) throws NonExistingLinksException {
-		logger.info("*******************************************************\nComputing mapping for class " + cls + "...");
-		return computeMappings(cls).get(0);
+	
+	public EvaluatedDescription computeMapping(SortedSet<Individual> positiveExamples) throws NonExistingLinksException {
+		return computeMappings(positiveExamples).get(0);
 	}
 
-	public EvaluatedDescription computeMapping(NamedClass cls, SortedSet<Individual> targetInstances) throws NonExistingLinksException {
-		logger.info("*******************************************************\nComputing mapping for class " + cls + "...");
-		return computeMappings(cls, targetInstances).get(0);
+	public List<? extends EvaluatedDescription> computeMappings(Description targetClassExpression) throws NonExistingLinksException {
+		SortedSet<Individual> targetInstances = getTargetInstances(targetClassExpression);
+		return computeMappings(targetInstances);
 	}
 
-	public List<? extends EvaluatedDescription> computeMappings(NamedClass cls, SortedSet<Individual> targetInstances) throws NonExistingLinksException {
+	public List<? extends EvaluatedDescription> computeMappings(SortedSet<Individual> positiveExamples) throws NonExistingLinksException {
 		//if there are no links to the target KB, then we can skip learning
-		if (targetInstances.isEmpty()) {
+		if (positiveExamples.isEmpty()) {
 			throw new NonExistingLinksException();
 		} else {
 			//compute a mapping
-			List<? extends EvaluatedDescription> schemaMapping = initSchemaMapping(targetInstances);
-			logger.info("Generated class expressions for " + cls + ":");
-			for (EvaluatedDescription ed : schemaMapping) {
-				logger.info(ed);
-			}
-			return schemaMapping;
-		}
-	}
+			//get a sample of the positive examples
+			SortedSet<Individual> positiveExamplesSample = SetManipulation.stableShrinkInd(positiveExamples, maxNrOfPositiveExamples);
 
-	public List<? extends EvaluatedDescription> computeMappings(NamedClass cls) throws NonExistingLinksException {
-		//get all instances in the target KB to which instances of c_i are connected to
-		//this are our positive examples
-		SortedSet<Individual> targetInstances = getTargetInstances(cls);
+			//starting from the positive examples, we first extract the fragment for them
+			logger.info("Extracting fragment for positive examples...");
+			mon.start();
+			Model positiveFragment = getFragment(positiveExamplesSample, target);
+			mon.stop();
+			logger.info("...got " + positiveFragment.size() + " triples in " + mon.getLastValue() + "ms.");
+//			for (Individual ind : positiveExamplesSample) {
+//				System.out.println(ResultSetFormatter.asText(
+//						com.hp.hpl.jena.query.QueryExecutionFactory.create("SELECT * WHERE {<" + ind.getName() + "> a ?o.}", positiveFragment).execSelect()));
+//			}
 
-		//if there are no links to the target KB, then we can skip learning
-		if (targetInstances.isEmpty()) {
-			throw new NonExistingLinksException();
-		} else {
-			//compute a mapping
-			List<? extends EvaluatedDescription> schemaMapping = initSchemaMapping(targetInstances);
-			return schemaMapping;
-		}
-	}
+			//compute the negative examples
+			logger.info("Computing negative examples...");
+			MonitorFactory.getTimeMonitor("negative examples").start();
+			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(target.getReasoner(), target.getNamespace());
+			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
+			negativeExamples.removeAll(positiveExamples);
+			MonitorFactory.getTimeMonitor("negative examples").stop();
+			logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
 
-	protected List<? extends EvaluatedDescription> initSchemaMapping(SortedSet<Individual> positiveExamples) {
-		//get a sample of the positive examples
-		SortedSet<Individual> positiveExamplesSample = SetManipulation.stableShrinkInd(positiveExamples, maxNrOfPositiveExamples);
+			//get a sample of the negative examples
+			SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);
+			//create fragment for negative examples
+			logger.info("Extracting fragment for negative examples...");
+			mon.start();
+			Model negativeFragment = getFragment(negativeExamplesSample, target);
+			mon.stop();
+			logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
 
-		//starting from the positive examples, we first extract the fragment for them
-		logger.info("Extracting fragment for positive examples...");
-		mon.start();
-		Model positiveFragment = getFragment(positiveExamplesSample, target);
-		mon.stop();
-		logger.info("...got " + positiveFragment.size() + " triples in " + mon.getLastValue() + "ms.");
+			logger.info("Learning input:");
+			logger.info("Positive examples: " + positiveExamplesSample.size() + " with " + positiveFragment.size() + " triples, e.g. \n" + print(positiveExamplesSample, 3));
+			logger.info("Negative examples: " + negativeExamplesSample.size() + " with " + negativeFragment.size() + " triples, e.g. \n" + print(negativeExamplesSample, 3));
 
-		//based on the fragment we try to find some good negative examples
-		SortedSet<Individual> negativeExamples = new TreeSet<Individual>();
-		logger.info("Computing negative examples...");
-		MonitorFactory.getTimeMonitor("negative examples").start();
-		
-		//find the classes that the positive examples are asserted to
-		//Also, compute positiveExamplesClasses priorities (number of instances of each class by number of all instances)
-		Multiset<NamedClass> positiveExamplesClasses = HashMultiset.create();
-		ParameterizedSparqlString template = new ParameterizedSparqlString("SELECT ?type WHERE {?s a ?type.}");
-		for (Individual pos : positiveExamples) {
-			template.clearParams();
-			template.setIri("s", pos.getName());
-			ResultSet rs = QueryExecutionFactory.create(template.asQuery(), positiveFragment).execSelect();
-			QuerySolution qs;
-			while (rs.hasNext()) {
-				qs = rs.next();
-				if (qs.get("type").isURIResource()) {
-					NamedClass nc = new NamedClass(qs.getResource("type").getURI());
-					if(!nc.getURI().equals(Thing.uri) && !nc.getName().equals(RDFS.Resource.getURI()) && !nc.getName().contains("yago") 
-							&& nc.getName().startsWith(targetDomainNameSpace) ){
-						positiveExamplesClasses.add(nc);
-					}
-				}
-			}
-		}
-
-		keepMostSpecificClasses(positiveExamplesClasses);
-		positiveExamplesClasses = Multisets.copyHighestCountFirst(positiveExamplesClasses);
-
-		System.out.println("***************** positiveExamplesClasses ******************");  
-		System.out.println(positiveExamplesClasses);
-
-		//get the negative examples
-		final int NrOfnegExampleTechniques = 3;
-		int chunkSize = maxNrOfNegativeExamples/NrOfnegExampleTechniques;
-		// 1. Sibling classes
-		logger.info("Computing sibling classes individuals ...");
-		System.out.println("\n---------- Computing sibling classes individuals ----------\n");
-		
-		// get top n most specific positive classes' sibling classes individuals
-		Iterator<NamedClass> iter = positiveExamplesClasses.iterator();
-		while (iter.hasNext() && negativeExamples.size() < chunkSize) {
-			NamedClass nc = (NamedClass) iter.next();
-			Set<NamedClass> siblingClasses = target.getReasoner().getSiblingClasses(nc);
-			Iterator<NamedClass> iterator = siblingClasses.iterator();
-			while (iterator.hasNext() && negativeExamples.size() < chunkSize) {
-				NamedClass siblingClass = (NamedClass) iterator.next();
-				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(siblingClass, currentClass, 5));
-			}
-		}
-
-		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
-		System.out.println(negativeExamples);
-		// 2. Super classes individuals
-		logger.info("Computing super classes individuals ...");
-		System.out.println("\n---------- Computing super classes individuals ----------\n");
-		
-		// get top n most specific positive classes' super classes individuals
-		iter = positiveExamplesClasses.elementSet().iterator();
-		while (iter.hasNext() && negativeExamples.size() < 2*chunkSize) {
-			NamedClass nc = (NamedClass) iter.next();
+			//create fragment consisting of both
+			OntModel fullFragment = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM);
+			fullFragment.add(positiveFragment);
+			fullFragment.add(negativeFragment);
+			filter(fullFragment, target.getNamespace());
 			
-			Set<NamedClass> superClasses = new HashSet<NamedClass>();
-			for (Description superClass : target.getReasoner().getSuperClasses(nc)) {
-				superClasses.add((NamedClass) superClass);
-			}
-			superClasses.remove(new NamedClass(Thing.uri));
-			superClasses.remove(new NamedClass(RDFS.Resource.getURI()));
-			
-			
-			for (NamedClass sc : superClasses) {
-				negativeExamples.addAll(target.getReasoner().getIndividualsExcluding(sc, currentClass,10));
-				System.out.println("negativeExamples.size():  ("+negativeExamples.size()+ ") maxProrityClass: "+ nc);
-			}
-		}	
-		
-		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
-		System.out.println(negativeExamples);
-	
-		// 3. Random individuals
-		logger.debug("Computing random classes individuals ...");
-		System.out.println("\n---------- Computing random classes individuals ----------\n");
-		negativeExamples.addAll(target.getReasoner().getRandomIndividuals(positiveExamplesClasses.elementSet(), chunkSize));
-		
-		negativeExamples.removeAll(positiveExamples);
-		
-		System.out.println("\n----------- Negative Example(" + negativeExamples.size() + ") ----------");
-		System.out.println(negativeExamples);
-		
-		MonitorFactory.getTimeMonitor("negative examples").stop();
-		logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
-
-		//get a sample of the negative examples
-		SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);
-		System.out.println( ((LocalKnowledgeBase)target).getModel().size());
-		//create fragment for negative examples
-		logger.info("Extracting fragment for negative examples...");
-		mon.start();
-		Model negativeFragment = getFragment(negativeExamplesSample, target);
-		mon.stop();
-		logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
-
-		logger.info("Learning input:");
-		logger.info("Positive examples: " + positiveExamplesSample.size() + " with " + positiveFragment.size() + " triples, e.g. \n" + print(positiveExamplesSample, 3));
-		logger.info("Negative examples: " + negativeExamplesSample.size() + " with " + negativeFragment.size() + " triples, e.g. \n" + print(negativeExamplesSample, 3));
-
-		//create fragment consisting of both
-		OntModel fullFragment = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM);
-		fullFragment.add(positiveFragment);
-		fullFragment.add(negativeFragment);
-
-		//learn the class expressions
-		return learnClassExpressions(fullFragment, positiveExamplesSample, negativeExamplesSample);
-	}
-
-	private void keepMostSpecificClasses(Multiset<NamedClass> classes){
-		HashMultiset<NamedClass> copy = HashMultiset.create(classes);
-		final ClassHierarchy hierarchy = target.getReasoner().getClassHierarchy();
-		for (NamedClass nc1 : copy.elementSet()) {
-			for (NamedClass nc2 : copy.elementSet()) {
-				if(!nc1.equals(nc2)){
-					//remove class nc1 if it is superclass of another class nc2
-					if(hierarchy.isSubclassOf(nc2, nc1)){
-						classes.remove(nc1, classes.count(nc1));
-						break;
-					}
-				}
-			}
+			//learn the class expressions
+			return learnClassExpressions(fullFragment, positiveExamplesSample, negativeExamplesSample);
 		}
 	}
-	
 	
 	private List<? extends EvaluatedDescription> learnClassExpressions(Model model, SortedSet<Individual> positiveExamples, SortedSet<Individual> negativeExamples) {
 		try {
@@ -794,7 +658,7 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.debug("Loading fragment for " + ind.getName());
 		ConciseBoundedDescriptionGenerator cbdGen;
 		if (kb.isRemote()) {
-			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint());
+			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint(), ((RemoteKnowledgeBase) kb).getCache().getCacheDirectory());
 		} else {
 			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((LocalKnowledgeBase) kb).getModel());
 		}
@@ -826,6 +690,27 @@ public class ExpressiveSchemaMappingGenerator {
 			}
 		}
 		
+		model.remove(statementsToRemove);
+	}
+	
+	/**
+	 * Filter triples which are not relevant based on the given knowledge base namespace.
+	 * @param model
+	 * @param namespace
+	 */
+	private void filter(Model model, String namespace){
+		List<Statement> statementsToRemove = new ArrayList<Statement>();
+		for (Iterator<Statement> iter = model.listStatements().toList().iterator(); iter.hasNext();) {
+			Statement st = iter.next();
+			Property predicate = st.getPredicate();
+			if(predicate.equals(RDF.type)){
+				if(!st.getObject().asResource().getURI().startsWith(namespace)){
+					statementsToRemove.add(st);
+				}
+			} else if(!predicate.equals(RDFS.subClassOf) && !predicate.equals(OWL.sameAs) && !predicate.asResource().getURI().startsWith(namespace)){
+				statementsToRemove.add(st);
+			}
+		}
 		model.remove(statementsToRemove);
 	}
 

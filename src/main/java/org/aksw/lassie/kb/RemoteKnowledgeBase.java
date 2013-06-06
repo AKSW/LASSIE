@@ -44,6 +44,10 @@ public class RemoteKnowledgeBase extends AbstractKnowledgeBase {
 	public SparqlEndpoint getEndpoint() {
 		return endpoint;
 	}
+	
+	public ExtractionDBCache getCache() {
+		return cache;
+	}
 
 	public ResultSet executeSelect(String query) {
 		ResultSet rs;

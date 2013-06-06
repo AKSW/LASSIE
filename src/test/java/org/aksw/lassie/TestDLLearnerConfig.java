@@ -28,6 +28,7 @@ import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.core.NonExistingLinksException;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
+import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
@@ -92,11 +93,11 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> test() {
 		
-		String sourceClassUri="http://dbpedia.org/ontology/Ambassador";
+//		String sourceClassUri="http://dbpedia.org/ontology/Ambassador";
 //		String sourceClassUri="http://dbpedia.org/ontology/Town";
 //		String sourceClassUri="http://dbpedia.org/ontology/Continent";
 //		String sourceClassUri="http://dbpedia.org/ontology/ProtectedArea";
-//		String sourceClassUri="http://dbpedia.org/ontology/HistoricBuilding";
+		String sourceClassUri="http://dbpedia.org/ontology/HistoricBuilding";
 		
 		Map<String, Object> result = new HashMap<String, Object>();
 
@@ -132,7 +133,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		try {
 			currentClass = sourceClass;
 			
-			EvaluatedDescription singleMapping = computeMapping(sourceClass, targetInstances);
+			EvaluatedDescription singleMapping = computeMapping(targetInstances);
 			System.out.println("\n---------- EvaluatedDescription ----------");
 			System.out.println(singleMapping);
 		} catch (NonExistingLinksException e) {
@@ -263,8 +264,11 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 //		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
 //		Model testDataset = new TestDLLearnerConfig(null,null).createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 
-		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
-		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
+		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset, "http://dbpedia.org/ontology/");
+		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset, "http://dbpedia.org/ontology/");
+		
+		source = new RemoteKnowledgeBase(SparqlEndpoint.getEndpointDBpedia(), new ExtractionDBCache("cache"), "http://dbpedia.org/ontology/");
+		target = source;
 		
 //		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 

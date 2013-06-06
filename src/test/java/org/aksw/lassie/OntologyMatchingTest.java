@@ -141,7 +141,6 @@ public class OntologyMatchingTest {
 	@Test
 	public void testSingleClassLinkedGeoDataToDBpedia() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(linkedGeoData, dbpedia);
-		matcher.setFragmentDepth(fragmentDepth);
 		NamedClass nc = new NamedClass("http://linkedgeodata.org/ontology/Aerodrome");
 		try {
 			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);
