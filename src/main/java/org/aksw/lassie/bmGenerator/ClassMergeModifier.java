@@ -70,7 +70,7 @@ public class ClassMergeModifier extends Modifier{
 
 		System.out.println("----- Base Model -----");
 		System.out.println("Size: "+m.size());
-//		baseModel.write(System.out,"TTL");
+		baseModel.write(System.out,"TTL");
 		System.out.println();
 
 		System.out.println("----- Merge Model -----");

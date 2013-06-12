@@ -6,6 +6,10 @@ package org.aksw.lassie.bmGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.dllearner.core.owl.NamedClass;
 
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -28,18 +32,81 @@ import com.hp.hpl.jena.util.FileManager;
  */
 public abstract class Modifier {
 	static Model baseModel = ModelFactory.createDefaultModel();
-	static Model destroyedPropertiesModel = ModelFactory.createDefaultModel(); //destroyed properties model
-	static Model destroyedClassModel = ModelFactory.createDefaultModel();      //destroyed class model
-	static Model destroyedModel = ModelFactory.createDefaultModel();           //final destroyed model
+	static Model destroyedPropertiesModel = ModelFactory.createDefaultModel(); 		//destroyed properties model
+	static Model destroyedClassModel      = ModelFactory.createDefaultModel();     //destroyed class model
+	static Model destroyedModel           = ModelFactory.createDefaultModel();     //final destroyed model
 	static List<Property> properties = new ArrayList<Property>();
 	double destructionRatio = 0.5;
 	long destroyedInstancesCount;
 	boolean destroyProperty = false;
 	
-	public String inputClassUri = null;
+	public String inputClassUri  = null;
 	public String outputClassUri = null;
 	
+	static protected String  nameSpace = "";
+	static protected List<String> baseClasses     = new ArrayList<String>();
+	static protected List<String> modifiedClasses = new ArrayList<String>();
 	
+	/**
+	 * @return the baseClasses
+	 */
+	public List<String> getBaseClasses() {
+		return baseClasses;
+	}
+
+	/**
+	 * @param baseClasses the baseClasses to set
+	 */
+	public void setBaseClasses(List<String> baseClasses) {
+		Modifier.baseClasses = baseClasses;
+	}
+
+	public void setBaseClasses(Set<NamedClass> namedClasses) {
+		for (NamedClass namedClass : namedClasses) {
+			baseClasses.add(namedClass.getName());
+		}
+	}
+	
+	
+	/**
+	 * @return the modifiedClasses
+	 */
+	public List<String> getModifiedClasses() {
+		return modifiedClasses;
+	}
+	
+	public Set<NamedClass> getModifiedNamedClasses() {
+		Set<NamedClass> namedClasses = new TreeSet<NamedClass>();
+		for (String mc : modifiedClasses) {
+			namedClasses.add(new NamedClass(mc));
+		}
+		return namedClasses;
+	}
+
+	/**
+	 * @param modifiedClasses the modifiedClasses to set
+	 */
+	public void setModifiedClasses(List<String> modifiedClasses) {
+		Modifier.modifiedClasses = modifiedClasses;
+	}
+
+
+	
+	
+	/**
+	 * @return the nameSpace
+	 */
+	public static String getNameSpace() {
+		return nameSpace;
+	}
+
+	/**
+	 * @param nameSpace the nameSpace to set
+	 */
+	public static void setNameSpace(String nameSpace) {
+		Modifier.nameSpace = nameSpace;
+	}
+
 	public Modifier(Model m){
 		baseModel=m;
 	}
@@ -92,6 +159,15 @@ public abstract class Modifier {
 		return result;
 	}
 	
+	protected Model getClassInstancesModel(String classUri, Model m){
+		Model result=ModelFactory.createDefaultModel();
+		String sparqlQueryString= "CONSTRUCT {?s ?p ?o} WHERE {?s a <"+classUri+">. ?s ?p ?o}";
+		QueryFactory.create(sparqlQueryString);
+		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, m);
+		result =qexec.execConstruct();
+		return result;
+	}
+	
 	
 	/**
 	 * @param subModelSize
@@ -133,6 +209,9 @@ public abstract class Modifier {
 		while (results.hasNext()) {
 		    QuerySolution row= results.next();
 		    RDFNode className= row.get("class");
+		    if(!nameSpace.equals("")){
+		    	if(!className.toString().startsWith(nameSpace)) continue;
+		    }
 		    classNames.add(className.toString());
 		}
 		return classNames;
@@ -146,6 +225,25 @@ public abstract class Modifier {
 	 * @author Sherif
 	 */
 	public Model renameClass(Model model, String oldClassUri,String newClassUri) {
+		Model result = model;
+		Model inClassModel = ModelFactory.createDefaultModel();
+		String sparqlQueryString= "CONSTRUCT {?s a <"+oldClassUri+">} WHERE {?s a <"+oldClassUri+">.}";
+		QueryFactory.create(sparqlQueryString);
+		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, model);
+		inClassModel = qexec.execConstruct();
+		result.remove(inClassModel);
+		StmtIterator sItr = inClassModel.listStatements();
+		while(sItr.hasNext()){
+			Statement stmt = sItr.nextStatement();
+			Resource subject = stmt.getSubject();
+			Property predicate = stmt.getPredicate();
+			RDFNode object = ResourceFactory.createResource(newClassUri);
+			result.add( subject, predicate, object);
+		}
+		return result;
+	}
+	
+	public Model renameAllClasses(Model model, String oldClassUri,String newClassUri) {
 		Model result=model;
 		Model inClassModel=ModelFactory.createDefaultModel();
 		String sparqlQueryString= "CONSTRUCT {?s a <"+oldClassUri+">} WHERE {?s a <"+oldClassUri+">.}";
@@ -165,7 +263,6 @@ public abstract class Modifier {
 		}
 		return result;
 	}
-	
 
 	/**
 	 * @return the properties
