@@ -44,20 +44,33 @@ public class ClassRenameModifier extends Modifier {
 		Model removeModel = ModelFactory.createDefaultModel();
 		Model addModel = ModelFactory.createDefaultModel();
 		
-		StmtIterator iter = subModel.listStatements((Resource) null, RDF.type,(RDFNode) null);
-
-		while (iter.hasNext()) {
-			Statement stmt      = iter.nextStatement();  
-			Resource  subject   = stmt.getSubject();     
-			Property  predicate = stmt.getPredicate();   
-			RDFNode   object    = stmt.getObject();   
-			removeModel.add(stmt);
-			RDFNode newObject = ResourceFactory.createResource(object.toString()+"_RENAME");
-			addModel.add( subject, predicate, newObject);
+		List<String> classNames = new ArrayList<String>();
+		if (baseClasses.size() == 0) {
+			classNames = getClasses(subModel);
+		} else {
+			classNames = baseClasses;
 		}
 		
-		subModel.remove(removeModel);
-		subModel.add(addModel);
+		for (String className : classNames) {
+			String ranamedClassName = className+"_RENAME";
+			subModel = renameClass(subModel, className,  ranamedClassName);
+			modifiedClasses.add(ranamedClassName);
+		}
+		
+//		StmtIterator iter = subModel.listStatements((Resource) null, RDF.type,(RDFNode) null);
+//
+//		while (iter.hasNext()) {
+//			Statement stmt      = iter.nextStatement();  
+//			Resource  subject   = stmt.getSubject();     
+//			Property  predicate = stmt.getPredicate();   
+//			RDFNode   object    = stmt.getObject();   
+//			removeModel.add(stmt);
+//			RDFNode newObject = ResourceFactory.createResource(object.toString()+"_RENAME");
+//			addModel.add( subject, predicate, newObject);
+//		}
+//		
+//		subModel.remove(removeModel);
+//		subModel.add(addModel);
 		
 		return subModel;
 	}

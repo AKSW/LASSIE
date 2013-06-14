@@ -3,6 +3,9 @@
  */
 package org.aksw.lassie.bmGenerator;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
@@ -26,10 +29,43 @@ public class ClassDeleteModifier extends Modifier {
 	 */
 	@Override
 	Model destroy(Model subModel) {
-		baseModel.remove(subModel);
+		List<String> classNames = new ArrayList<String>();
+		if (baseClasses.size() == 0) {
+			classNames = getClasses(subModel);
+		} else {
+			classNames = baseClasses;
+		}
+		
+//		modifiedClasses.removeAll(classNames);
+		
+		for(String className: classNames){
+//			System.out.println("className: "+className);
+			Model sourceClassModel = getClassInstancesModel(className, subModel);
+//			System.out.println("************* sourceClassModel *********");
+//			sourceClassModel.write(System.out,"TTL");
+//			System.exit(1);
+			baseModel.remove(sourceClassModel);
+			modifiedClasses.add(className);
+		}
+		
+		
+		
+//		baseModel.remove(subModel);
 		return ModelFactory.createDefaultModel();
 	}
 	public static void main(String[] args){
+		Model m= loadModel(args[0]);
+		ClassDeleteModifier classDeleter=new ClassDeleteModifier(m);
+
+		System.out.println("----- Base Model -----");
+		System.out.println("Size: "+m.size());
+		baseModel.write(System.out,"TTL");
+		System.out.println();
+
+		System.out.println("----- Merge Model -----");
+		Model desM = classDeleter.destroy(m);
+		System.out.println("Size: "+desM.size());
+		desM.write(System.out,"TTL");
 
 	}
 }

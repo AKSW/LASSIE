@@ -51,12 +51,21 @@ public class ClassTypeDeleteModifier extends Modifier{
 	@Override
 	Model destroy(Model subModel) {
 		Model result = ModelFactory.createDefaultModel();
-		List<String> classNames = getClasses(subModel);
+		List<String> classNames = new ArrayList<String>();
+		if (baseClasses.size() == 0) {
+			classNames = getClasses(subModel);
+		} else {
+			classNames = baseClasses;
+		}
+		
+//		modifiedClasses.removeAll(classNames);
+		
 		for(String className: classNames){
-			Model sourceClassModel = getClassInstancesModel(className);
+			Model sourceClassModel = getClassInstancesModel(className, subModel);
 
 			sourceClassModel.removeAll(null, RDF.type, null);
 			result.add(sourceClassModel);
+			modifiedClasses.add(className);
 			}
 		return result;
 	}

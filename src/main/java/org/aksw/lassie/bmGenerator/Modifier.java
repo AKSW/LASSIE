@@ -168,6 +168,18 @@ public abstract class Modifier {
 		return result;
 	}
 	
+	protected Model getClassInstancesModel(String classUri, Model m, long limit, long offset){
+		Model result=ModelFactory.createDefaultModel();
+		String sparqlQueryString= 	"CONSTRUCT {?s ?p ?o} " +
+									" WHERE {?s a <"+classUri+">. ?s ?p ?o} " +
+									" LIMIT " + limit + 
+									" OFFSET " + offset;
+		QueryFactory.create(sparqlQueryString);
+		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, m);
+		result =qexec.execConstruct();
+		return result;
+	}
+	
 	
 	/**
 	 * @param subModelSize

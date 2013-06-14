@@ -74,7 +74,7 @@ public class Evaluation {
 	private static Map<Modifier, Double> classModefiersAndRates    = new HashMap<Modifier, Double>();
 	private static Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
 	
-	private int maxNrOfClasses = 1;//-1 all classes
+	private int maxNrOfClasses = 5;//-1 all classes
 	private int maxNrOfInstancesPerClass = 100;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
@@ -142,10 +142,6 @@ public class Evaluation {
 		return null;
 	}
 
-	private void loadDBpediaSchema(){
-
-	}
-	
 	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates){
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(referenceDataset);
 		Modifier.setNameSpace(dbpediaNamespace);
@@ -166,28 +162,30 @@ public class Evaluation {
 
 	public Map<String, Object> run(){
 		Model referenceDataset = createDBpediaReferenceDataset();
-
+		// instance modifiers
 //		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
-//		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
-//		//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
+//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
+//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
 		
-		classModefiersAndRates.put(new ClassSplitModifier(), 1d);
-		
-//		classModefiersAndRates.put(new ClassMergeModifier(), 1d);
-//		classModefiersAndRates.put(new ClassRenameModifier(), 1d);
-		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
+		// class modifiers
+		classModefiersAndRates.put(new ClassSplitModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassDeleteModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassMergeModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassRenameModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.2d);
 		Model modifiedRefrenceDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 		try {
+			// just 4 test
 			modifiedRefrenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+		
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedRefrenceDataset); 
 		KnowledgeBase target = new RemoteKnowledgeBase(endpoint, cache, dbpediaNamespace);
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-//		Map<String, Object> result = generator.run(source.getReasoner().getDbpediaClasses(), dbpediaClasses);
 		Map<String, Object> result = generator.run(ModifiedDbpediaClasses, dbpediaClasses);
 
 

@@ -172,8 +172,6 @@ public class ExpressiveSchemaMappingGenerator {
 		double totalCoverage = 0;
 		Map<Integer, Double> coverageMap = new TreeMap<Integer, Double>();
 		do {
-			coverageMap.put(i, totalCoverage);
-
 			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
 			//a map from C_i to a set of instances in the target KB
 			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
@@ -206,9 +204,11 @@ public class ExpressiveSchemaMappingGenerator {
 			if((newTotalCoverage-totalCoverage) <= coverageThreshold){
 				break;
 			}
+			
 			totalCoverage = newTotalCoverage;
-
-		} while (++i <= maxNrOfIterations);
+			coverageMap.put(i++, totalCoverage);
+			
+		} while (i <= maxNrOfIterations);
 
 		result.put("mapping", mapping);
 		result.put("mappingTop10", mappingTop10);
@@ -259,8 +259,8 @@ public class ExpressiveSchemaMappingGenerator {
 		// JaccardDistance = 2*|C_i n D_j|/(|C_i|+|D_j|)
 		SetView<Individual> intersection = Sets.intersection(sourceInstances, targetInstances);
 		SetView<Individual> union = Sets.union(sourceInstances, targetInstances);
-		return (double) (intersection.size())/union.size(); 
-//		return 2*((double)intersection.size())/(sourceInstances.size()+targetInstances.size());
+//		return (double) (intersection.size())/union.size(); 
+		return 2*((double)intersection.size())/(sourceInstances.size()+targetInstances.size());
 	}
 
 	/**

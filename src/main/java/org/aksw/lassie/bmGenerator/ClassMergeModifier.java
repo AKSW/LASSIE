@@ -23,9 +23,23 @@ import com.hp.hpl.jena.vocabulary.RDF;
 public class ClassMergeModifier extends Modifier{
 	//	List<String> mergeSourceClassUris = new ArrayList<String>();
 	//	String mergeTargetClassuri = new String();
-	public int mergeCount = 2;
+	private int mergeCount = 2;
 
 
+
+	/**
+	 * @return the mergeCount
+	 */
+	public int getMergeCount() {
+		return mergeCount;
+	}
+
+	/**
+	 * @param mergeCount the mergeCount to set
+	 */
+	public void setMergeCount(int mergeCount) {
+		this.mergeCount = mergeCount;
+	}
 
 	/**
 	 * @param m
@@ -43,7 +57,14 @@ public class ClassMergeModifier extends Modifier{
 	 */
 	Model destroy(Model subModel) {
 		Model result = ModelFactory.createDefaultModel();
-		List<String> classNames = getClasses(subModel);
+		
+		List<String> classNames = new ArrayList<String>();
+		if (baseClasses.size() == 0) {
+			classNames = getClasses(subModel);
+		} else {
+			classNames = baseClasses;
+		}
+		
 		List<String> mergeSourceClassUris = new ArrayList<String>();
 		
 		for(int i=0 ; i<classNames.size() ; i+=mergeCount){
@@ -51,10 +72,14 @@ public class ClassMergeModifier extends Modifier{
 			mergeSourceClassUris.removeAll(mergeSourceClassUris);
 			for(int j=0 ; j<mergeCount && i+j<classNames.size() ; j++){
 				mergeSourceClassUris.add(j,classNames.get(i+j)); 
-				mergeTargetClassUri = classNames.get(i+j).concat("MERGE"); 
+				mergeTargetClassUri = mergeTargetClassUri.concat(classNames.get(i+j));
+				mergeTargetClassUri = (j+1 == mergeCount)? mergeTargetClassUri : mergeTargetClassUri.concat("_MERGE_");
 			}
+			modifiedClasses.add(mergeTargetClassUri);
+			
 			for(String sourceClassUri:mergeSourceClassUris){
 				Model sourceClassModel = getClassInstancesModel(sourceClassUri);
+				System.out.println();
 				sourceClassModel = renameClass(sourceClassModel, sourceClassUri, mergeTargetClassUri);
 				result.add(sourceClassModel);
 			}
