@@ -93,11 +93,11 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> test() {
 		
-//		String sourceClassUri="http://dbpedia.org/ontology/Ambassador";
+		String sourceClassUri="http://dbpedia.org/ontology/Ambassador";
 //		String sourceClassUri="http://dbpedia.org/ontology/Town";
 //		String sourceClassUri="http://dbpedia.org/ontology/Continent";
 //		String sourceClassUri="http://dbpedia.org/ontology/ProtectedArea";
-		String sourceClassUri="http://dbpedia.org/ontology/HistoricBuilding";
+//		String sourceClassUri="http://dbpedia.org/ontology/HistoricBuilding";
 		
 		Map<String, Object> result = new HashMap<String, Object>();
 

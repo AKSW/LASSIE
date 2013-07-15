@@ -6,6 +6,7 @@ package org.aksw.lassie.bmGenerator;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +90,7 @@ public class BenchmarkGenerator extends Modifier{
 			long subModelSize = (long) (inputModel.size()*rate);
 
 			if((inputModelOffset+subModelSize) > inputModel.size()){
-				System.out.println("The sum of modifiers rates is grater than 100% ... exit with error");
+				System.out.println("The sum of modifiers rates is grater than 100% of the input model ... \nExit with error");
 				System.exit(1);
 			}
 
@@ -121,30 +122,44 @@ public class BenchmarkGenerator extends Modifier{
 
 	public Model destroyClasses (Map<? extends Modifier, Double> modefiersAndRates){
 		Model resultModel = ModelFactory.createDefaultModel();
-		List<String> classNames = getClasses(baseModel);
-		int offset = 0; 
-		for(Entry<? extends Modifier, Double> mod2rat: modefiersAndRates.entrySet() ){
-			Modifier modifer = mod2rat.getKey();
-			Double   rate    = mod2rat.getValue();
+		//		List<String> classNames = getClasses(baseModel);
+		List<String> classNames = new ArrayList<String>();
+		if (baseClasses.size() == 0) {
+			classNames = getClasses(baseModel);
+		} else {
+			classNames = baseClasses;
+		}
+
+		for (String className : classNames) {
+			long classModelOffset 	= 0l;
+			long classSubModelSize 	= 0l;
+			long classModelSize 	= getClassInstancesModel(className).size();
 			Model subModel = ModelFactory.createDefaultModel();
-			System.out.println("\nDestroying class(es):");
-			for(int i=offset ; i < (offset+(int) Math.floor(classNames.size()*rate)) ; i++){
-				subModel.add(getClassInstancesModel(classNames.get(i)));
-				System.out.println(classNames.get(i));
+
+			for(Entry<? extends Modifier, Double> mod2rat: modefiersAndRates.entrySet() ){
+				Modifier modifer = mod2rat.getKey();
+				Double   rate    = mod2rat.getValue();
+				classSubModelSize = (long) ( classModelSize * rate);
+
+				if( (classModelOffset + classSubModelSize) > classModelSize){
+					System.out.println("The sum of modifiers rates is grater than 100% of the input model \n... Exit with error");
+					System.exit(1);
+				}
+
+				subModel = getClassInstancesModel(className, baseModel, classSubModelSize, classModelOffset);
+				resultModel.add(modifer.destroy(subModel));
+				classModelOffset += classSubModelSize;
 			}
-			System.out.println("containing total of " + subModel.size() + " instances with modifier " + modifer.getClass().getSimpleName()+"\n");
-			resultModel.add(modifer.destroy(subModel));
-			offset += Math.floor(classNames.size()*rate);
-		}
-		//add the rest of base model (if any)
-		if(offset<classNames.size()){
-			for(int i=offset ; i<classNames.size() ; i++){
-				resultModel.add(getClassInstancesModel(classNames.get(i)));
+
+			//add the rest of class model (if any)
+			if(classModelOffset < classModelSize){
+				subModel = getClassInstancesModel(className, baseModel, classModelSize-classModelOffset, classModelOffset+1);
+				resultModel.add(subModel);
 			}
 		}
+		destroyedModel.add(resultModel);
 		return resultModel;
 	}
-
 
 	/**
 	 * @return sub model contains a certain class
@@ -158,8 +173,6 @@ public class BenchmarkGenerator extends Modifier{
 		result =qexec.execConstruct();
 		return result;
 	}
-
-
 
 	/* (non-Javadoc)
 	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy(com.hp.hpl.jena.rdf.model.Model)

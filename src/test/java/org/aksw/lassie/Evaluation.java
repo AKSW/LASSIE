@@ -29,6 +29,7 @@ import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
+import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
@@ -50,6 +51,7 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.sparql.function.library.namespace;
 
 public class Evaluation {
 
@@ -57,6 +59,7 @@ public class Evaluation {
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
@@ -65,10 +68,12 @@ public class Evaluation {
 	private String dbpediaNamespace = "http://dbpedia.org/ontology/";
 	private OWLOntology dbpediaOntology;
 
-	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
+	private Set<NamedClass> ModifiedDbpediaClasses = new TreeSet<NamedClass>();
+	private Set<NamedClass> dbpediaClasses 			= new TreeSet<NamedClass>();
 
-
-	private static Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
+	private static Map<Modifier, Double> classModefiersAndRates    = new HashMap<Modifier, Double>();
+	private static Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
+	
 	private int maxNrOfClasses = 5;//-1 all classes
 	private int maxNrOfInstancesPerClass = 100;
 
@@ -137,12 +142,11 @@ public class Evaluation {
 		return null;
 	}
 
-	private void loadDBpediaSchema(){
-
-	}
-
 	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates){
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(referenceDataset);
+		Modifier.setNameSpace(dbpediaNamespace);
+		benchmarker.setBaseClasses(dbpediaClasses);
+		
 		Model testDataset = ModelFactory.createDefaultModel();
 
 		if(!instanceModefiersAndRates.isEmpty()){
@@ -152,28 +156,38 @@ public class Evaluation {
 		if(!classModefiersAndRates.isEmpty()){
 			testDataset = benchmarker.destroyClasses (classModefiersAndRates);
 		}
+		ModifiedDbpediaClasses = benchmarker.getModifiedNamedClasses();
 		return testDataset;
 	}
 
 	public Map<String, Object> run(){
 		Model referenceDataset = createDBpediaReferenceDataset();
-
+		// instance modifiers
 //		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
-//		//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
-//		//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
-//		//classModefiersAndRates.put(new ClassSplitModifier(), 0.5d);
-//		classModefiersAndRates.put(new ClassMergeModifier(), 0.5d);
-//		//		classModefiersAndRates.put(new ClassRenameModifier(), 1d);
-//		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.5d);
-//		Model testDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
-
-		KnowledgeBase source = new LocalKnowledgeBase(referenceDataset);
-		KnowledgeBase target = new LocalKnowledgeBase(referenceDataset);
-//		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
+//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
+//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
+		
+		// class modifiers
+		classModefiersAndRates.put(new ClassSplitModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassDeleteModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassMergeModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassRenameModifier(), 0.2d);
+		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.2d);
+		Model modifiedRefrenceDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
+		try {
+			// just 4 test
+			modifiedRefrenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		KnowledgeBase source = new LocalKnowledgeBase(modifiedRefrenceDataset); 
+		KnowledgeBase target = new RemoteKnowledgeBase(endpoint, cache, dbpediaNamespace);
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		Map<String, Object> result = generator.run(dbpediaClasses, dbpediaClasses);
+		Map<String, Object> result = generator.run(ModifiedDbpediaClasses, dbpediaClasses);
+
 
 		return result;
 	}
