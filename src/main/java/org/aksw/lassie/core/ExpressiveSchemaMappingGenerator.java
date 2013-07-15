@@ -468,6 +468,8 @@ public class ExpressiveSchemaMappingGenerator {
 			logger.info("Initializing reasoner...");
 			AbstractReasonerComponent rc = new FastInstanceChecker(ks);
 			rc.init();
+			System.out.println(target.getReasoner().getClassHierarchy());
+			rc.setSubsumptionHierarchy(target.getReasoner().getClassHierarchy());
 			logger.info("Done.");
 
 			//initialize the learning problem

@@ -68,7 +68,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
 	private int maxNrOfClasses = 5;//20;//-1 all classes
-	private int maxNrOfInstancesPerClass = 100;
+	private int maxNrOfInstancesPerClass = 20;
 	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
 	private OWLOntology dbpediaOntology;
