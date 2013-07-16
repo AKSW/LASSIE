@@ -2,12 +2,14 @@ package org.aksw.lassie.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,9 +47,11 @@ import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.io.RDFXMLOntologyFormat;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -107,7 +111,7 @@ public class ExpressiveSchemaMappingGenerator {
 	/**
 	 * LIMES Config
 	 */
-	static double coverage_LIMES = 1d;
+	static double coverage_LIMES = 0.7;
 	static double beta_LIMES = 1d;
 	static String fmeasure_LIMES = "own";
 	protected final int linkingMaxNrOfExamples_LIMES = 100;
@@ -179,6 +183,8 @@ public class ExpressiveSchemaMappingGenerator {
 			int j=1;
 			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
 			for (NamedClass sourceClass : sourceClasses) {
+				
+				logger.info("+++++++++++++++++++++++++++++++++" + sourceClass + "+++++++++++++++++++++");
 				currentClass = sourceClass;
 				try {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
@@ -293,7 +299,10 @@ public class ExpressiveSchemaMappingGenerator {
 		for (Description targetClass : targetClasses) {
 			// get all instances of D_i
 			SortedSet<Individual> targetInstances = getTargetInstances(targetClass);
-			targetInstances = SetManipulation.stableShrinkInd(targetInstances, linkingMaxNrOfExamples_LIMES);
+//			targetInstances = SetManipulation.stableShrinkInd(targetInstances, linkingMaxNrOfExamples_LIMES);
+//			ArrayList<Individual> l = new ArrayList<Individual>(targetInstances);
+//			Collections.reverse(l);
+//			targetInstances = new TreeSet<Individual>(l.subList(0, Math.min(100, targetInstances.size())));
 
 			// get the fragment describing the instances of D_i
 			logger.info("Computing fragment...");
@@ -315,7 +324,11 @@ public class ExpressiveSchemaMappingGenerator {
 				Description targetClassExpression = entry2.getKey();
 				Model targetClassExpressionModel = entry2.getValue();
 
-				Mapping result = getDeterministicUnsupervisedMappings(getCache(sourceClassModel), getCache(targetClassExpressionModel));
+				logger.info("******* COMPUTING links between " + sourceClass + " and " + targetClassExpression + "******");
+				Cache cache = getCache(sourceClassModel);
+				Cache cache2 = getCache(targetClassExpressionModel);
+				
+				Mapping result = getDeterministicUnsupervisedMappings(cache, cache2);
 				
 				for (Entry<String, HashMap<String, Double>> mappingEntry : result.map.entrySet()) {
 					String key = mappingEntry.getKey();
@@ -326,7 +339,7 @@ public class ExpressiveSchemaMappingGenerator {
 		}
 		return map;
 	}
-
+	
 	private void removeNonLiteralStatements(Model m){
 		StmtIterator iterator = m.listStatements();
 		List<Statement> statements2Remove = new ArrayList<Statement>();
@@ -362,21 +375,22 @@ public class ExpressiveSchemaMappingGenerator {
 
 		MeshBasedSelfConfigurator bsc = new MeshBasedSelfConfigurator(source, target, coverage_LIMES, beta_LIMES);
 		bsc.setMeasure(fmeasure_LIMES);
-		//        Set<String> sProperties = getAllProperties(source);
-		//        Set<String> tProperties = getAllProperties(target);
 		List<SimpleClassifier> cp = bsc.getBestInitialClassifiers();
 		if(cp.size() == 0) 
 		{
 			logger.warn("No property mapping found");
 			return new Mapping();
 		}
-		//        List<SimpleClassifier> cp = new ArrayList<SimpleClassifier>();
-		//        for (String property : sProperties) {
-		//            for(String )
-		//            //cp.add(new SimpleClassifier("jaccard", 1.0, property, property));
-		//            cp.add(new SimpleClassifier("levenshtein", 1.0, property, property));
-		//            cp.add(new SimpleClassifier("trigrams", 1.0, property, property));
-		//        }
+//        Set<String> sProperties = getAllProperties(source);
+//        Set<String> tProperties = getAllProperties(target);
+//		        List<SimpleClassifier> cp = new ArrayList<SimpleClassifier>();
+//		        for (String sProperty : sProperties) {
+//		            for(String tProperty : tProperties){
+//			            //cp.add(new SimpleClassifier("jaccard", 1.0, property, property));
+//			            cp.add(new SimpleClassifier("levenshtein", 1.0, sProperty, tProperty));
+//			            cp.add(new SimpleClassifier("trigrams", 1.0, sProperty, tProperty));
+//		            }
+//		        }
 		ComplexClassifier cc = bsc.getZoomedHillTop(5, 5, cp);
 		Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
 		logger.info("Mapping size is " + map.getNumberofMappings());
@@ -468,7 +482,6 @@ public class ExpressiveSchemaMappingGenerator {
 			logger.info("Initializing reasoner...");
 			AbstractReasonerComponent rc = new FastInstanceChecker(ks);
 			rc.init();
-			System.out.println(target.getReasoner().getClassHierarchy());
 			rc.setSubsumptionHierarchy(target.getReasoner().getClassHierarchy());
 			logger.info("Done.");
 
@@ -499,6 +512,17 @@ public class ExpressiveSchemaMappingGenerator {
 			return la.getCurrentlyBestEvaluatedDescriptions(10);
 		} catch (ComponentInitException e) {
 			logger.error(e);
+			OWLOntologyManager man = OWLManager.createOWLOntologyManager();
+			OWLOntology ontology = ((OWLAPIOntology)convert(model)).createOWLOntology(man);
+			try {
+				man.saveOntology(ontology, new RDFXMLOntologyFormat(), new FileOutputStream(new File("inc.owl")));
+			} catch (OWLOntologyStorageException e1) {
+				e1.printStackTrace();
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			}
+			System.exit(0);
+			
 		}
 		return null;
 	}
@@ -681,6 +705,8 @@ public class ExpressiveSchemaMappingGenerator {
 				Literal lit = object.asLiteral();
 				if (lit.getDatatype() == null || lit.getDatatype().equals(XSD.xstring)) {
 					st.changeObject("shortened", "en");
+				} else if(lit.getDatatype().getURI().equals(XSD.gYear.getURI())){
+					statementsToRemove.add(st);System.err.println("REMOVE "  + st);
 				}
 			}
 			//remove statements like <x a owl:Class>
@@ -707,6 +733,10 @@ public class ExpressiveSchemaMappingGenerator {
 			Property predicate = st.getPredicate();
 			if(predicate.equals(RDF.type)){
 				if(!st.getObject().asResource().getURI().startsWith(namespace)){
+					statementsToRemove.add(st);
+				} else if(st.getObject().equals(OWL.FunctionalProperty.asNode())){
+					statementsToRemove.add(st);
+				} else if(st.getObject().isLiteral() && st.getObject().asLiteral().getDatatypeURI().equals(XSD.gYear.getURI())){
 					statementsToRemove.add(st);
 				}
 			} else if(!predicate.equals(RDFS.subClassOf) && !predicate.equals(OWL.sameAs) && !predicate.asResource().getURI().startsWith(namespace)){

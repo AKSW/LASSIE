@@ -49,6 +49,7 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.sparql.function.library.namespace;
@@ -58,8 +59,8 @@ public class Evaluation {
 
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
-	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
-//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
+//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
@@ -75,7 +76,7 @@ public class Evaluation {
 	private static Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
 	
 	private int maxNrOfClasses = 5;//-1 all classes
-	private int maxNrOfInstancesPerClass = 100;
+	private int maxNrOfInstancesPerClass = 20;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 
@@ -102,6 +103,10 @@ public class Evaluation {
 				Collections.shuffle(tmp, new Random(123));
 				dbpediaClasses = new TreeSet<NamedClass>(tmp.subList(0, maxNrOfClasses));
 			}
+			//TODO remove
+//			dbpediaClasses = Sets.newHashSet(
+//					new NamedClass("http://dbpedia.org/ontology/Ambassador"), 
+//					new NamedClass("http://dbpedia.org/ontology/Continent"));
 
 			Model model = ModelFactory.createDefaultModel();
 			//try to load sample from cache
