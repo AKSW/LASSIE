@@ -95,7 +95,7 @@ public class BenchmarkGenerator extends Modifier{
 			}
 
 			Model subModel = getSubModel(inputModel, subModelSize, inputModelOffset);
-			modifer.destroy(subModel);
+			destroyedModel.add(modifer.destroy(subModel));
 			inputModelOffset += subModelSize;
 		}
 

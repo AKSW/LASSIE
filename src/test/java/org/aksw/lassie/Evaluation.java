@@ -21,10 +21,18 @@ import java.util.TreeSet;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
 import org.aksw.lassie.bmGenerator.ClassDeleteModifier;
+import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
 import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.ClassTypeDeleteModifier;
+import org.aksw.lassie.bmGenerator.InstanceAbbreviationModifier;
+import org.aksw.lassie.bmGenerator.InstanceAcronymModifier;
+import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
+import org.aksw.lassie.bmGenerator.InstanceMergeModifier;
+import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
+import org.aksw.lassie.bmGenerator.InstancePermutationModifier;
+import org.aksw.lassie.bmGenerator.InstanceSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -75,7 +83,7 @@ public class Evaluation {
 	private static Map<Modifier, Double> classModefiersAndRates    = new HashMap<Modifier, Double>();
 	private static Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
 	
-	private int maxNrOfClasses = 5;//-1 all classes
+	private int maxNrOfClasses = 1;//-1 all classes
 	private int maxNrOfInstancesPerClass = 20;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
@@ -168,16 +176,21 @@ public class Evaluation {
 	public Map<String, Object> run(){
 		Model referenceDataset = createDBpediaReferenceDataset();
 		// instance modifiers
-//		Map<Modifier, Double> instanceModefiersAndRates= new HashMap<Modifier, Double>();
-//		instanceModefiersAndRates.put(new MisspellingModifier(), 0.1d);
-//		Map<Modifier, Double> classModefiersAndRates= new HashMap<Modifier, Double>();
+//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
+		instanceModefiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
+//		instanceModefiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
+//		instanceModefiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
+//		instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
+//		instanceModefiersAndRates.put(new InstanceSplitModifier(),			0.2d);
+
 		
 		// class modifiers
-		classModefiersAndRates.put(new ClassSplitModifier(), 0.2d);
-		classModefiersAndRates.put(new ClassDeleteModifier(), 0.2d);
-		classModefiersAndRates.put(new ClassMergeModifier(), 0.2d);
-		classModefiersAndRates.put(new ClassRenameModifier(), 0.2d);
-		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 0.2d);
+//		classModefiersAndRates.put(new ClassIdentityModifier(), 1d);
+		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
+//		classModefiersAndRates.put(new ClassDeleteModifier(),		0.2d);
+//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
+//		classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
+//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
 		Model modifiedRefrenceDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 		try {
 			// just 4 test
@@ -211,6 +224,9 @@ public class Evaluation {
 		int j=1;
 		for(Modifier m: classModefiersAndRates.keySet()){
 			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + classModefiersAndRates.get(m)*100 + "%");
+		}
+		for(Modifier m: instanceModefiersAndRates.keySet()){
+			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + instanceModefiersAndRates.get(m)*100 + "%");
 		}
 		for(String key:result.keySet()){
 			if(key.equals("mapping")){

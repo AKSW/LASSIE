@@ -104,14 +104,14 @@ public class ExpressiveSchemaMappingGenerator {
 	 */
 	protected int maxNrOfNegativeExamples = 100;//20;
 	protected NamedClass currentClass;
-	protected KnowledgeBase source;
-	protected KnowledgeBase target;
+	protected KnowledgeBase sourceKB;
+	protected KnowledgeBase targetKB;
 	protected String linkingProperty = OWL.sameAs.getURI();
 	protected int maxRecursionDepth = 2;
 	/**
 	 * LIMES Config
 	 */
-	static double coverage_LIMES = 0.7;
+	static double coverage_LIMES = 0.8;
 	static double beta_LIMES = 1d;
 	static String fmeasure_LIMES = "own";
 	protected final int linkingMaxNrOfExamples_LIMES = 100;
@@ -134,8 +134,8 @@ public class ExpressiveSchemaMappingGenerator {
 	}
 
 	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, String linkingProperty) {
-		this.source = source;
-		this.target = target;
+		this.sourceKB = source;
+		this.targetKB = target;
 		this.linkingProperty = linkingProperty;
 
 		mon = MonitorFactory.getTimeMonitor("time");
@@ -146,17 +146,17 @@ public class ExpressiveSchemaMappingGenerator {
 
 	public void run() {
 		// get all classes C_i in source KB
-		Set<NamedClass> sourceClasses = getClasses(source);
+		Set<NamedClass> sourceClasses = getClasses(sourceKB);
 
 		// get all classes D_i in target KB
-		Set<NamedClass> targetClasses = getClasses(target);
+		Set<NamedClass> targetClasses = getClasses(targetKB);
 
 		run(sourceClasses, targetClasses);
 	}
 
 	public void run(Set<NamedClass> sourceClasses) {
 		// get all classes D_i in target KB
-		Set<NamedClass> targetClasses = getClasses(target);
+		Set<NamedClass> targetClasses = getClasses(targetKB);
 
 		run(sourceClasses, targetClasses);
 	}
@@ -205,7 +205,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 			//set the target class expressions
 			targetClassExpressions = mapping.values();
-			double newTotalCoverage = computeCoverage(mapping, source);
+			double newTotalCoverage = computeCoverage(mapping);
 
 			if((newTotalCoverage-totalCoverage) <= coverageThreshold){
 				break;
@@ -242,17 +242,20 @@ public class ExpressiveSchemaMappingGenerator {
 //		System.exit(1);
 	}
 
-	double computeCoverage(Map<NamedClass, Description> mapping, KnowledgeBase kb){
+	double computeCoverage(Map<NamedClass, Description> mapping){
 
 		double totalCoverage = 0;
 
 		for (Entry<NamedClass, Description> entry : mapping.entrySet()) {
-			NamedClass source = entry.getKey();
-			Description target = entry.getValue();
+			NamedClass sourceClass 			= entry.getKey();
+			Description targetDescription 	= entry.getValue();
 
-			SortedSet<Individual> sourceInstances = getInstances(source, kb);
-			SortedSet<Individual> targetInstances = getInstances(target, kb);
-
+			SortedSet<Individual> sourceInstances = getInstances(sourceClass, sourceKB);
+			SortedSet<Individual> targetInstances = getInstances(targetDescription, targetKB);
+			
+			System.out.println(sourceInstances.size() + " sourceInstances : " + sourceInstances);
+			System.out.println(targetInstances.size() + " targetInstances: "  + targetInstances);
+			
 			double coverage = computeJaccardSimilarity(sourceInstances, targetInstances);
 			totalCoverage += coverage;
 		}
@@ -265,8 +268,32 @@ public class ExpressiveSchemaMappingGenerator {
 		// JaccardDistance = 2*|C_i n D_j|/(|C_i|+|D_j|)
 		SetView<Individual> intersection = Sets.intersection(sourceInstances, targetInstances);
 		SetView<Individual> union = Sets.union(sourceInstances, targetInstances);
-//		return (double) (intersection.size())/union.size(); 
-		return 2*((double)intersection.size())/(sourceInstances.size()+targetInstances.size());
+		
+	
+		
+		System.out.println("intersection.size: "+ intersection.size() + "\n intersection instances: " + intersection );
+		
+		//TODO  remove comment and delete next statement
+		int targetInstancesSize = targetInstances.size(); 
+//		int targetInstancesSize = sourceInstances.size();
+		double dice    = 2*((double)intersection.size())/(double)(sourceInstances.size()+targetInstancesSize);
+		System.out.println("Dice distance: " + dice);
+		
+		//TODO  remove comment and delete next statement
+		double jaccard = (double) intersection.size() / (double) union.size();
+//		double jaccard = (double) intersection.size() / (double) targetInstancesSize;
+		System.out.println("Jaccard distance: " + jaccard);
+		
+		double overlap = (double) intersection.size() / (double) Math.min(sourceInstances.size(), targetInstancesSize);
+		System.out.println("Overlap distance: " + overlap);
+		
+		double alpha = 1, beta = 0.2;
+		SetView<Individual> sourceDifTarget = Sets.difference(sourceInstances, targetInstances);
+		SetView<Individual> targetDifsource = Sets.difference(targetInstances, sourceInstances);
+		double tversky = (double)intersection.size() / ((double) intersection.size() + alpha * (double) sourceDifTarget.size() + beta * (double) targetDifsource.size()); 
+		System.out.println("Tversky distance: " + tversky);
+		
+		return overlap;
 	}
 
 	/**
@@ -287,7 +314,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 			//get the fragment describing the instances of C_i
 			logger.info("Computing fragment...");
-			Model sourceFragment = getFragment(sourceInstances, source, linkingMaxRecursionDepth_LIMES);
+			Model sourceFragment = getFragment(sourceInstances, sourceKB, linkingMaxRecursionDepth_LIMES);
 			removeNonLiteralStatements(sourceFragment);
 			logger.info("...got " + sourceFragment.size() + " triples.");
 			sourceClassToModel.put(sourceClass, sourceFragment);
@@ -306,7 +333,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 			// get the fragment describing the instances of D_i
 			logger.info("Computing fragment...");
-			Model targetFragment = getFragment(targetInstances, target, linkingMaxRecursionDepth_LIMES);
+			Model targetFragment = getFragment(targetInstances, targetKB, linkingMaxRecursionDepth_LIMES);
 			removeNonLiteralStatements(targetFragment);
 			logger.info("...got " + targetFragment.size() + " triples.");
 			targetClassExpressionToModel.put(targetClass, targetFragment);
@@ -431,7 +458,7 @@ public class ExpressiveSchemaMappingGenerator {
 			//starting from the positive examples, we first extract the fragment for them
 			logger.info("Extracting fragment for positive examples...");
 			mon.start();
-			Model positiveFragment = getFragment(positiveExamplesSample, target);
+			Model positiveFragment = getFragment(positiveExamplesSample, targetKB);
 			mon.stop();
 			logger.info("...got " + positiveFragment.size() + " triples in " + mon.getLastValue() + "ms.");
 //			for (Individual ind : positiveExamplesSample) {
@@ -442,7 +469,7 @@ public class ExpressiveSchemaMappingGenerator {
 			//compute the negative examples
 			logger.info("Computing negative examples...");
 			MonitorFactory.getTimeMonitor("negative examples").start();
-			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(target.getReasoner(), target.getNamespace());
+			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
 			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
 			negativeExamples.removeAll(positiveExamples);
 			MonitorFactory.getTimeMonitor("negative examples").stop();
@@ -453,7 +480,7 @@ public class ExpressiveSchemaMappingGenerator {
 			//create fragment for negative examples
 			logger.info("Extracting fragment for negative examples...");
 			mon.start();
-			Model negativeFragment = getFragment(negativeExamplesSample, target);
+			Model negativeFragment = getFragment(negativeExamplesSample, targetKB);
 			mon.stop();
 			logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
 
@@ -465,7 +492,7 @@ public class ExpressiveSchemaMappingGenerator {
 			OntModel fullFragment = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM);
 			fullFragment.add(positiveFragment);
 			fullFragment.add(negativeFragment);
-			filter(fullFragment, target.getNamespace());
+			filter(fullFragment, targetKB.getNamespace());
 			
 			//learn the class expressions
 			return learnClassExpressions(fullFragment, positiveExamplesSample, negativeExamplesSample);
@@ -482,7 +509,7 @@ public class ExpressiveSchemaMappingGenerator {
 			logger.info("Initializing reasoner...");
 			AbstractReasonerComponent rc = new FastInstanceChecker(ks);
 			rc.init();
-			rc.setSubsumptionHierarchy(target.getReasoner().getClassHierarchy());
+			rc.setSubsumptionHierarchy(targetKB.getReasoner().getClassHierarchy());
 			logger.info("Done.");
 
 			//initialize the learning problem
@@ -550,7 +577,7 @@ public class ExpressiveSchemaMappingGenerator {
 		mon.start();
 		SortedSet<Individual> instances = new TreeSet<Individual>();
 		String query = String.format("SELECT DISTINCT ?s WHERE {?s a <%s>}", cls.getName());
-		ResultSet rs = source.executeSelect(query);
+		ResultSet rs = sourceKB.executeSelect(query);
 		QuerySolution qs;
 		while (rs.hasNext()) {
 			qs = rs.next();
@@ -570,7 +597,7 @@ public class ExpressiveSchemaMappingGenerator {
 	 * @return
 	 */
 	private SortedSet<Individual> getTargetInstances(Description desc) {
-		return getInstances(desc, target);
+		return getInstances(desc, targetKB);
 	}
 
 	private SortedSet<Individual> getInstances(Description desc, KnowledgeBase kb) {
@@ -603,8 +630,8 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.info("Retrieving instances to which instances of class " + cls + " are linked to via property " + linkingProperty + "...");
 		mon.start();
 		SortedSet<Individual> instances = new TreeSet<Individual>();
-		String query = String.format("SELECT DISTINCT ?o WHERE {?s a <%s>. ?s <%s> ?o. FILTER(REGEX(?o,'^%s'))}", cls.getName(), linkingProperty, target.getNamespace());
-		ResultSet rs = source.executeSelect(query);
+		String query = String.format("SELECT DISTINCT ?o WHERE {?s a <%s>. ?s <%s> ?o. FILTER(REGEX(?o,'^%s'))}", cls.getName(), linkingProperty, targetKB.getNamespace());
+		ResultSet rs = sourceKB.executeSelect(query);
 		QuerySolution qs;
 		while (rs.hasNext()) {
 			qs = rs.next();

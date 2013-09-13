@@ -104,7 +104,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		//1. read class and instances
 		NamedClass sourceClass = new NamedClass(sourceClassUri);
 		// get perfect positive examples as some instance of the source class directly without using LIMES
-		SortedSet<Individual> targetInstances = source.getReasoner().getIndividuals(sourceClass,maxNrOfInstancesPerClass);
+		SortedSet<Individual> targetInstances = sourceKB.getReasoner().getIndividuals(sourceClass,maxNrOfInstancesPerClass);
 		
 		
 //		NamedClass sourceClass = null;
