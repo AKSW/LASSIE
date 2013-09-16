@@ -49,6 +49,7 @@ public class RemoteKnowledgeBase extends AbstractKnowledgeBase {
 		return cache;
 	}
 
+	@Override
 	public ResultSet executeSelect(String query) {
 		ResultSet rs;
 		if(cache != null){
@@ -67,6 +68,7 @@ public class RemoteKnowledgeBase extends AbstractKnowledgeBase {
 		return rs;
 	}
 
+	@Override
 	public Model executeConstruct(String query) {
 		Model model = null;
 		if(cache != null){
@@ -90,6 +92,7 @@ public class RemoteKnowledgeBase extends AbstractKnowledgeBase {
 		return model;
 	}
 
+	@Override
 	public boolean isRemote() {
 		return true;
 	}

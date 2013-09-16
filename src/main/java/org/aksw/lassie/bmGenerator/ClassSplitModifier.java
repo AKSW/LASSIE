@@ -92,6 +92,7 @@ public class ClassSplitModifier extends Modifier {
 			}
 			Union optimalSolution = new Union(children);
 			optimalSolutions.put(new NamedClass(className), optimalSolution);
+//			System.out.println("********************** optimalSolutions: "+optimalSolutions);
 
 			//perform splitting
 			for(String targetClassUri:splitTargetClassUri){

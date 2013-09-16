@@ -26,16 +26,19 @@ public class LocalKnowledgeBase extends AbstractKnowledgeBase {
 		return model;
 	}
 
+	@Override
 	public ResultSet executeSelect(String query) {
 		ResultSet rs = QueryExecutionFactory.create(query, this.model).execSelect();
 		return rs;
 	}
 
+	@Override
 	public Model executeConstruct(String query) {
 		Model model = QueryExecutionFactory.create(query, this.model).execConstruct();
 		return model;
 	}
 
+	@Override
 	public boolean isRemote() {
 		return false;
 	}

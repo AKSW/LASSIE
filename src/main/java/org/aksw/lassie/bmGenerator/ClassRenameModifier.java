@@ -45,7 +45,6 @@ public class ClassRenameModifier extends Modifier {
 			modifiedClasses.add(renamedClassName);
 			optimalSolutions.put(new NamedClass(className), new NamedClass(renamedClassName));
 		}
-		
 		return subModel;
 	}
 

@@ -19,7 +19,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
-import org.aksw.lassie.bmGenerator.ClassDeleteModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
@@ -38,7 +37,6 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
-import org.dllearner.kb.sparql.simple.ClassIndexer;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClass;
@@ -50,14 +48,12 @@ import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
-import de.uni_leipzig.simba.bmGenerator.ClassMergeModifier;
-
 public class Evaluation {
 
 
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
-//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+	//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
@@ -72,8 +68,8 @@ public class Evaluation {
 
 	private static Map<Modifier, Double> classModefiersAndRates    = new HashMap<Modifier, Double>();
 	private static Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
-	
-	private int maxNrOfClasses = 1;//-1 all classes
+
+	private int maxNrOfClasses = 2;//-1 all classes
 	private int maxNrOfInstancesPerClass = 20;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
@@ -102,9 +98,9 @@ public class Evaluation {
 				dbpediaClasses = new TreeSet<NamedClass>(tmp.subList(0, maxNrOfClasses));
 			}
 			//TODO remove
-//			dbpediaClasses = Sets.newHashSet(
-//					new NamedClass("http://dbpedia.org/ontology/Ambassador"), 
-//					new NamedClass("http://dbpedia.org/ontology/Continent"));
+			//			dbpediaClasses = Sets.newHashSet(
+			//					new NamedClass("http://dbpedia.org/ontology/Ambassador"), 
+			//					new NamedClass("http://dbpedia.org/ontology/Continent"));
 
 			Model model = ModelFactory.createDefaultModel();
 			//try to load sample from cache
@@ -149,7 +145,7 @@ public class Evaluation {
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(referenceDataset);
 		Modifier.setNameSpace(dbpediaNamespace);
 		benchmarker.setBaseClasses(dbpediaClasses);
-		
+
 		Model testDataset = ModelFactory.createDefaultModel();
 
 		if(!instanceModefiersAndRates.isEmpty()){
@@ -166,21 +162,21 @@ public class Evaluation {
 	public Map<String, Object> run(){
 		Model referenceDataset = createDBpediaReferenceDataset();
 		// instance modifiers
-//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
+		//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
 		instanceModefiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
-//		instanceModefiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
-//		instanceModefiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
-//		instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
-//		instanceModefiersAndRates.put(new InstanceSplitModifier(),			0.2d);
+		//		instanceModefiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
+		//		instanceModefiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
+		//		instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
+		//		instanceModefiersAndRates.put(new InstanceSplitModifier(),			0.2d);
 
-		
+
 		// class modifiers
-//		classModefiersAndRates.put(new ClassIdentityModifier(), 1d);
+		//		classModefiersAndRates.put(new ClassIdentityModifier(), 1d);
 		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
-//		classModefiersAndRates.put(new ClassDeleteModifier(),		0.2d);
-//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
-//		classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
-//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
+		//		classModefiersAndRates.put(new ClassDeleteModifier(),		0.2d);
+		//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
+		//		classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
+		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
 		Model modifiedRefrenceDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 		try {
 			// just 4 test
@@ -188,7 +184,7 @@ public class Evaluation {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		
+
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedRefrenceDataset); 
 		KnowledgeBase target = new RemoteKnowledgeBase(endpoint, cache, dbpediaNamespace);
 
@@ -199,7 +195,50 @@ public class Evaluation {
 
 		return result;
 	}
-	
+
+
+	public Map<String, Object> runSplit(){
+		Model referenceDataset = createDBpediaReferenceDataset();
+		// instance modifiers
+		//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
+		instanceModefiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
+		//		instanceModefiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
+		//		instanceModefiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
+		//		instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
+		//		instanceModefiersAndRates.put(new InstanceSplitModifier(),			0.2d);
+
+
+		// class modifiers
+		//		classModefiersAndRates.put(new ClassIdentityModifier(), 1d);
+		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
+		//		classModefiersAndRates.put(new ClassDeleteModifier(),		0.2d);
+		//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
+		//		classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
+		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
+		Model modifiedRefrenceDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
+		try {
+			// just 4 test
+			modifiedRefrenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		KnowledgeBase source = new LocalKnowledgeBase(modifiedRefrenceDataset); 
+		KnowledgeBase target = new RemoteKnowledgeBase(endpoint, cache, dbpediaNamespace);
+
+		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
+		generator.setTargetDomainNameSpace(dbpediaNamespace);
+
+		List<Modifier> modifiers = new ArrayList<Modifier>();
+		modifiers.add(new ClassSplitModifier());
+		generator.setModifiers(modifiers);
+
+		Map<String, Object> result = generator.runSplit(ModifiedDbpediaClasses, dbpediaClasses);
+
+
+		return result;
+	}
+
 
 	/**
 	 * @param result
@@ -221,7 +260,7 @@ public class Evaluation {
 		for(String key:result.keySet()){
 			if(key.equals("mapping")){
 				System.out.println("\nFINAL MAPPING:");
-				
+
 				Map<NamedClass, Description> map = (Map<NamedClass, Description>) result.get(key);
 				for(NamedClass nC: map.keySet()){
 					System.out.println(nC + "\t" + map.get(nC));
@@ -263,19 +302,23 @@ public class Evaluation {
 					}
 				}
 			}
+
+			if(key.equals("Pos")){
+				System.out.println("\nResult position:");
+				List<Integer> pos = (List<Integer>) result.get(key);
+				for(Integer p: pos){
+					System.out.println("\n"+ p);
+				}
+			}
 		}
 	}
-	
-	public int intensionalEvaluation(List<? extends EvaluatedDescription> descriptions, Modifier modifier, NamedClass cls){
-		Description targetDescription = modifier.getOptimalSolution(cls);
-		int pos = descriptions.indexOf(targetDescription);
-		return pos;
-	}
+
+
 
 
 	public static void main(String[] args) throws Exception {
 		Evaluation evaluator = new Evaluation();
-		Map<String, Object> result = evaluator.run();
+		Map<String, Object> result = evaluator.runSplit();
 		evaluator.printResults(result);
 	}
 

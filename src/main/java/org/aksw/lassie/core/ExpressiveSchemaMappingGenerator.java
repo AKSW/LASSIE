@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,6 +20,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
@@ -62,7 +62,6 @@ import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -117,7 +116,14 @@ public class ExpressiveSchemaMappingGenerator {
 	protected final int linkingMaxNrOfExamples_LIMES = 100;
 	protected final int linkingMaxRecursionDepth_LIMES = 0;
 	private String targetDomainNameSpace = "";
+	protected List<Modifier> modifiers;
 	
+	/**
+	 * @param modifiers the modifiers to set
+	 */
+	public void setModifiers(List<Modifier> modifiers) {
+		this.modifiers = modifiers;
+	}
 
 	/**
 	 * @param domainOntolog the domainOntolog to set
@@ -222,6 +228,66 @@ public class ExpressiveSchemaMappingGenerator {
 		return result;
 	}
 
+	
+	public Map<String, Object> runSplit(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+		int pos = 0;
+		Map<String, Object> result = new HashMap<String, Object>();
+		List<Integer> posList = new ArrayList<Integer>();
+		
+		//initially, the class expressions E_i in the target KB are the named classes D_i
+		Collection<Description> targetClassExpressions = new TreeSet<Description>();
+		targetClassExpressions.addAll(targetClasses);
+
+		//perform the iterative schema matching
+		Map<NamedClass, Description> mapping = new HashMap<NamedClass, Description>();
+		Map<NamedClass, List<? extends EvaluatedDescription>> mappingTop10 = new HashMap<NamedClass, List<? extends EvaluatedDescription>>();
+		int i = 1;
+		double totalCoverage = 0;
+		Map<Integer, Double> coverageMap = new TreeMap<Integer, Double>();
+		do {
+			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
+			//a map from C_i to a set of instances in the target KB
+			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
+			result.put("posExamples", links);
+			int j=1;
+			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
+			for (NamedClass sourceClass : sourceClasses) {
+				
+				logger.info("+++++++++++++++++++++++++++++++++" + sourceClass + "+++++++++++++++++++++");
+				currentClass = sourceClass;
+				try {
+					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
+
+					serializeCurrentObjects(j, sourceClass, targetInstances);
+					
+					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
+					
+					pos = intensionalEvaluation(mappingList, modifiers.get(0), sourceClass);
+					posList.add(pos);
+				} catch (NonExistingLinksException e) {
+					logger.warn(e.getMessage() + "Skipped learning.");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			//set the target class expressions
+			targetClassExpressions = mapping.values();
+			
+		} while (i <= maxNrOfIterations && pos < 0);
+		result.put("Pos", posList);
+		result.put("mapping", mapping);
+		result.put("mappingTop10", mappingTop10);
+		result.put("coverage", coverageMap);
+		return result;
+	}
+	
+	public int intensionalEvaluation(List<? extends EvaluatedDescription> descriptions, Modifier modifier, NamedClass cls){
+		Description targetDescription = modifier.getOptimalSolution(cls);
+		int pos = descriptions.indexOf(targetDescription);
+		return pos;
+	}
+	
+	
 	/**
 	 * @param j
 	 * @param sourceClass
@@ -276,7 +342,7 @@ public class ExpressiveSchemaMappingGenerator {
 		//TODO  remove comment and delete next statement
 		int targetInstancesSize = targetInstances.size(); 
 //		int targetInstancesSize = sourceInstances.size();
-		double dice    = 2*((double)intersection.size())/(double)(sourceInstances.size()+targetInstancesSize);
+		double dice    = 2*((double)intersection.size())/(sourceInstances.size()+targetInstancesSize);
 		System.out.println("Dice distance: " + dice);
 		
 		//TODO  remove comment and delete next statement
@@ -290,7 +356,7 @@ public class ExpressiveSchemaMappingGenerator {
 		double alpha = 1, beta = 0.2;
 		SetView<Individual> sourceDifTarget = Sets.difference(sourceInstances, targetInstances);
 		SetView<Individual> targetDifsource = Sets.difference(targetInstances, sourceInstances);
-		double tversky = (double)intersection.size() / ((double) intersection.size() + alpha * (double) sourceDifTarget.size() + beta * (double) targetDifsource.size()); 
+		double tversky = intersection.size() / (intersection.size() + alpha * sourceDifTarget.size() + beta * targetDifsource.size()); 
 		System.out.println("Tversky distance: " + tversky);
 		
 		return overlap;
@@ -403,6 +469,9 @@ public class ExpressiveSchemaMappingGenerator {
 		MeshBasedSelfConfigurator bsc = new MeshBasedSelfConfigurator(source, target, coverage_LIMES, beta_LIMES);
 		bsc.setMeasure(fmeasure_LIMES);
 		List<SimpleClassifier> cp = bsc.getBestInitialClassifiers();
+//		Set<String> measure =  new HashSet<String>();
+//		measure.add("trigrams");
+//		List<SimpleClassifier> cp = bsc.getBestInitialClassifiers(measure);
 		if(cp.size() == 0) 
 		{
 			logger.warn("No property mapping found");
