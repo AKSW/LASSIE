@@ -5,10 +5,13 @@ package org.aksw.lassie.bmGenerator;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.NamedClass;
 
 import com.hp.hpl.jena.query.QueryExecution;
@@ -47,11 +50,20 @@ public abstract class Modifier {
 	static protected List<String> baseClasses     = new ArrayList<String>();
 	static protected List<String> modifiedClasses = new ArrayList<String>();
 	
+	Map<NamedClass, Description> optimalSolutions = new HashMap<NamedClass, Description>();
+	
 	/**
 	 * @return the baseClasses
 	 */
 	public List<String> getBaseClasses() {
 		return baseClasses;
+	}
+	
+	/**
+	 * @return the optimalSolutions
+	 */
+	public Description getOptimalSolution(NamedClass cls) {
+		return optimalSolutions.get(cls);
 	}
 
 	/**

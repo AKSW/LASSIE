@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -21,18 +20,8 @@ import java.util.TreeSet;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
 import org.aksw.lassie.bmGenerator.ClassDeleteModifier;
-import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
-import org.aksw.lassie.bmGenerator.ClassMergeModifier;
-import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
-import org.aksw.lassie.bmGenerator.ClassTypeDeleteModifier;
-import org.aksw.lassie.bmGenerator.InstanceAbbreviationModifier;
-import org.aksw.lassie.bmGenerator.InstanceAcronymModifier;
-import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
-import org.aksw.lassie.bmGenerator.InstanceMergeModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
-import org.aksw.lassie.bmGenerator.InstancePermutationModifier;
-import org.aksw.lassie.bmGenerator.InstanceSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -49,6 +38,7 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
+import org.dllearner.kb.sparql.simple.ClassIndexer;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClass;
@@ -57,10 +47,10 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.sparql.function.library.namespace;
+
+import de.uni_leipzig.simba.bmGenerator.ClassMergeModifier;
 
 public class Evaluation {
 
@@ -274,6 +264,12 @@ public class Evaluation {
 				}
 			}
 		}
+	}
+	
+	public int intensionalEvaluation(List<? extends EvaluatedDescription> descriptions, Modifier modifier, NamedClass cls){
+		Description targetDescription = modifier.getOptimalSolution(cls);
+		int pos = descriptions.indexOf(targetDescription);
+		return pos;
 	}
 
 
