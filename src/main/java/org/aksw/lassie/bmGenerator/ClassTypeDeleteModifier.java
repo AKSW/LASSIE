@@ -23,7 +23,7 @@ public class ClassTypeDeleteModifier extends Modifier{
 	 *@author sherif
 	 */
 	public ClassTypeDeleteModifier() {
-		// TODO Auto-generated constructor stub
+		isClassModifier = true;
 	}
 	/**
 	 * @param m
@@ -31,6 +31,7 @@ public class ClassTypeDeleteModifier extends Modifier{
 	 */
 	public ClassTypeDeleteModifier(Model m) {
 		super(m);
+		isClassModifier = true;
 	}
 
 	public static void main(String[] args) {

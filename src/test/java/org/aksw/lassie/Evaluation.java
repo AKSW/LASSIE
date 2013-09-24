@@ -17,8 +17,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
+import org.aksw.lassie.bmGenerator.ClassMergeModifier;
+import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
@@ -53,7 +56,7 @@ public class Evaluation {
 
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
-	//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
@@ -197,7 +200,7 @@ public class Evaluation {
 	}
 
 
-	public Map<String, Object> runSplit(){
+	public Map<String, Object> runIntensionalEvaluation(){
 		Model referenceDataset = createDBpediaReferenceDataset();
 		// instance modifiers
 		//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
@@ -210,10 +213,10 @@ public class Evaluation {
 
 		// class modifiers
 		//		classModefiersAndRates.put(new ClassIdentityModifier(), 1d);
-		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
+//		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
 		//		classModefiersAndRates.put(new ClassDeleteModifier(),		0.2d);
-		//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
-		//		classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
+//				classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
+				classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
 		Model modifiedRefrenceDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
 		try {
@@ -229,11 +232,17 @@ public class Evaluation {
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 
-		List<Modifier> modifiers = new ArrayList<Modifier>();
-		modifiers.add(new ClassSplitModifier());
-		generator.setModifiers(modifiers);
-
-		Map<String, Object> result = generator.runSplit(ModifiedDbpediaClasses, dbpediaClasses);
+		
+		for(Entry<Modifier, Double> clsMod2Rat : classModefiersAndRates.entrySet()){
+			System.out.println("Modifer Name: " + clsMod2Rat.getKey());
+			System.out.println("Optimal solution: " + clsMod2Rat.getKey().getOptimalSolution(dbpediaClasses.iterator().next()));
+		}
+		System.exit(1);
+		
+		
+		
+		Map<String, Object> result = 
+				generator.runIntensionalEvaluation(ModifiedDbpediaClasses, dbpediaClasses, instanceModefiersAndRates, classModefiersAndRates);
 
 
 		return result;
@@ -303,11 +312,16 @@ public class Evaluation {
 				}
 			}
 
-			if(key.equals("Pos")){
-				System.out.println("\nResult position:");
-				List<Integer> pos = (List<Integer>) result.get(key);
-				for(Integer p: pos){
-					System.out.println("\n"+ p);
+			if(key.equals("Modifier2pos")){
+				Map<Modifier, Integer> map = new HashMap<Modifier, Integer>();
+				for(Modifier m: map.keySet()){
+					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m));
+				}
+			}
+			if(key.equals("modifier2optimalSolution")){
+				Map<Modifier, Description> map = new HashMap<Modifier, Description>();
+				for(Modifier m: map.keySet()){
+					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m).toString());
 				}
 			}
 		}
@@ -318,8 +332,15 @@ public class Evaluation {
 
 	public static void main(String[] args) throws Exception {
 		Evaluation evaluator = new Evaluation();
-		Map<String, Object> result = evaluator.runSplit();
+		long startTime = System.currentTimeMillis();
+		
+//		Map<String, Object> result = evaluator.run();
+		Map<String, Object> result = evaluator.runIntensionalEvaluation();
 		evaluator.printResults(result);
+		
+		long endTime   = System.currentTimeMillis();
+		long totalTime = endTime - startTime;
+		System.out.println("totalTime: " + totalTime + " ms");
 	}
 
 }

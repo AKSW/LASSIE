@@ -25,7 +25,7 @@ public class ClassMergeModifier extends Modifier{
 	//	String mergeTargetClassuri = new String();
 	private int mergeCount = 2;
 
-
+	
 
 	/**
 	 * @return the mergeCount
@@ -47,9 +47,11 @@ public class ClassMergeModifier extends Modifier{
 	 */
 	public ClassMergeModifier(Model m) {
 		super(m);
+		isClassModifier = true;
 	}
 
 	public ClassMergeModifier() {
+		isClassModifier = true;
 	}
 
 	/* (non-Javadoc)

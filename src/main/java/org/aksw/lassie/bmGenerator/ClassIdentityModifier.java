@@ -16,9 +16,11 @@ public class ClassIdentityModifier extends Modifier {
 
 	public ClassIdentityModifier(Model m) {
 		super(m);
+		isClassModifier = true;
 	}
 
 	public ClassIdentityModifier() {
+		isClassModifier = true;
 	}
 
 	@Override

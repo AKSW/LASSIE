@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.NamedClass;
 
+import com.clarkparsia.sparqlowl.parser.antlr.SparqlOwlParser.booleanLiteral_return;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
@@ -49,8 +50,16 @@ public abstract class Modifier {
 	static protected String  nameSpace = "";
 	static protected List<String> baseClasses     = new ArrayList<String>();
 	static protected List<String> modifiedClasses = new ArrayList<String>();
+	protected boolean isClassModifier = false;
 	
 	Map<NamedClass, Description> optimalSolutions = new HashMap<NamedClass, Description>();
+	
+	public String getName(){
+		return this.getClass().getCanonicalName();
+	}
+	public boolean isClassModifier(){
+		return isClassModifier;
+	}
 	
 	/**
 	 * @return the baseClasses

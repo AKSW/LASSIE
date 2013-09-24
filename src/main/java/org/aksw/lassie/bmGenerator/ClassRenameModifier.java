@@ -19,9 +19,11 @@ public class ClassRenameModifier extends Modifier {
 
 	public ClassRenameModifier(Model m) {
 		super(m);
+		isClassModifier = true;
 	}
 
 	public ClassRenameModifier() {
+		isClassModifier = true;
 	}
 
 	/* (non-Javadoc)
@@ -43,7 +45,7 @@ public class ClassRenameModifier extends Modifier {
 			String renamedClassName = className+"_RENAME";
 			subModel = renameClass(subModel, className,  renamedClassName);
 			modifiedClasses.add(renamedClassName);
-			optimalSolutions.put(new NamedClass(className), new NamedClass(renamedClassName));
+			optimalSolutions.put(new NamedClass(renamedClassName), new NamedClass(className));
 		}
 		return subModel;
 	}

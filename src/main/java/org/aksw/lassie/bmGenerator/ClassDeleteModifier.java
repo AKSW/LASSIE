@@ -22,9 +22,11 @@ public class ClassDeleteModifier extends Modifier {
 	 */
 	public ClassDeleteModifier(Model m) {
 		super(m);
+		isClassModifier = true;
 	}
 	
 	public ClassDeleteModifier() {
+		isClassModifier = true;
 	}
 	/* (non-Javadoc)
 	 * @see de.uni_leipzig.simba.bmGenerator.Modifier#destroy(com.hp.hpl.jena.rdf.model.Model)

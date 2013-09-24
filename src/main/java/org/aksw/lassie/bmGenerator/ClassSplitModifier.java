@@ -23,6 +23,7 @@ public class ClassSplitModifier extends Modifier {
 
 
 	public ClassSplitModifier() {
+		isClassModifier = true;
 	}
 	
 	public ClassSplitModifier(int c) {
@@ -33,6 +34,7 @@ public class ClassSplitModifier extends Modifier {
 	
 	public ClassSplitModifier(Model m) {
 		super(m);
+		isClassModifier = true;
 	}
 	
 	public ClassSplitModifier(Model m, int c) {
