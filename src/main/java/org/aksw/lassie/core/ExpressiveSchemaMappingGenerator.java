@@ -638,7 +638,6 @@ public class ExpressiveSchemaMappingGenerator {
 		StringBuilder sb = new StringBuilder();
 		int i = 0;
 		for (Individual individual : individuals) {
->>>>>>> 7cee9e440a5fe4f30652f3d588dc62f430c4a91a
 			sb.append(individual.getName() + ",");
 		}
 		sb.append("...");
