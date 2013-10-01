@@ -427,14 +427,16 @@ public class ExpressiveSchemaMappingGenerator {
                 logger.info("******* COMPUTING links between " + sourceClass + " and " + targetClassExpression + "******");
                 Cache cache = getCache(sourceClassModel);
                 Cache cache2 = getCache(targetClassExpressionModel);
-                Mapping result;
+                Mapping result = null;
                 
                 //buffers the mapping results and only carries out a computation if the mapping results are unknown
                 if (mappingResults.containsKey(cache)) {
                     if (mappingResults.get(cache).containsKey(cache2)) {
                         result = mappingResults.get(cache).get(cache2);
                     }
-                } else {
+                } 
+                
+                if(result == null){
                     result = getDeterministicUnsupervisedMappings(cache, cache2);
                     if (!mappingResults.containsKey(cache)) {
                         mappingResults.put(cache, new HashMap<Cache, Mapping>());
