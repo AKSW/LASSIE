@@ -9,17 +9,17 @@ import com.hp.hpl.jena.rdf.model.Model;
  * @author sherif
  *
  */
-public class SynonymModifier extends Modifier {
+public class InstanceSynonymModifier extends Modifier {
 
 	/**
 	 * @param m
 	 *@author sherif
 	 */
-	public SynonymModifier(Model m) {
+	public InstanceSynonymModifier(Model m) {
 		super(m);
 	}
 
-	public SynonymModifier() {
+	public InstanceSynonymModifier() {
 	}
 	
 	/* (non-Javadoc)

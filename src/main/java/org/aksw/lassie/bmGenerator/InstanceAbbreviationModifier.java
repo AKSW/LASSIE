@@ -15,17 +15,17 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
  * @author sherif
  *
  */
-public class AbbreviationModifier extends Modifier {
+public class InstanceAbbreviationModifier extends Modifier {
 
     /**
 	 * @param m
 	 *@author sherif
 	 */
-	public AbbreviationModifier(Model m) {
+	public InstanceAbbreviationModifier(Model m) {
 		super(m);
 	}
 
-	public AbbreviationModifier() {
+	public InstanceAbbreviationModifier() {
 	}
 	/*
      * (non-Javadoc) @see de.uni_leipzig.simba.benchmarker.Modifier#destroy()

@@ -6,6 +6,10 @@ package org.aksw.lassie.bmGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.dllearner.core.owl.Description;
+import org.dllearner.core.owl.NamedClass;
+import org.dllearner.core.owl.Union;
+
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
@@ -15,18 +19,44 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
  */
 public class ClassSplitModifier extends Modifier {
 
-	public int splitCount = 2;
+	private int splitCount = 2;
+
+
+	public ClassSplitModifier() {
+		isClassModifier = true;
+	}
+	
+	public ClassSplitModifier(int c) {
+		if (c > 2) {
+			splitCount = c;
+		}
+	}
+	
+	public ClassSplitModifier(Model m) {
+		super(m);
+		isClassModifier = true;
+	}
+	
+	public ClassSplitModifier(Model m, int c) {
+		super(m);
+		if (c > 2) {
+			splitCount = c;
+		}
+	}
 
 
 	/**
-	 * @param m
-	 *@author sherif
+	 * @return the splitCount
 	 */
-	public ClassSplitModifier(Model m) {
-		super(m);
+	public int getSplitCount() {
+		return splitCount;
 	}
 
-	public ClassSplitModifier() {
+	/**
+	 * @param splitCount the splitCount to set
+	 */
+	public void setSplitCount(int splitCount) {
+		this.splitCount = splitCount;
 	}
 
 	/* (non-Javadoc)
@@ -35,42 +65,56 @@ public class ClassSplitModifier extends Modifier {
 	@Override
 	Model destroy(Model subModel) {
 		Model result = ModelFactory.createDefaultModel();
-		List<String> classNames = getClasses(subModel);
+		
+		List<String> classNames = new ArrayList<String>();
+		if (baseClasses.size() == 0) {
+			classNames = getClasses(subModel);
+		} else {
+			classNames = baseClasses;
+		}
+		
 		for(String className: classNames){
 			Model sourceClassModel = getClassInstancesModel(className);
 
 			//divide the source class instances equally to target classes
 			long targetClassSize = (long) Math.floor(sourceClassModel.size()/splitCount);
-			long sourceClassModeloffset = 0L;
+			long sourceClassModelOffset = 0L;
 
 			//create split classes URIs
 			List<String> splitTargetClassUri = new ArrayList<String>();
 			for(int i=0 ; i<splitCount ; i++){
-				splitTargetClassUri.add(className+"Split"+(i+1));
+				String splitUri = className +"_SPLIT_"+(i+1);
+				splitTargetClassUri.add(splitUri);
+				modifiedClasses.add(splitUri);
 			}
+			//generate optimal solution
+			List<Description> children = new ArrayList<Description>();
+			for (String uri : splitTargetClassUri) {
+				children.add(new NamedClass(uri));
+			}
+			Union optimalSolution = new Union(children);
+			optimalSolutions.put(new NamedClass(className), optimalSolution);
+//			System.out.println("********************** optimalSolutions: "+optimalSolutions);
 
 			//perform splitting
 			for(String targetClassUri:splitTargetClassUri){
-				Model splitModel = getSubModel(sourceClassModel, targetClassSize, sourceClassModeloffset); 
-				sourceClassModeloffset += targetClassSize;
+				Model splitModel = getSubModel(sourceClassModel, targetClassSize, sourceClassModelOffset); 
+				sourceClassModelOffset += targetClassSize;
 				splitModel = renameClass(splitModel, className, targetClassUri);	
 				result.add(splitModel);  
+				destroyedModel.add(splitModel);
 
 				//if some triples remains at end (<targetClassSize) add them to the last split
-				if( (sourceClassModel.size()-sourceClassModeloffset) < targetClassSize){
-					splitModel = getSubModel(sourceClassModel, sourceClassModel.size()-sourceClassModeloffset, sourceClassModeloffset); 
+				if( (sourceClassModel.size() - sourceClassModelOffset) < targetClassSize){
+					splitModel = getSubModel(sourceClassModel, sourceClassModel.size()-sourceClassModelOffset, sourceClassModelOffset); 
 					splitModel = renameClass(splitModel, className, targetClassUri);
+					result.add(splitModel);
 					destroyedModel.add(splitModel);
 					break;
 				}
 			}
 		}
 
-
-
-
-
-		result.add(destroyedModel);
 		return result;
 	}
 
@@ -79,6 +123,7 @@ public class ClassSplitModifier extends Modifier {
 		ClassSplitModifier classSpliter = new ClassSplitModifier(m);
 		System.out.println("----- Base Model -----");
 		System.out.println("Size: "+baseModel.size());
+		m.write(System.out,"TTL");
 		System.out.println();
 		System.out.println("----- Split Model -----");
 		Model destM = classSpliter.destroy(m);

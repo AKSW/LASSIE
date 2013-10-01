@@ -35,8 +35,6 @@ import org.semanticweb.owlapi.io.ToStringRenderer;
 import com.google.common.collect.Sets;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.util.FileManager;
-
 import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
 
 public class OntologyMatchingTest {
@@ -141,7 +139,6 @@ public class OntologyMatchingTest {
 	@Test
 	public void testSingleClassLinkedGeoDataToDBpedia() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(linkedGeoData, dbpedia);
-		matcher.setFragmentDepth(fragmentDepth);
 		NamedClass nc = new NamedClass("http://linkedgeodata.org/ontology/Aerodrome");
 		try {
 			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);

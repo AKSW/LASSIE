@@ -13,18 +13,18 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
  * @author sherif
  *
  */
-public class AcronymModifier extends Modifier{
+public class InstanceAcronymModifier extends Modifier{
 	
 	public int maxAcronymLength = 4;
 	/**
 	 * @param m
 	 *@author sherif
 	 */
-	public AcronymModifier(Model m) {
+	public InstanceAcronymModifier(Model m) {
 		super(m);
 	}
 
-	public AcronymModifier() {
+	public InstanceAcronymModifier() {
 	}
 
 
@@ -94,7 +94,7 @@ public class AcronymModifier extends Modifier{
 	}
 	
 	public static void main(String args[]){
-		AcronymModifier a = new AcronymModifier();
+		InstanceAcronymModifier a = new InstanceAcronymModifier();
 		System.out.println(a.acronyam("sdsadasd jkhkh kjkljl jhkjh jkbnk"));
 	}
 }

@@ -15,7 +15,7 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
  * @author sherif
  *
  */
-public class MisspellingModifier extends Modifier {
+public class InstanceMisspellingModifier extends Modifier {
 	
 	private final String alphabet="abcdefghijklmnopqrstuvwxzyABCDEFGHIJKLMNOPQRSTUVWXYZ"; 
 	private final int MISSPELING_MODIFIERS_COUNT = 4 ;   // No of misspelling modifiers so far
@@ -38,11 +38,11 @@ public class MisspellingModifier extends Modifier {
 	 * @param m
 	 *@author sherif
 	 */
-	public MisspellingModifier(Model m) {
+	public InstanceMisspellingModifier(Model m) {
 		super(m);
 	}
 
-	public MisspellingModifier() {
+	public InstanceMisspellingModifier() {
 	}
 
 	/**
@@ -184,7 +184,6 @@ public class MisspellingModifier extends Modifier {
 		}
 		String objectLitral     = stmt.getObject().asNode().getLiteral().getLexicalForm();
 		String misspelledLitral = new String();
-
 		if(permutationTriplesCount>0){
 			misspelledLitral=charPermutation(objectLitral);
 			permutationTriplesCount--;
@@ -198,7 +197,6 @@ public class MisspellingModifier extends Modifier {
 			misspelledLitral=charSubstitution(objectLitral);
 			substitutionTriplesCount--;
 		}
-		
 		RDFNode misspelledObject= ResourceFactory.createTypedLiteral(misspelledLitral);
 		Statement result        = ResourceFactory.createStatement(stmt.getSubject(), stmt.getPredicate(), misspelledObject);
 		return result;
@@ -330,7 +328,7 @@ public class MisspellingModifier extends Modifier {
 
 
 	public static void main(String args[]){
-		MisspellingModifier m= new MisspellingModifier();
+		InstanceMisspellingModifier m= new InstanceMisspellingModifier();
 		System.out.println("charDeletion: "+m.charDeletion("abcd"));
 		System.out.println("charInsertion: "+m.charInsertion("abcd"));
 		System.out.println("charPermutation: "+m.charPermutation("abcd"));

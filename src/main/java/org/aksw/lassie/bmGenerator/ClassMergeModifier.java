@@ -7,11 +7,14 @@ package org.aksw.lassie.bmGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.xerces.util.URI;
-import org.apache.xerces.util.URI.MalformedURIException;
+import org.dllearner.core.owl.Description;
+import org.dllearner.core.owl.NamedClass;
+import org.dllearner.core.owl.Union;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import com.hp.hpl.jena.vocabulary.RDF;
 
 /**
  * @author sherif
@@ -20,9 +23,23 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 public class ClassMergeModifier extends Modifier{
 	//	List<String> mergeSourceClassUris = new ArrayList<String>();
 	//	String mergeTargetClassuri = new String();
-	public int mergeCount = 2;
+	private int mergeCount = 2;
 
+	
 
+	/**
+	 * @return the mergeCount
+	 */
+	public int getMergeCount() {
+		return mergeCount;
+	}
+
+	/**
+	 * @param mergeCount the mergeCount to set
+	 */
+	public void setMergeCount(int mergeCount) {
+		this.mergeCount = mergeCount;
+	}
 
 	/**
 	 * @param m
@@ -30,30 +47,52 @@ public class ClassMergeModifier extends Modifier{
 	 */
 	public ClassMergeModifier(Model m) {
 		super(m);
+		isClassModifier = true;
 	}
 
 	public ClassMergeModifier() {
+		isClassModifier = true;
 	}
 
 	/* (non-Javadoc)
 	 * @see de.uni_leipzig.simba.bmGenerator.Modifier#destroy(com.hp.hpl.jena.rdf.model.Model)
 	 */
+	@Override
 	Model destroy(Model subModel) {
 		Model result = ModelFactory.createDefaultModel();
-		List<String> classNames = getClasses(subModel);
+
+		List<String> classNames = new ArrayList<String>();
+		if (baseClasses.size() == 0) {
+			classNames = getClasses(subModel);
+		} else {
+			classNames = baseClasses;
+		}
+		
+		String mergeTargetClassUri = new String();
 		List<String> mergeSourceClassUris = new ArrayList<String>();
 		
 		for(int i=0 ; i<classNames.size() ; i+=mergeCount){
-			String mergeTargetClassUri = new String();
 			mergeSourceClassUris.removeAll(mergeSourceClassUris);
 			for(int j=0 ; j<mergeCount && i+j<classNames.size() ; j++){
 				mergeSourceClassUris.add(j,classNames.get(i+j)); 
-				mergeTargetClassUri = classNames.get(i+j).concat("MERGE"); 
+				mergeTargetClassUri = mergeTargetClassUri.concat(classNames.get(i+j));
+				mergeTargetClassUri = (j+1 == mergeCount)? mergeTargetClassUri : mergeTargetClassUri.concat("_MERGE_");
 			}
-			for(String sourceClassUri:mergeSourceClassUris){
+			modifiedClasses.add(mergeTargetClassUri);
+
+			for(String sourceClassUri : mergeSourceClassUris){
 				Model sourceClassModel = getClassInstancesModel(sourceClassUri);
 				sourceClassModel = renameClass(sourceClassModel, sourceClassUri, mergeTargetClassUri);
 				result.add(sourceClassModel);
+
+				//generate optimal solution
+				List<Description> children = new ArrayList<Description>();
+				for (String uri : mergeSourceClassUris) {
+					children.add(new NamedClass(uri));
+				}
+				Union optimalSolution = new Union(children);
+				optimalSolutions.put(new NamedClass(mergeTargetClassUri), optimalSolution);
+				
 			}
 		}
 		return result;
@@ -65,14 +104,32 @@ public class ClassMergeModifier extends Modifier{
 		Model m= loadModel(args[0]);
 		ClassMergeModifier classMerger=new ClassMergeModifier(m);
 
-		System.out.println("----- Base Model -----");
+		System.out.println("----- Base Model -----\n");
 		System.out.println("Size: "+m.size());
-//		baseModel.write(System.out,"TTL");
+		baseModel.write(System.out,"TTL");
 		System.out.println();
 
-		System.out.println("----- Merge Model -----");
+		System.out.println("\n\n----- Merge Model -----\n");
 		Model desM = classMerger.destroy(m);
 		System.out.println("Size: "+desM.size());
 		desM.write(System.out,"TTL");
+
+		//		Model test= ModelFactory.createDefaultModel();
+		//		test.add(ResourceFactory.createResource("aaaa"),RDF.type,ResourceFactory.createResource("a"));
+		//		test.add(ResourceFactory.createResource("bbbb"),RDF.type,ResourceFactory.createResource("b"));
+		//		test.add(ResourceFactory.createResource("cccc"),RDF.type,ResourceFactory.createResource("c"));
+		//		test.add(ResourceFactory.createResource("dddd"),RDF.type,ResourceFactory.createResource("d"));
+		//		test.add(ResourceFactory.createResource("eeee"),RDF.type,ResourceFactory.createResource("e"));
+		//		test.add(ResourceFactory.createResource("ffff"),RDF.type,ResourceFactory.createResource("f"));
+		//		test.write(System.out,"TTL");
+		//		System.out.println(test.size());
+		//		System.out.println("----------------------------------");
+		//		ClassMergeModifier classMerger=new ClassMergeModifier(test);
+		//		Model desM = classMerger.destroy(test);
+		//		System.out.println(desM.size());
+		//		desM.write(System.out,"TTL");
+		//		classMerger.renameClass(test, "a", "X").write(System.out,"TTL");
+
+
 	}
 }

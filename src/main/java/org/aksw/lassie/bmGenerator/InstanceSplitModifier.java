@@ -20,7 +20,7 @@ import com.hp.hpl.jena.vocabulary.RDFS;
  * @author sherif
  *
  */
-public class SplitModifier extends Modifier{
+public class InstanceSplitModifier extends Modifier{
 	public int partsCount=2;
 	public List<Property> splitProperties=new ArrayList<Property>(); 
 	
@@ -29,11 +29,11 @@ public class SplitModifier extends Modifier{
 	 * @param m
 	 *@author sherif
 	 */
-	public SplitModifier(Model m) {
+	public InstanceSplitModifier(Model m) {
 		super(m);
 	}
 	
-	public SplitModifier() {
+	public InstanceSplitModifier() {
 	}
 
 	/**
@@ -110,7 +110,7 @@ public class SplitModifier extends Modifier{
 
 	
 	public static void main(String args[]){
-		SplitModifier sM=new SplitModifier();
+		InstanceSplitModifier sM=new InstanceSplitModifier();
 		Resource s = ResourceFactory.createResource("medo.test");
 		RDFNode o= ResourceFactory.createTypedLiteral("Medo koko dodo");
 		Statement stmt = ResourceFactory.createStatement(s, RDFS.label, o);

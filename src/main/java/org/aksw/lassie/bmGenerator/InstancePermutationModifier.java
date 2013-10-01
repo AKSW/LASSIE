@@ -13,17 +13,17 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
  * @author sherif
  *
  */
-public class PermutationModifier extends Modifier {
+public class InstancePermutationModifier extends Modifier {
 
     /**
 	 * @param m
 	 *@author sherif
 	 */
-	public PermutationModifier(Model m) {
+	public InstancePermutationModifier(Model m) {
 		super(m);
 	}
 
-	public PermutationModifier() {
+	public InstancePermutationModifier() {
 	}
 	/*
      * (non-Javadoc) @see de.uni_leipzig.simba.benchmarker.Modifier#destroy()

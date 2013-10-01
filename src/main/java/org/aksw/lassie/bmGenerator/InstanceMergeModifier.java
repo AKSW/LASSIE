@@ -19,7 +19,7 @@ import com.hp.hpl.jena.vocabulary.RDFS;
  * @author sherif
  *
  */
-public class MergeModifier extends Modifier{
+public class InstanceMergeModifier extends Modifier{
 
 	public Property mergeProperty;
 
@@ -27,11 +27,11 @@ public class MergeModifier extends Modifier{
 	 * @param m
 	 *@author sherif
 	 */
-	public MergeModifier(Model m) {
+	public InstanceMergeModifier(Model m) {
 		super(m);
 	}
 
-	public MergeModifier() {
+	public InstanceMergeModifier() {
 	}
 
 	/**
@@ -108,7 +108,7 @@ public class MergeModifier extends Modifier{
 	}
 
 	public static void main(String args[]){
-		MergeModifier mM=new MergeModifier();
+		InstanceMergeModifier mM=new InstanceMergeModifier();
 		Resource s = ResourceFactory.createResource("medo.test");
 		RDFNode o1= ResourceFactory.createTypedLiteral("koko");
 		RDFNode o2= ResourceFactory.createTypedLiteral("Medo");
