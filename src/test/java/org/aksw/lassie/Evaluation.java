@@ -27,6 +27,7 @@ import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
+import org.aksw.lassie.kb.KnowledgebaseSampleGenerator;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
@@ -56,8 +57,8 @@ public class Evaluation {
 
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
-//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
-	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
+	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
@@ -72,7 +73,7 @@ public class Evaluation {
 	private static Map<Modifier, Double> classModefiersAndRates    = new HashMap<Modifier, Double>();
 	private static Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
 
-	private int maxNrOfClasses = 2;//-1 all classes
+	private int maxNrOfClasses = 5;//-1 all classes
 	private int maxNrOfInstancesPerClass = 20;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
@@ -201,7 +202,15 @@ public class Evaluation {
 
 
 	public Map<String, Object> runIntensionalEvaluation(){
-		Model referenceDataset = createDBpediaReferenceDataset();
+		//create a sample of the knowledge base
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass);
+		
+		//we assume that the target is the sample KB itself
+		KnowledgeBase target = sampleKB;
+		
+		//we create the source KB by modifying the data of the sample KB
+		Model sampleKBModel = sampleKB.getModel();
+		
 		// instance modifiers
 		//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
 		instanceModefiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
@@ -218,23 +227,26 @@ public class Evaluation {
 //				classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
 				classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
-		Model modifiedRefrenceDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
-		try {
-			// just 4 test
-			modifiedRefrenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModefiersAndRates, classModefiersAndRates);
+//		try {
+//			// just 4 test
+//			modifiedRefrenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
 
-		KnowledgeBase source = new LocalKnowledgeBase(modifiedRefrenceDataset); 
-		KnowledgeBase target = new RemoteKnowledgeBase(endpoint, cache, dbpediaNamespace);
+//		KnowledgeBase source = new LocalKnowledgeBase(modifiedRefrenceDataset); 
+//		KnowledgeBase target = new RemoteKnowledgeBase(endpoint, cache, dbpediaNamespace);
+		
+		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
+		generator.run();
 
 		
 		for(Entry<Modifier, Double> clsMod2Rat : classModefiersAndRates.entrySet()){
-			System.out.println("Modifer Name: " + clsMod2Rat.getKey());
+			System.out.println("Modifier Name: " + clsMod2Rat.getKey());
 			System.out.println("Optimal solution: " + clsMod2Rat.getKey().getOptimalSolution(dbpediaClasses.iterator().next()));
 		}
 		System.exit(1);

@@ -860,7 +860,11 @@ public class ExpressiveSchemaMappingGenerator {
 		Set<NamedClass> classes = new HashSet<NamedClass>();
 
 		//get all OWL classes
-		String query = String.format("SELECT ?type WHERE {?type a <%s>.}", OWL.Class.getURI());
+		String query = "SELECT ?type WHERE {?type a <" + OWL.Class.getURI() + ">.";
+		if(kb.getNamespace() != null){
+			query += "FILTER(REGEX(?type,'" + kb.getNamespace() + "'))";
+		}
+		query += "}";
 		ResultSet rs = kb.executeSelect(query);
 		QuerySolution qs;
 		while (rs.hasNext()) {
@@ -872,7 +876,11 @@ public class ExpressiveSchemaMappingGenerator {
 
 		//fallback: check for ?s a ?type where ?type is not asserted to owl:Class
 		if (classes.isEmpty()) {
-			query = "SELECT ?type WHERE {?s a ?type.}";
+			query = "SELECT DISTINCT ?type WHERE {?s a ?type.";
+			if(kb.getNamespace() != null){
+				query += "FILTER(REGEX(?type,'" + kb.getNamespace() + "'))";
+			}
+			query += "}";
 			rs = kb.executeSelect(query);
 			while (rs.hasNext()) {
 				qs = rs.next();
