@@ -117,7 +117,7 @@ public class ExpressiveSchemaMappingGenerator {
     protected final int linkingMaxRecursionDepth_LIMES = 0;
     private String targetDomainNameSpace = "";
     protected List<Modifier> modifiers = new ArrayList<Modifier>();
-    protected Map<Cache, Map<Cache, Mapping>> mappingResults = new HashMap<Cache, Map<Cache, Mapping>>();
+    protected Map<NamedClass, Map<Description, Mapping>> mappingResults = new HashMap<NamedClass, Map<Description, Mapping>>();
 
     /**
      * @param modifiers the modifiers to set
@@ -418,6 +418,8 @@ public class ExpressiveSchemaMappingGenerator {
         for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
             NamedClass sourceClass = entry.getKey();
             Model sourceClassModel = entry.getValue();
+            
+            Cache cache = getCache(sourceClassModel);
 
             //for each D_i
             for (Entry<Description, Model> entry2 : targetClassExpressionToModel.entrySet()) {
@@ -425,23 +427,23 @@ public class ExpressiveSchemaMappingGenerator {
                 Model targetClassExpressionModel = entry2.getValue();
 
                 logger.info("******* COMPUTING links between " + sourceClass + " and " + targetClassExpression + "******");
-                Cache cache = getCache(sourceClassModel);
+                
                 Cache cache2 = getCache(targetClassExpressionModel);
                 Mapping result = null;
                 
                 //buffers the mapping results and only carries out a computation if the mapping results are unknown
-                if (mappingResults.containsKey(cache)) {
-                    if (mappingResults.get(cache).containsKey(cache2)) {
+                if (mappingResults.containsKey(sourceClass)) {
+                    if (mappingResults.get(sourceClass).containsKey(targetClassExpression)) {
                         result = mappingResults.get(cache).get(cache2);
                     }
                 } 
                 
                 if(result == null){
                     result = getDeterministicUnsupervisedMappings(cache, cache2);
-                    if (!mappingResults.containsKey(cache)) {
-                        mappingResults.put(cache, new HashMap<Cache, Mapping>());
+                    if (!mappingResults.containsKey(sourceClass)) {
+                        mappingResults.put(sourceClass, new HashMap<Description, Mapping>());
                     }
-                    mappingResults.get(cache).put(cache2, result);
+                    mappingResults.get(cache).put(targetClassExpression, result);
                 }
 
                 for (Entry<String, HashMap<String, Double>> mappingEntry : result.map.entrySet()) {
@@ -490,32 +492,80 @@ public class ExpressiveSchemaMappingGenerator {
         MeshBasedSelfConfigurator bsc = new MeshBasedSelfConfigurator(source, target, coverage_LIMES, beta_LIMES);
         //ensures that only the threshold 1.0 is tested. Can be set to a lower value
         //default is 0.3
-        bsc.MIN_THRESHOLD = 1.0;
+        bsc.MIN_THRESHOLD = 0.8;
         bsc.setMeasure(fmeasure_LIMES);
         List<SimpleClassifier> cp = bsc.getBestInitialClassifiers();
 //		Set<String> measure =  new HashSet<String>();
 //		measure.add("trigrams");
 //		List<SimpleClassifier> cp = bsc.getBestInitialClassifiers(measure);
-        if (cp.size() == 0) {
-            logger.warn("No property mapping found");
-            return new Mapping();
-        }
-        //        Set<String> sProperties = getAllProperties(source);
-        //        Set<String> tProperties = getAllProperties(target);
-        //		        List<SimpleClassifier> cp = new ArrayList<SimpleClassifier>();
-        //		        for (String sProperty : sProperties) {
-        //		            for(String tProperty : tProperties){
-        //			            //cp.add(new SimpleClassifier("jaccard", 1.0, property, property));
-        //			            cp.add(new SimpleClassifier("levenshtein", 1.0, sProperty, tProperty));
-        //			            cp.add(new SimpleClassifier("trigrams", 1.0, sProperty, tProperty));
-        //		            }
-        //		        }
-        ComplexClassifier cc = bsc.getZoomedHillTop(5, 5, cp);
-        Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
-        logger.info("Mapping size is " + map.getNumberofMappings());
-        logger.info("Pseudo F-measure is " + cc.fMeasure);
-        return map;
-    }
+		if(cp.size() == 0) 
+		{
+			logger.warn("No property mapping found");
+			return new Mapping();
+		}
+		//        Set<String> sProperties = getAllProperties(source);
+		//        Set<String> tProperties = getAllProperties(target);
+		//		        List<SimpleClassifier> cp = new ArrayList<SimpleClassifier>();
+		//		        for (String sProperty : sProperties) {
+		//		            for(String tProperty : tProperties){
+		//			            //cp.add(new SimpleClassifier("jaccard", 1.0, property, property));
+		//			            cp.add(new SimpleClassifier("levenshtein", 1.0, sProperty, tProperty));
+		//			            cp.add(new SimpleClassifier("trigrams", 1.0, sProperty, tProperty));
+		//		            }
+		//		        }
+		ComplexClassifier cc = bsc.getZoomedHillTop(5, 1, cp);
+		Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
+		logger.info("Mapping size is " + map.getNumberofMappings());
+		logger.info("Pseudo F-measure is " + cc.fMeasure);
+		return map;
+	}
+    
+    /**
+     * Computes initial mappings
+     *
+     */
+    public Mapping getNonDeterministicUnsupervisedMappings(Cache source, Cache target) {
+        logger.info("Source size = " + source.getAllUris().size());
+        logger.info("Target size = " + target.getAllUris().size());
+        //TODO @Axel: Add genetic algorithm variant
+        return null;
+	}
+
+	private Set<NamedClass> getClasses(KnowledgeBase kb) {
+		Set<NamedClass> classes = new HashSet<NamedClass>();
+
+		//get all OWL classes
+		String query = "SELECT ?type WHERE {?type a <" + OWL.Class.getURI() + ">.";
+		if(kb.getNamespace() != null){
+			query += "FILTER(REGEX(STR(?type),'" + kb.getNamespace() + "'))";
+		}
+		query += "}";
+		ResultSet rs = kb.executeSelect(query);
+		QuerySolution qs;
+		while (rs.hasNext()) {
+			qs = rs.next();
+			if (qs.get("type").isURIResource()) {
+				classes.add(new NamedClass(qs.get("type").asResource().getURI()));
+			}
+		}
+
+		//fallback: check for ?s a ?type where ?type is not asserted to owl:Class
+		if (classes.isEmpty()) {
+			query = "SELECT DISTINCT ?type WHERE {?s a ?type.";
+			if(kb.getNamespace() != null){
+				query += "FILTER(REGEX(STR(?type),'" + kb.getNamespace() + "'))";
+			}
+			query += "}";
+			rs = kb.executeSelect(query);
+			while (rs.hasNext()) {
+				qs = rs.next();
+				if (qs.get("type").isURIResource()) {
+					classes.add(new NamedClass(qs.get("type").asResource().getURI()));
+				}
+			}
+		}
+		return classes;
+	}
 
     public Cache getCache(Model m) {
         Cache c = new MemoryCache();
@@ -774,8 +824,6 @@ public class ExpressiveSchemaMappingGenerator {
         Model fragment;
         for (Individual ind : individuals) {
             fragment = getFragment(ind, kb, recursionDepth);
-            System.out.println(ind + ": " + fragment.size() + " triples");
-            //			logger.info(i++  + "/" + individuals.size());
             fullFragment.add(fragment);
         }
         //        cleanUpModel(fullFragment);
@@ -870,34 +918,6 @@ public class ExpressiveSchemaMappingGenerator {
             }
         }
         model.remove(statementsToRemove);
-    }
-
-    private Set<NamedClass> getClasses(KnowledgeBase kb) {
-        Set<NamedClass> classes = new HashSet<NamedClass>();
-
-        //get all OWL classes
-        String query = String.format("SELECT ?type WHERE {?type a <%s>.}", OWL.Class.getURI());
-        ResultSet rs = kb.executeSelect(query);
-        QuerySolution qs;
-        while (rs.hasNext()) {
-            qs = rs.next();
-            if (qs.get("type").isURIResource()) {
-                classes.add(new NamedClass(qs.get("type").asResource().getURI()));
-            }
-        }
-
-        //fallback: check for ?s a ?type where ?type is not asserted to owl:Class
-        if (classes.isEmpty()) {
-            query = "SELECT ?type WHERE {?s a ?type.}";
-            rs = kb.executeSelect(query);
-            while (rs.hasNext()) {
-                qs = rs.next();
-                if (qs.get("type").isURIResource()) {
-                    classes.add(new NamedClass(qs.get("type").asResource().getURI()));
-                }
-            }
-        }
-        return classes;
     }
 
     private SortedSet<Individual> getRelatedIndividualsNamespaceAware(KnowledgeBase kb, NamedClass nc, String targetNamespace) {
