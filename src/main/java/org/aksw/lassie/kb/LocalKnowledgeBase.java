@@ -27,7 +27,7 @@ public class LocalKnowledgeBase extends AbstractKnowledgeBase {
 	}
 
 	@Override
-	public ResultSet executeSelect(String query) {		System.out.println(query);//getModel().write(System.out, "TURTLE");
+	public ResultSet executeSelect(String query) {		
 		ResultSet rs = QueryExecutionFactory.create(query, this.model).execSelect();
 		return rs;
 	}

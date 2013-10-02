@@ -54,6 +54,8 @@ public abstract class Modifier {
 	
 	Map<NamedClass, Description> optimalSolutions = new HashMap<NamedClass, Description>();
 	
+	Map<NamedClass, NamedClass> alteredClasses = new HashMap<NamedClass, NamedClass>();
+	
 	public String getName(){
 		return this.getClass().getCanonicalName();
 	}
@@ -110,9 +112,6 @@ public abstract class Modifier {
 	public void setModifiedClasses(List<String> modifiedClasses) {
 		Modifier.modifiedClasses = modifiedClasses;
 	}
-
-
-	
 	
 	/**
 	 * @return the nameSpace
@@ -143,7 +142,6 @@ public abstract class Modifier {
 	public static Model getBaseModel() {
 		return baseModel;
 	}
-
 
 	/**
 	 * @param baseModel the baseModel to set

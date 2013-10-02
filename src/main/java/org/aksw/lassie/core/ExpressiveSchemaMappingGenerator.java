@@ -522,7 +522,7 @@ public class ExpressiveSchemaMappingGenerator {
 		//get all OWL classes
 		String query = "SELECT ?type WHERE {?type a <" + OWL.Class.getURI() + ">.";
 		if(kb.getNamespace() != null){
-			query += "FILTER(REGEX(?type,'" + kb.getNamespace() + "'))";
+			query += "FILTER(REGEX(STR(?type),'" + kb.getNamespace() + "'))";
 		}
 		query += "}";
 		ResultSet rs = kb.executeSelect(query);
@@ -538,7 +538,7 @@ public class ExpressiveSchemaMappingGenerator {
 		if (classes.isEmpty()) {
 			query = "SELECT DISTINCT ?type WHERE {?s a ?type.";
 			if(kb.getNamespace() != null){
-				query += "FILTER(REGEX(?type,'" + kb.getNamespace() + "'))";
+				query += "FILTER(REGEX(STR(?type),'" + kb.getNamespace() + "'))";
 			}
 			query += "}";
 			rs = kb.executeSelect(query);
@@ -809,8 +809,6 @@ public class ExpressiveSchemaMappingGenerator {
         Model fragment;
         for (Individual ind : individuals) {
             fragment = getFragment(ind, kb, recursionDepth);
-            System.out.println(ind + ": " + fragment.size() + " triples");
-            //			logger.info(i++  + "/" + individuals.size());
             fullFragment.add(fragment);
         }
         //        cleanUpModel(fullFragment);

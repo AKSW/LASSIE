@@ -67,8 +67,8 @@ public class Evaluation {
 	private String dbpediaNamespace = "http://dbpedia.org/ontology/";
 	private OWLOntology dbpediaOntology;
 
-	private Set<NamedClass> ModifiedDbpediaClasses = new TreeSet<NamedClass>();
-	private Set<NamedClass> dbpediaClasses 			= new TreeSet<NamedClass>();
+	private Set<NamedClass> modifiedDbpediaClasses = new TreeSet<NamedClass>();
+	private Set<NamedClass> classesToLearn 			= new TreeSet<NamedClass>();
 
 	private static Map<Modifier, Double> classModefiersAndRates    = new HashMap<Modifier, Double>();
 	private static Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
@@ -94,12 +94,12 @@ public class Evaluation {
 			//extract DBpedia classes
 			for (OWLClass cls : dbpediaOntology.getClassesInSignature()) {
 				if(!cls.toStringID().startsWith(dbpediaNamespace)) continue;
-				dbpediaClasses.add(new NamedClass(cls.toStringID()));
+				classesToLearn.add(new NamedClass(cls.toStringID()));
 			}
 			if(maxNrOfClasses > 0){
-				List<NamedClass> tmp = new ArrayList<NamedClass>(dbpediaClasses);
+				List<NamedClass> tmp = new ArrayList<NamedClass>(classesToLearn);
 				Collections.shuffle(tmp, new Random(123));
-				dbpediaClasses = new TreeSet<NamedClass>(tmp.subList(0, maxNrOfClasses));
+				classesToLearn = new TreeSet<NamedClass>(tmp.subList(0, maxNrOfClasses));
 			}
 			//TODO remove
 			//			dbpediaClasses = Sets.newHashSet(
@@ -118,7 +118,7 @@ public class Evaluation {
 			model.read(is, "RDF/XML");
 
 			//for each class c_i get n random instances + their CBD
-			for (NamedClass cls : dbpediaClasses) {
+			for (NamedClass cls : classesToLearn) {
 				logger.info("Generating sample for " + cls + "...");
 				SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass);
 				for (Individual individual : individuals) {
@@ -148,7 +148,7 @@ public class Evaluation {
 	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates){
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(referenceDataset);
 		Modifier.setNameSpace(dbpediaNamespace);
-		benchmarker.setBaseClasses(dbpediaClasses);
+		benchmarker.setBaseClasses(classesToLearn);
 
 		Model testDataset = ModelFactory.createDefaultModel();
 
@@ -159,7 +159,7 @@ public class Evaluation {
 		if(!classModefiersAndRates.isEmpty()){
 			testDataset = benchmarker.destroyClasses (classModefiersAndRates);
 		}
-		ModifiedDbpediaClasses = benchmarker.getModifiedNamedClasses();
+		modifiedDbpediaClasses = benchmarker.getModifiedNamedClasses();
 		return testDataset;
 	}
 
@@ -194,7 +194,7 @@ public class Evaluation {
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		Map<String, Object> result = generator.run(ModifiedDbpediaClasses, dbpediaClasses);
+		Map<String, Object> result = generator.run(modifiedDbpediaClasses, classesToLearn);
 
 
 		return result;
@@ -228,33 +228,24 @@ public class Evaluation {
 				classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
 		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModefiersAndRates, classModefiersAndRates);
-//		try {
-//			// just 4 test
-//			modifiedRefrenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		}
-
-//		KnowledgeBase source = new LocalKnowledgeBase(modifiedRefrenceDataset); 
-//		KnowledgeBase target = new RemoteKnowledgeBase(endpoint, cache, dbpediaNamespace);
 		
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		generator.run();
+		generator.run(modifiedDbpediaClasses);
 
 		
 		for(Entry<Modifier, Double> clsMod2Rat : classModefiersAndRates.entrySet()){
 			System.out.println("Modifier Name: " + clsMod2Rat.getKey());
-			System.out.println("Optimal solution: " + clsMod2Rat.getKey().getOptimalSolution(dbpediaClasses.iterator().next()));
+			System.out.println("Optimal solution: " + clsMod2Rat.getKey().getOptimalSolution(classesToLearn.iterator().next()));
 		}
 		System.exit(1);
 		
 		
 		
 		Map<String, Object> result = 
-				generator.runIntensionalEvaluation(ModifiedDbpediaClasses, dbpediaClasses, instanceModefiersAndRates, classModefiersAndRates);
+				generator.runIntensionalEvaluation(modifiedDbpediaClasses, classesToLearn, instanceModefiersAndRates, classModefiersAndRates);
 
 
 		return result;
