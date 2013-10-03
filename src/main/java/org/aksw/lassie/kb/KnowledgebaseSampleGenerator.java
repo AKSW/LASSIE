@@ -61,7 +61,7 @@ public class KnowledgebaseSampleGenerator {
 		File file = new File(filename);
 		
 		if(!file.exists()){//if not exists
-			logger.debug("Generating sample...");
+			logger.info("Generating sample...");
 			long startTime = System.currentTimeMillis();
 			SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), cacheDir);
 			ConciseBoundedDescriptionGenerator cbdGen = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cacheDir);
@@ -93,7 +93,9 @@ public class KnowledgebaseSampleGenerator {
 					}
 				}
 			}
-			logger.debug("...done in " + (System.currentTimeMillis() - startTime) + "ms");
+			logger.info("...done in " + (System.currentTimeMillis() - startTime) + "ms");
+			//add schema
+			model.add(reasoner.loadOWLSchema());
 			logger.debug("Writing sample to disk...");
 			startTime = System.currentTimeMillis();
 			try {
@@ -110,7 +112,7 @@ public class KnowledgebaseSampleGenerator {
 			}
 			logger.debug("...done in " + (System.currentTimeMillis() - startTime) + "ms");
 		} else {
-			logger.debug("Loading sample from disk...");
+			logger.info("Loading sample from disk...");
 			long startTime = System.currentTimeMillis();
 			try {
 				CompressorInputStream in = new CompressorStreamFactory().
@@ -124,7 +126,7 @@ public class KnowledgebaseSampleGenerator {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			logger.debug("...done in " + (System.currentTimeMillis() - startTime) + "ms");
+			logger.info("...done in " + (System.currentTimeMillis() - startTime) + "ms");
 		}
 		
 		return new LocalKnowledgeBase(model, namespace);
@@ -143,11 +145,7 @@ public class KnowledgebaseSampleGenerator {
 	}
 
 	public static void main(String[] args) throws Exception {
-		LocalKnowledgeBase kb = createKnowledgebaseSample(SparqlEndpoint.getEndpointDBpedia(), "http://dbpedia.org/ontology", 5 , 5);
-		kb.getModel().write(System.out, "TURTLE");
-		Query q = QueryFactory.create("SELECT DISTINCT ?t WHERE {?s a ?t.filter(regex(str(?t),'ontology','i'))}", Syntax.syntaxARQ);
-		System.out.println(q);
-		System.out.println(ResultSetFormatter.asText(QueryExecutionFactory.create(q, kb.getModel()).execSelect()));
-		ResultSetFormatter.asText(kb.executeSelect("SELECT DISTINCT ?type WHERE {?s a ?type.}"));
+		LocalKnowledgeBase kb = createKnowledgebaseSample(SparqlEndpoint.getEndpointDBpedia(), "http://dbpedia.org/ontology", 100);
+		
 	}
 }
