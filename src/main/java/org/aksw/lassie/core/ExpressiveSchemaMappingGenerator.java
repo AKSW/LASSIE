@@ -657,6 +657,7 @@ public class ExpressiveSchemaMappingGenerator {
             AbstractReasonerComponent rc = new FastInstanceChecker(ks);
             rc.init();
             rc.setSubsumptionHierarchy(targetKB.getReasoner().getClassHierarchy());
+            rc.init();
             logger.info("Done.");
 
             //initialize the learning problem

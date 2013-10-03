@@ -50,6 +50,7 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
@@ -235,6 +236,7 @@ public class Evaluation {
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 		generator.run(modifiedDbpediaClasses);
+//		generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
 
 		
 		for(Entry<Modifier, Double> clsMod2Rat : classModefiersAndRates.entrySet()){
