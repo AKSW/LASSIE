@@ -145,11 +145,7 @@ public class KnowledgebaseSampleGenerator {
 	}
 
 	public static void main(String[] args) throws Exception {
-		LocalKnowledgeBase kb = createKnowledgebaseSample(SparqlEndpoint.getEndpointDBpedia(), "http://dbpedia.org/ontology", 5 , 5);
-		kb.getModel().write(System.out, "TURTLE");
-		Query q = QueryFactory.create("SELECT DISTINCT ?t WHERE {?s a ?t.filter(regex(str(?t),'ontology','i'))}", Syntax.syntaxARQ);
-		System.out.println(q);
-		System.out.println(ResultSetFormatter.asText(QueryExecutionFactory.create(q, kb.getModel()).execSelect()));
-		ResultSetFormatter.asText(kb.executeSelect("SELECT DISTINCT ?type WHERE {?s a ?type.}"));
+		LocalKnowledgeBase kb = createKnowledgebaseSample(SparqlEndpoint.getEndpointDBpedia(), "http://dbpedia.org/ontology", 100);
+		
 	}
 }

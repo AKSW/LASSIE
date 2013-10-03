@@ -458,9 +458,9 @@ public class ExpressiveSchemaMappingGenerator {
                     HashMap<String, Double> value = mappingEntry.getValue();
                     map.put(sourceClass, value.keySet().iterator().next());
                 }
-                break;
+//                break;
             }
-            break;
+//            break;
         }
         return map;
     }
