@@ -120,7 +120,7 @@
 		<dependency>
 		<groupId>de.uni_leipzig.simba.limes</groupId>
 		<artifactId>limes-core</artifactId>
-		<version>2013-06-10</version>
+		<version>2013-10-02</version>
 		</dependency>
 
 		<dependency>

@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -73,7 +74,7 @@ public class Evaluation {
 	private static Map<Modifier, Double> classModefiersAndRates    = new HashMap<Modifier, Double>();
 	private static Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
 
-	private int maxNrOfClasses = 5;//-1 all classes
+	private int maxNrOfClasses = 1;//-1 all classes
 	private int maxNrOfInstancesPerClass = 20;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
@@ -334,6 +335,7 @@ public class Evaluation {
 
 
 	public static void main(String[] args) throws Exception {
+		System.setOut(new PrintStream("/dev/null"));
 		Evaluation evaluator = new Evaluation();
 		long startTime = System.currentTimeMillis();
 		

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,6 +49,7 @@ import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.io.RDFXMLOntologyFormat;
+import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -83,7 +85,6 @@ import de.uni_leipzig.simba.data.Mapping;
 import de.uni_leipzig.simba.selfconfig.ComplexClassifier;
 import de.uni_leipzig.simba.selfconfig.MeshBasedSelfConfigurator;
 import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
-import java.util.*;
 
 public class ExpressiveSchemaMappingGenerator {
 
@@ -185,6 +186,7 @@ public class ExpressiveSchemaMappingGenerator {
         double totalCoverage = 0;
         Map<Integer, Double> coverageMap = new TreeMap<Integer, Double>();
         do {
+        	logger.info(i + ". ITERATION:");
             //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
             //a map from C_i to a set of instances in the target KB
             Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
@@ -380,6 +382,8 @@ public class ExpressiveSchemaMappingGenerator {
      */
     public Multimap<NamedClass, String> performUnsupervisedLinking(Set<NamedClass> sourceClasses, Collection<Description> targetClasses) {
         logger.info("Computing links...");
+        logger.info("Source classes: " + sourceClasses);
+        logger.info("Target classes: " + targetClasses);
         //compute the Concise Bounded Description(CBD) for each instance
         //in each source class C_i, thus creating a model for each class
         Map<NamedClass, Model> sourceClassToModel = new HashMap<NamedClass, Model>();
@@ -389,10 +393,10 @@ public class ExpressiveSchemaMappingGenerator {
             sourceInstances = SetManipulation.stableShrinkInd(sourceInstances, linkingMaxNrOfExamples_LIMES);
 
             //get the fragment describing the instances of C_i
-            logger.info("Computing fragment...");
+            logger.debug("Computing fragment...");
             Model sourceFragment = getFragment(sourceInstances, sourceKB, linkingMaxRecursionDepth_LIMES);
             removeNonLiteralStatements(sourceFragment);
-            logger.info("...got " + sourceFragment.size() + " triples.");
+            logger.debug("...got " + sourceFragment.size() + " triples.");
             sourceClassToModel.put(sourceClass, sourceFragment);
         }
 
@@ -408,10 +412,10 @@ public class ExpressiveSchemaMappingGenerator {
             //			targetInstances = new TreeSet<Individual>(l.subList(0, Math.min(100, targetInstances.size())));
 
             // get the fragment describing the instances of D_i
-            logger.info("Computing fragment...");
+            logger.debug("Computing fragment...");
             Model targetFragment = getFragment(targetInstances, targetKB, linkingMaxRecursionDepth_LIMES);
             removeNonLiteralStatements(targetFragment);
-            logger.info("...got " + targetFragment.size() + " triples.");
+            logger.debug("...got " + targetFragment.size() + " triples.");
             targetClassExpressionToModel.put(targetClass, targetFragment);
         }
 
@@ -429,7 +433,7 @@ public class ExpressiveSchemaMappingGenerator {
                 Description targetClassExpression = entry2.getKey();
                 Model targetClassExpressionModel = entry2.getValue();
 
-                logger.info("******* COMPUTING links between " + sourceClass + " and " + targetClassExpression + "******");
+                logger.debug("Computing links between " + sourceClass + " and " + targetClassExpression + "...");
 
                 Cache cache2 = getCache(targetClassExpressionModel);
                 Mapping result = null;
@@ -454,7 +458,9 @@ public class ExpressiveSchemaMappingGenerator {
                     HashMap<String, Double> value = mappingEntry.getValue();
                     map.put(sourceClass, value.keySet().iterator().next());
                 }
+                break;
             }
+            break;
         }
         return map;
     }
@@ -497,11 +503,10 @@ public class ExpressiveSchemaMappingGenerator {
         //default is 0.3
         bsc.MIN_THRESHOLD = 0.6;
         bsc.setMeasure(fmeasure_LIMES);
-        List<SimpleClassifier> cp = bsc.getBestInitialClassifiers();
+        Set<String> measure =  new HashSet<String>();
+		measure.add("trigrams");
+        List<SimpleClassifier> cp = bsc.getBestInitialClassifiers(measure);
         
-//		Set<String> measure =  new HashSet<String>();
-//		measure.add("trigrams");
-//		List<SimpleClassifier> cp = bsc.getBestInitialClassifiers(measure);
         if (cp.isEmpty()) {
             logger.warn("No property mapping found");
             return new Mapping();
@@ -677,7 +682,9 @@ public class ExpressiveSchemaMappingGenerator {
             logger.info("Running learning algorithm...");
             la.start();
             logger.info(la.getCurrentlyBestEvaluatedDescription());
-
+//            for (EvaluatedDescription d : la.getCurrentlyBestEvaluatedDescriptions(100, 0.2, true)) {
+//				logger.info(d);
+//			}
             return la.getCurrentlyBestEvaluatedDescriptions(10);
         } catch (ComponentInitException e) {
             logger.error(e);
@@ -713,7 +720,7 @@ public class ExpressiveSchemaMappingGenerator {
      * @return
      */
     private SortedSet<Individual> getSourceInstances(NamedClass cls) {
-        logger.info("Retrieving instances of class " + cls + "...");
+        logger.debug("Retrieving instances of class " + cls + "...");
         mon.start();
         SortedSet<Individual> instances = new TreeSet<Individual>();
         String query = String.format("SELECT DISTINCT ?s WHERE {?s a <%s>}", cls.getName());
@@ -724,7 +731,7 @@ public class ExpressiveSchemaMappingGenerator {
             instances.add(new Individual(qs.getResource("s").getURI()));
         }
         mon.stop();
-        logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
+        logger.debug("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
         return instances;
     }
 
@@ -741,7 +748,7 @@ public class ExpressiveSchemaMappingGenerator {
     }
 
     private SortedSet<Individual> getInstances(Description desc, KnowledgeBase kb) {
-        logger.info("Retrieving instances of class expression " + desc + "...");
+        logger.trace("Retrieving instances of class expression " + desc + "...");
         mon.start();
         SortedSet<Individual> instances = new TreeSet<Individual>();
         OWLClassExpressionToSPARQLConverter converter = new OWLClassExpressionToSPARQLConverter();
@@ -754,7 +761,7 @@ public class ExpressiveSchemaMappingGenerator {
             instances.add(new Individual(qs.getResource("x").getURI()));
         }
         mon.stop();
-        logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
+        logger.trace("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
         return instances;
     }
 
@@ -767,7 +774,7 @@ public class ExpressiveSchemaMappingGenerator {
      * @return
      */
     private SortedSet<Individual> getTargetInstances(NamedClass cls) {
-        logger.info("Retrieving instances to which instances of class " + cls + " are linked to via property " + linkingProperty + "...");
+        logger.trace("Retrieving instances to which instances of class " + cls + " are linked to via property " + linkingProperty + "...");
         mon.start();
         SortedSet<Individual> instances = new TreeSet<Individual>();
         String query = String.format("SELECT DISTINCT ?o WHERE {?s a <%s>. ?s <%s> ?o. FILTER(REGEX(?o,'^%s'))}", cls.getName(), linkingProperty, targetKB.getNamespace());
@@ -778,7 +785,7 @@ public class ExpressiveSchemaMappingGenerator {
             instances.add(new Individual(qs.getResource("o").getURI()));
         }
         mon.stop();
-        logger.info("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
+        logger.trace("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
         return instances;
     }
 
@@ -847,7 +854,7 @@ public class ExpressiveSchemaMappingGenerator {
      * @param ind
      */
     private Model getFragment(Individual ind, KnowledgeBase kb, int recursionDepth) {
-        logger.debug("Loading fragment for " + ind.getName());
+        logger.trace("Loading fragment for " + ind.getName());
         ConciseBoundedDescriptionGenerator cbdGen;
         if (kb.isRemote()) {
             cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint(), ((RemoteKnowledgeBase) kb).getCache().getCacheDirectory());
@@ -858,9 +865,9 @@ public class ExpressiveSchemaMappingGenerator {
         try {
             cbd = cbdGen.getConciseBoundedDescription(ind.getName(), 1);
         } catch (Exception e) {
-            System.out.println("End Point(" + ((RemoteKnowledgeBase) kb).getEndpoint().toString() + ") Exception: " + e);
+            logger.error("End Point(" + ((RemoteKnowledgeBase) kb).getEndpoint().toString() + ") Exception: " + e);
         }
-        logger.debug("Got " + cbd.size() + " triples.");
+        logger.trace("Got " + cbd.size() + " triples.");
         return cbd;
     }
 
@@ -878,7 +885,7 @@ public class ExpressiveSchemaMappingGenerator {
                     st.changeObject("shortened", "en");
                 } else if (lit.getDatatype().getURI().equals(XSD.gYear.getURI())) {
                     statementsToRemove.add(st);
-                    System.err.println("REMOVE " + st);
+//                    System.err.println("REMOVE " + st);
                 }
             }
             //remove statements like <x a owl:Class>
