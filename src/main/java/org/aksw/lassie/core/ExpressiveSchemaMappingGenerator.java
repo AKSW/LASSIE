@@ -508,7 +508,7 @@ public class ExpressiveSchemaMappingGenerator {
         MeshBasedSelfConfigurator bsc = new MeshBasedSelfConfigurator(source, target, coverage_LIMES, beta_LIMES);
         //ensures that only the threshold 1.0 is tested. Can be set to a lower value
         //default is 0.3
-        bsc.MIN_THRESHOLD = 0.6;
+        bsc.MIN_THRESHOLD = 0.9;
         bsc.setMeasure(fmeasure_LIMES);
         Set<String> measure =  new HashSet<String>();
 		measure.add("trigrams");

@@ -337,8 +337,8 @@ public class Evaluation {
 		Evaluation evaluator = new Evaluation();
 		long startTime = System.currentTimeMillis();
 
-		//		Map<String, Object> result = evaluator.run();
-		Map<String, Object> result = evaluator.runIntensionalEvaluation();
+		Map<String, Object> result = evaluator.run();
+//		Map<String, Object> result = evaluator.runIntensionalEvaluation();
 		logger.info("FINAL RESULTS: " + result);
 
 		evaluator.printResults(result);
