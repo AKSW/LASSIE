@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -22,7 +23,12 @@ import java.util.TreeSet;
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
 import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
+import org.aksw.lassie.bmGenerator.InstanceAbbreviationModifier;
+import org.aksw.lassie.bmGenerator.InstanceAcronymModifier;
+import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
+import org.aksw.lassie.bmGenerator.InstanceMergeModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
+import org.aksw.lassie.bmGenerator.InstanceSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -66,8 +72,8 @@ public class Evaluation {
 	private Set<NamedClass> modifiedDbpediaClasses = new TreeSet<NamedClass>();
 	private Set<NamedClass> classesToLearn 			= new TreeSet<NamedClass>();
 
-	private static Map<Modifier, Double> classModefiersAndRates    = new HashMap<Modifier, Double>();
-	private static Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
+	private static Map<Modifier, Double> classModifiersAndRates    = new HashMap<Modifier, Double>();
+	private static Map<Modifier, Double> instanceModifiersAndRates = new HashMap<Modifier, Double>();
 
 	private int maxNrOfClasses = 1;//-1 all classes
 	private int maxNrOfInstancesPerClass = 20;
@@ -75,6 +81,19 @@ public class Evaluation {
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
+
+	//constructors
+	public Evaluation(){
+		super();
+	}
+
+	public Evaluation(int maxNrOfClasses,int maxNrOfInstancesPerClass, Map<Modifier, Double> classModifiers2Rates, Map<Modifier, Double> instanceModifiers2Rates) {
+		super();
+		this.maxNrOfClasses = maxNrOfClasses;
+		this.maxNrOfInstancesPerClass = maxNrOfInstancesPerClass;
+		classModifiersAndRates = classModifiers2Rates;
+		instanceModifiersAndRates = instanceModifiers2Rates;
+	}
 
 	/**
 	 * Create a sample of DBpedia, i.e. the schema + for each class for max n instances the CBD.
@@ -141,19 +160,19 @@ public class Evaluation {
 		return null;
 	}
 
-	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates){
+	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModifiersAndRates, Map<Modifier, Double> classModifiersAndRates){
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(referenceDataset);
 		Modifier.setNameSpace(dbpediaNamespace);
 		benchmarker.setBaseClasses(classesToLearn);
 
 		Model testDataset = ModelFactory.createDefaultModel();
 
-		if(!instanceModefiersAndRates.isEmpty()){
-			testDataset = benchmarker.destroyInstances(instanceModefiersAndRates);
+		if(!instanceModifiersAndRates.isEmpty()){
+			testDataset = benchmarker.destroyInstances(instanceModifiersAndRates);
 		}
 
-		if(!classModefiersAndRates.isEmpty()){
-			testDataset = benchmarker.destroyClasses (classModefiersAndRates);
+		if(!classModifiersAndRates.isEmpty()){
+			testDataset = benchmarker.destroyClasses (classModifiersAndRates);
 		}
 		modifiedDbpediaClasses = benchmarker.getModifiedNamedClasses();
 		return testDataset;
@@ -166,27 +185,15 @@ public class Evaluation {
 		//we assume that the target is the sample KB itself
 		KnowledgeBase target = sampleKB;
 
-		//we create the source KB by modifying the data of the sample KB
+		//we create the source KB by modifying the data of the sample KB  
 		Model sampleKBModel = sampleKB.getModel();
-		
-		// instance modifiers
-		//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
-		instanceModefiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
-		//		instanceModefiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
-		//		instanceModefiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
-		//		instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
-		//		instanceModefiersAndRates.put(new InstanceSplitModifier(),			0.2d);
 
+		if(instanceModifiersAndRates.isEmpty() && classModifiersAndRates.isEmpty()){
+			logger.error("No modifiers specified, EXIT");
+			System.exit(1);
+		}
 
-		// class modifiers
-		//		classModefiersAndRates.put(new ClassIdentityModifier(), 1d);
-//		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
-		//		classModefiersAndRates.put(new ClassDeleteModifier(),		0.2d);
-				classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
-		//		classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
-		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
-				
-		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModefiersAndRates, classModefiersAndRates);
+		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates);
 
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 		try {
@@ -203,6 +210,31 @@ public class Evaluation {
 		return result;
 	}
 
+	/** 
+	 * 
+	 * @author sherif
+	 */
+	private void setModefiersManually() {
+		// instance modifiers
+		//				instanceModifiersAndRates.put(new InstanceIdentityModifier(),1d);
+		instanceModifiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
+		//				instanceModifiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
+		//				instanceModifiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
+		//				instanceModifiersAndRates.put(new InstanceMergeModifier(),			0.2d);
+		//				instanceModifiersAndRates.put(new InstanceSplitModifier(),			0.2d);
+
+
+		// class modifiers
+		//				classModifiersAndRates.put(new ClassIdentityModifier(), 1d);
+		//				classModifiersAndRates.put(new ClassSplitModifier(),  		0.2d);
+		//				classModifiersAndRates.put(new ClassDeleteModifier(),		0.2d);
+		classModifiersAndRates.put(new ClassMergeModifier(),  		0.2d);
+		//				classModifiersAndRates.put(new ClassRenameModifier(), 		0.2d);
+		//				classModifiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
+	}
+
+
+
 
 	public Map<String, Object> runIntensionalEvaluation(){
 		//create a sample of the knowledge base
@@ -216,7 +248,7 @@ public class Evaluation {
 
 		// instance modifiers
 		//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
-		instanceModefiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
+		instanceModifiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
 		//		instanceModefiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
 		//		instanceModefiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
 		//				instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
@@ -227,17 +259,17 @@ public class Evaluation {
 		//		classModefiersAndRates.put(new ClassIdentityModifier(), 1d);
 		//		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
 		//		classModefiersAndRates.put(new ClassDeleteModifier(),		0.2d);
-//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
-				classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
+		//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
+		classModifiersAndRates.put(new ClassRenameModifier(), 		0.2d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
-		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModefiersAndRates, classModefiersAndRates);
+		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates);
 
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 
-//		return generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
+		//		return generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
 		return generator.run(modifiedDbpediaClasses);
 
 	}
@@ -257,11 +289,11 @@ public class Evaluation {
 		System.out.println("No of Instance per Classes: " + maxNrOfInstancesPerClass);
 		System.out.println("MODIFIER(S):");
 		int j=1;
-		for(Modifier m: classModefiersAndRates.keySet()){
-			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + classModefiersAndRates.get(m)*100 + "%");
+		for(Modifier m: classModifiersAndRates.keySet()){
+			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + classModifiersAndRates.get(m)*100 + "%");
 		}
-		for(Modifier m: instanceModefiersAndRates.keySet()){
-			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + instanceModefiersAndRates.get(m)*100 + "%");
+		for(Modifier m: instanceModifiersAndRates.keySet()){
+			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + instanceModifiersAndRates.get(m)*100 + "%");
 		}
 		for(String key:result.keySet()){
 			if(key.equals("mapping")){
@@ -272,15 +304,23 @@ public class Evaluation {
 					System.out.println(nC + "\t" + map.get(nC));
 				}
 			}
-			
+
 			if(key.equals("coverage")){
 				System.out.println("\nCOVERAGE:");
 				Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get(key);
 				Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2PFMeasure");
-				System.out.println("IterationNr\tCoverage\t class->FMeasure");
-				
+				System.out.println("IterationNr\tCoverage\tAVG-F\tclass->FMeasure");
+				//compute the average F measure for all classes instance mappings
+				double sum = 0d, count = 0f;
 				for(Integer i : iteration2coverage.keySet()){
-					System.out.println(i + "\t" + iteration2coverage.get(i) + "\t" + iteration2sourceClass2PFMeasure.get(i));
+					Iterator<Map<NamedClass, Double>> iter = iteration2sourceClass2PFMeasure.get(i).iterator();
+					while(iter.hasNext()){
+						for(Double fm : iter.next().values()){
+							sum += fm;
+							count++; 
+						}
+					}
+					System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ (sum/count) + "\t" + iteration2sourceClass2PFMeasure.get(i));
 				}
 			}
 
@@ -300,7 +340,7 @@ public class Evaluation {
 					}
 				}
 			}
-			
+
 			if(key.equals("posExamples")){
 				System.out.println("\nPOSITIVE EXAMPLES:");
 
@@ -321,7 +361,7 @@ public class Evaluation {
 					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m));
 				}
 			}
-			
+
 			if(key.equals("modifier2optimalSolution")){
 				Map<Modifier, Description> map = (Map<Modifier, Description>) result.get(key);
 				for(Modifier m : map.keySet()){
@@ -331,19 +371,49 @@ public class Evaluation {
 		}
 	}
 
+	public void printShortResults(Map<String, Object> result, String resultId) throws FileNotFoundException {
+		System.setOut(new PrintStream(new FileOutputStream(resultId + ((maxNrOfClasses > 0) ? ("-" + maxNrOfClasses + "-" + maxNrOfInstancesPerClass) : "") + ".txt")));
 
+		System.out.println("No of Classes:              " + maxNrOfClasses);
+		System.out.println("No of Instance per Classes: " + maxNrOfInstancesPerClass);
+		System.out.println("MODIFIER(S):");
+		int j=1;
+		for(Modifier m: classModifiersAndRates.keySet()){
+			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + classModifiersAndRates.get(m)*100 + "%");
+		}
+		for(Modifier m: instanceModifiersAndRates.keySet()){
+			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + instanceModifiersAndRates.get(m)*100 + "%");
+
+
+			Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get("coverage");
+			Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2PFMeasure");
+			System.out.println("IterationNr\tCoverage\tAVG-F");
+			//compute the average F measure for all classes instance mappings
+			double sum = 0d, count = 0f;
+			for(Integer i : iteration2coverage.keySet()){
+				Iterator<Map<NamedClass, Double>> iter = iteration2sourceClass2PFMeasure.get(i).iterator();
+				while(iter.hasNext()){
+					for(Double fm : iter.next().values()){
+						sum += fm;
+						count++; 
+					}
+				}
+				System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ (sum/count) );
+			}
+		}
+	}
 
 
 	public static void main(String[] args) throws Exception {
-//		System.setOut(new PrintStream("/dev/null"));
+		System.setOut(new PrintStream("/dev/null"));
 		Evaluation evaluator = new Evaluation();
 		long startTime = System.currentTimeMillis();
-
+		evaluator.setModefiersManually();
 		Map<String, Object> result = evaluator.run();
-//		Map<String, Object> result = evaluator.runIntensionalEvaluation();
+		//		Map<String, Object> result = evaluator.runIntensionalEvaluation();
 		logger.info("FINAL RESULTS: " + result);
 
-		evaluator.printResults(result);
+		evaluator.printShortResults(result, "resultsOf");
 
 		long endTime   = System.currentTimeMillis();
 		long totalTime = endTime - startTime;

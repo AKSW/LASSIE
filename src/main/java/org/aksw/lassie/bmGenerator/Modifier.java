@@ -59,6 +59,11 @@ public abstract class Modifier {
 	public String getName(){
 		return this.getClass().getCanonicalName();
 	}
+	
+	public String getSimpleName(){
+		return this.getClass().getSimpleName();
+	}
+	
 	public boolean isClassModifier(){
 		return isClassModifier;
 	}
