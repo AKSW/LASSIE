@@ -235,8 +235,8 @@ public class Evaluation {
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		generator.run(modifiedDbpediaClasses);
-//		generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
+//		generator.run(modifiedDbpediaClasses);
+		generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
 
 		
 		for(Entry<Modifier, Double> clsMod2Rat : classModefiersAndRates.entrySet()){

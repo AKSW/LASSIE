@@ -20,6 +20,12 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -49,7 +55,6 @@ import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.io.RDFXMLOntologyFormat;
-import org.semanticweb.owlapi.model.AxiomType;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -380,7 +385,7 @@ public class ExpressiveSchemaMappingGenerator {
      * @param sourceClasses
      * @param targetClasses
      */
-    public Multimap<NamedClass, String> performUnsupervisedLinking(Set<NamedClass> sourceClasses, Collection<Description> targetClasses) {
+    public Multimap<NamedClass, String> performUnsupervisedLinkingMultiThreaded(Set<NamedClass> sourceClasses, Collection<Description> targetClasses) {
         logger.info("Computing links...");
         logger.info("Source classes: " + sourceClasses);
         logger.info("Target classes: " + targetClasses);
@@ -419,49 +424,63 @@ public class ExpressiveSchemaMappingGenerator {
             targetClassExpressionToModel.put(targetClass, targetFragment);
         }
 
-        Multimap<NamedClass, String> map = HashMultimap.create();
+        final Multimap<NamedClass, String> map = HashMultimap.create();
+        
+        ExecutorService threadPool = Executors.newFixedThreadPool(7);
+        List<Future<LinkingResult>> list = new ArrayList<Future<LinkingResult>>();
 
         //for each C_i
         for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
-            NamedClass sourceClass = entry.getKey();
+            final NamedClass sourceClass = entry.getKey();
             Model sourceClassModel = entry.getValue();
 
-            Cache cache = getCache(sourceClassModel);
+            final Cache sourceCache = getCache(sourceClassModel);
 
             //for each D_i
             for (Entry<Description, Model> entry2 : targetClassExpressionToModel.entrySet()) {
-                Description targetClassExpression = entry2.getKey();
+                final Description targetClassExpression = entry2.getKey();
                 Model targetClassExpressionModel = entry2.getValue();
 
                 logger.debug("Computing links between " + sourceClass + " and " + targetClassExpression + "...");
 
-                Cache cache2 = getCache(targetClassExpressionModel);
-                Mapping result = null;
+                final Cache targetCache = getCache(targetClassExpressionModel);
 
                 //buffers the mapping results and only carries out a computation if the mapping results are unknown
-                if (mappingResults.containsKey(sourceClass)) {
-                    if (mappingResults.get(sourceClass).containsKey(targetClassExpression)) {
-                        result = mappingResults.get(sourceClass).get(targetClassExpression);
-                    }
+                if (mappingResults.containsKey(sourceClass) && mappingResults.get(sourceClass).containsKey(targetClassExpression)) {
+					Mapping result = mappingResults.get(sourceClass).get(targetClassExpression);
+					for (Entry<String, HashMap<String, Double>> mappingEntry : result.map.entrySet()) {
+						String key = mappingEntry.getKey();
+						HashMap<String, Double> value = mappingEntry.getValue();
+						map.put(sourceClass, value.keySet().iterator().next());
+					}
+                } else {
+                	list.add(threadPool.submit(new DeterministicUnsupervisedLinkingTask(sourceClass, targetClassExpression, sourceCache, targetCache)));
                 }
-
-                if (result == null) {
-                    result = getDeterministicUnsupervisedMappings(cache, cache2);
-                    if (!mappingResults.containsKey(sourceClass)) {
-                        mappingResults.put(sourceClass, new HashMap<Description, Mapping>());
-                    }
-                    mappingResults.get(sourceClass).put(targetClassExpression, result);
-                }
-
-                for (Entry<String, HashMap<String, Double>> mappingEntry : result.map.entrySet()) {
-                    String key = mappingEntry.getKey();
-                    HashMap<String, Double> value = mappingEntry.getValue();
-                    map.put(sourceClass, value.keySet().iterator().next());
-                }
-//                break;
             }
-//            break;
         }
+        
+        try {
+			threadPool.shutdown();
+			threadPool.awaitTermination(5, TimeUnit.HOURS);
+			for (Future<LinkingResult> future : list) {
+				try {
+					LinkingResult result = future.get();
+                    if (!mappingResults.containsKey(result.source)) {
+                        mappingResults.put(result.source, new HashMap<Description, Mapping>());
+                    }
+                    mappingResults.get(result.source).put(result.target, result.mapping);
+                    for (Entry<String, HashMap<String, Double>> mappingEntry : result.mapping.map.entrySet()) {
+                        String key = mappingEntry.getKey();
+                        HashMap<String, Double> value = mappingEntry.getValue();
+                        map.put(result.source, value.keySet().iterator().next());
+                    }
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
         return map;
     }
 
@@ -949,5 +968,71 @@ public class ExpressiveSchemaMappingGenerator {
         //			}
         //		}
         return relatedIndividuals;
+    }
+    
+    class DeterministicUnsupervisedLinkingTask implements Callable<LinkingResult>{
+    	
+    	private NamedClass source;
+    	private Description target;
+    	private Cache sourceCache;
+		private Cache targetCache;
+
+		/**
+		 * 
+		 */
+		public DeterministicUnsupervisedLinkingTask(NamedClass source, Description target, Cache sourceCache, Cache targetCache) {
+			this.source = source;
+			this.target = target;
+			this.sourceCache = sourceCache;
+			this.targetCache = targetCache;
+		}
+
+		/* (non-Javadoc)
+		 * @see java.util.concurrent.Callable#call()
+		 */
+		@Override
+		public LinkingResult call() throws Exception {
+			logger.info("Source size = " + sourceCache.getAllUris().size());
+	        logger.info("Target size = " + targetCache.getAllUris().size());
+
+	        MeshBasedSelfConfigurator bsc = new MeshBasedSelfConfigurator(sourceCache, targetCache, coverage_LIMES, beta_LIMES);
+	        //ensures that only the threshold 1.0 is tested. Can be set to a lower value
+	        //default is 0.3
+	        bsc.MIN_THRESHOLD = 0.6;
+	        bsc.setMeasure(fmeasure_LIMES);
+	        Set<String> measure =  new HashSet<String>();
+			measure.add("trigrams");
+	        List<SimpleClassifier> cp = bsc.getBestInitialClassifiers(measure);
+	        
+	        if (cp.isEmpty()) {
+	            logger.warn("No property mapping found");
+	            return new LinkingResult(source, target, new Mapping());
+	        }
+	        //get subset of best initial classifiers
+	        
+	        Collections.sort(cp, new SimpleClassifierComparator());
+	        Collections.reverse(cp);
+	        if(cp.size() > numberOfDimensions)
+	        cp = cp.subList(0, numberOfDimensions);
+
+	        ComplexClassifier cc = bsc.getZoomedHillTop(5, numberOfLinkingIterations, cp);
+	        Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
+	        logger.info("Mapping size is " + map.getNumberofMappings());
+	        logger.info("Pseudo F-measure is " + cc.fMeasure);
+	        return new LinkingResult(source, target, map);
+		}
+    	
+    }
+    
+    class LinkingResult {
+    	Mapping mapping;
+    	NamedClass source;
+    	Description target;
+    	
+		public LinkingResult(NamedClass source, Description target, Mapping mapping) {
+			this.source = source;
+			this.target = target;
+			this.mapping = mapping;
+		}
     }
 }
