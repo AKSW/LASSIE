@@ -20,15 +20,14 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
+import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
-import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.KnowledgebaseSampleGenerator;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
-import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
@@ -38,7 +37,6 @@ import org.dllearner.core.owl.NamedClass;
 import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
-import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -58,9 +56,8 @@ public class Evaluation {
 
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 	//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
-	private ExtractionDBCache cache = new ExtractionDBCache("cache");
-	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
-	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
+	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), "cache");
+	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, "cache");
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
 
 	private String dbpediaNamespace = "http://dbpedia.org/ontology/";
@@ -163,7 +160,15 @@ public class Evaluation {
 	}
 
 	public Map<String, Object> run(){
-		Model referenceDataset = createDBpediaReferenceDataset();
+		//create a sample of the knowledge base
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass);
+
+		//we assume that the target is the sample KB itself
+		KnowledgeBase target = sampleKB;
+
+		//we create the source KB by modifying the data of the sample KB
+		Model sampleKBModel = sampleKB.getModel();
+		
 		// instance modifiers
 		//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
 		instanceModefiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
@@ -175,26 +180,25 @@ public class Evaluation {
 
 		// class modifiers
 		//		classModefiersAndRates.put(new ClassIdentityModifier(), 1d);
-		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
+//		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
 		//		classModefiersAndRates.put(new ClassDeleteModifier(),		0.2d);
-		//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
+				classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
 		//		classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
-		Model modifiedRefrenceDataset = createTestDataset(referenceDataset, instanceModefiersAndRates, classModefiersAndRates);
+				
+		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModefiersAndRates, classModefiersAndRates);
+
+		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 		try {
 			// just 4 test
-			modifiedRefrenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
+			modifiedReferenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 
-		KnowledgeBase source = new LocalKnowledgeBase(modifiedRefrenceDataset); 
-		KnowledgeBase target = new RemoteKnowledgeBase(endpoint, cache, dbpediaNamespace);
-
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		Map<String, Object> result = generator.run(modifiedDbpediaClasses, classesToLearn);
-
+		Map<String, Object> result = generator.run(modifiedDbpediaClasses);
 
 		return result;
 	}
