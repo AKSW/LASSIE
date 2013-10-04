@@ -18,10 +18,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
-import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
@@ -43,7 +41,6 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.reasoning.SPARQLReasoner;
-import org.omg.PortableInterceptor.INACTIVE;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -51,7 +48,6 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
@@ -236,25 +232,9 @@ public class Evaluation {
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-<<<<<<< HEAD
-//		generator.run(modifiedDbpediaClasses);
-		generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
 
-		
-		for(Entry<Modifier, Double> clsMod2Rat : classModefiersAndRates.entrySet()){
-			System.out.println("Modifier Name: " + clsMod2Rat.getKey());
-			System.out.println("Optimal solution: " + clsMod2Rat.getKey().getOptimalSolution(classesToLearn.iterator().next()));
-		}
-		System.exit(1);
-		
-		
-		
-		Map<String, Object> result = 
-				generator.runIntensionalEvaluation(modifiedDbpediaClasses, classesToLearn, instanceModefiersAndRates, classModefiersAndRates);
-
-=======
+//		return generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
 		return generator.run(modifiedDbpediaClasses);
->>>>>>> ecb179a586ff1c160283c9f62dd7be779bcf5117
 
 	}
 
