@@ -43,6 +43,7 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.reasoning.SPARQLReasoner;
+import org.omg.PortableInterceptor.INACTIVE;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -60,7 +61,7 @@ public class Evaluation {
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
-//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
+	//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cache);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
@@ -206,35 +207,36 @@ public class Evaluation {
 	public Map<String, Object> runIntensionalEvaluation(){
 		//create a sample of the knowledge base
 		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass);
-		
+
 		//we assume that the target is the sample KB itself
 		KnowledgeBase target = sampleKB;
-		
+
 		//we create the source KB by modifying the data of the sample KB
 		Model sampleKBModel = sampleKB.getModel();
-		
+
 		// instance modifiers
 		//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
 		instanceModefiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
 		//		instanceModefiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
 		//		instanceModefiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
-		//		instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
+		//				instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
 		//		instanceModefiersAndRates.put(new InstanceSplitModifier(),			0.2d);
 
 
 		// class modifiers
 		//		classModefiersAndRates.put(new ClassIdentityModifier(), 1d);
-//		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
+		//		classModefiersAndRates.put(new ClassSplitModifier(),  		0.2d);
 		//		classModefiersAndRates.put(new ClassDeleteModifier(),		0.2d);
-//				classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
+//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
 				classModefiersAndRates.put(new ClassRenameModifier(), 		0.2d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
 		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModefiersAndRates, classModefiersAndRates);
-		
+
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
+<<<<<<< HEAD
 //		generator.run(modifiedDbpediaClasses);
 		generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
 
@@ -250,17 +252,22 @@ public class Evaluation {
 		Map<String, Object> result = 
 				generator.runIntensionalEvaluation(modifiedDbpediaClasses, classesToLearn, instanceModefiersAndRates, classModefiersAndRates);
 
+=======
+		return generator.run(modifiedDbpediaClasses);
+>>>>>>> ecb179a586ff1c160283c9f62dd7be779bcf5117
 
-		return result;
 	}
 
 
 	/**
 	 * @param result
 	 * @author sherif
+	 * @throws FileNotFoundException 
 	 */
 	@SuppressWarnings("unchecked")
-	private void printResults(Map<String, Object> result) {
+	private void printResults(Map<String, Object> result) throws FileNotFoundException {
+		System.setOut(new PrintStream(new FileOutputStream("results"+ ((maxNrOfClasses > 0) ? ("-" + maxNrOfClasses + "-" + maxNrOfInstancesPerClass) : "") + ".txt")));
+
 		System.out.println("\n----------- RESULTS -----------");
 		System.out.println("No of Classes:              " + maxNrOfClasses);
 		System.out.println("No of Instance per Classes: " + maxNrOfInstancesPerClass);
@@ -281,6 +288,18 @@ public class Evaluation {
 					System.out.println(nC + "\t" + map.get(nC));
 				}
 			}
+			
+			if(key.equals("coverage")){
+				System.out.println("\nCOVERAGE:");
+				Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get(key);
+				Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2PFMeasure");
+				System.out.println("IterationNr\tCoverage\t class->FMeasure");
+				
+				for(Integer i : iteration2coverage.keySet()){
+					System.out.println(i + "\t" + iteration2coverage.get(i) + "\t" + iteration2sourceClass2PFMeasure.get(i));
+				}
+			}
+
 			if(key.equals("mappingTop10")){
 				System.out.println("\nTOP 10 MAPPINGS:");
 
@@ -297,13 +316,7 @@ public class Evaluation {
 					}
 				}
 			}
-			if(key.equals("coverage")){
-				System.out.println("\nCOVERAGE:");
-				Map<Integer, Double> map = (Map<Integer, Double>) result.get(key);
-				for(Integer i : map.keySet()){
-					System.out.println(i + "\t" + map.get(i));
-				}
-			}
+			
 			if(key.equals("posExamples")){
 				System.out.println("\nPOSITIVE EXAMPLES:");
 
@@ -319,14 +332,15 @@ public class Evaluation {
 			}
 
 			if(key.equals("Modifier2pos")){
-				Map<Modifier, Integer> map = new HashMap<Modifier, Integer>();
+				Map<Modifier, Integer> map = (Map<Modifier, Integer>) result.get(key);
 				for(Modifier m: map.keySet()){
 					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m));
 				}
 			}
+			
 			if(key.equals("modifier2optimalSolution")){
-				Map<Modifier, Description> map = new HashMap<Modifier, Description>();
-				for(Modifier m: map.keySet()){
+				Map<Modifier, Description> map = (Map<Modifier, Description>) result.get(key);
+				for(Modifier m : map.keySet()){
 					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m).toString());
 				}
 			}
@@ -337,17 +351,19 @@ public class Evaluation {
 
 
 	public static void main(String[] args) throws Exception {
-		System.setOut(new PrintStream("/dev/null"));
+//		System.setOut(new PrintStream("/dev/null"));
 		Evaluation evaluator = new Evaluation();
 		long startTime = System.currentTimeMillis();
-		
-//		Map<String, Object> result = evaluator.run();
-		Map<String, Object> result = evaluator.runIntensionalEvaluation();
+
+		Map<String, Object> result = evaluator.run();
+//		Map<String, Object> result = evaluator.runIntensionalEvaluation();
+		logger.info("FINAL RESULTS: " + result);
+
 		evaluator.printResults(result);
-		
+
 		long endTime   = System.currentTimeMillis();
 		long totalTime = endTime - startTime;
-		System.out.println("totalTime: " + totalTime + " ms");
+		System.out.println("\nTotal Time: " + totalTime + " ms");
 	}
 
 }
