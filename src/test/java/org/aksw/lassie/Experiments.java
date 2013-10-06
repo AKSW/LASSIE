@@ -44,15 +44,15 @@ public class Experiments {
 	private List<Modifier> instanceModifiers = new ArrayList<Modifier>();
 
 	public Experiments(){
-		//		classModifiers.add(new ClassRenameModifier());
-		//		classModifiers.add(new ClassDeleteModifier());
-		//		classModifiers.add(new ClassIdentityModifier());
+		classModifiers.add(new ClassRenameModifier());
+		classModifiers.add(new ClassDeleteModifier());
+		classModifiers.add(new ClassIdentityModifier());
 		classModifiers.add(new ClassMergeModifier());
-		//		classModifiers.add(new ClassSplitModifier());
-		//		classModifiers.add(new ClassTypeDeleteModifier());
+//		classModifiers.add(new ClassSplitModifier());
+		classModifiers.add(new ClassTypeDeleteModifier());
 
 		instanceModifiers.add(new InstanceAbbreviationModifier());
-		instanceModifiers.add(new InstanceAcronymModifier());
+//		instanceModifiers.add(new InstanceAcronymModifier());
 		instanceModifiers.add(new InstanceIdentityModifier());
 		instanceModifiers.add(new InstanceMergeModifier());
 		instanceModifiers.add(new InstanceMisspellingModifier());
@@ -96,7 +96,7 @@ public class Experiments {
 	}
 
 
-	public void runNClassesModifierExperiments(int noOfClasses, int noOfInstancesPerClass, 
+	public void runExperiments(int noOfClasses, int noOfInstancesPerClass, 
 			int noOfClassModifiers, int noOfInstanceModifiers, 
 			double modifierDestructionRate, double instanceDestructionRate,
 			int noOfExperimentRepeats, String outputFolder) throws FileNotFoundException{
@@ -111,7 +111,7 @@ public class Experiments {
 		for(int expNr = 0 ; expNr < noOfExperimentRepeats ; expNr++){
 			System.setOut(new PrintStream("/dev/null"));
 			long startTime = System.currentTimeMillis();
-			
+
 			//pick random noOfClassModifiers class modifiers
 			Collections.shuffle(classModifiers);
 			Map<Modifier, Double> classModifiersAndRates = new HashMap<Modifier, Double>();
@@ -145,26 +145,7 @@ public class Experiments {
 	}
 
 
-	public void runExperiments(int noOfClasses, int noOfInstancePerClass,int noOfExperimentsPerModifier, 
-			double modifierRate, String outputFolder) throws FileNotFoundException{
-		//create a folder for the results 
-		File folder = new File(outputFolder).getAbsoluteFile();
-		if (!folder.exists()) {
-			folder.mkdirs();
-		}
 
-		//do the experiment n times for each modifier 
-		for(int expNr = 0 ; expNr < noOfExperimentsPerModifier ; expNr++){
-			for(Modifier clsModifier : classModifiers){
-				logger.info("Running experiment for class modifier: " + clsModifier.getSimpleName());
-				System.setOut(new PrintStream("/dev/null"));
-				Map<Modifier, Double> classModifiersAndRates = new HashMap<Modifier, Double>();
-				classModifiersAndRates.put(clsModifier, modifierRate);
-				Evaluation evaluator = new Evaluation(noOfClasses, noOfInstancePerClass, classModifiersAndRates, new HashMap<Modifier, Double>());
-				evaluator.printShortResults(evaluator.run(), outputFolder + clsModifier.getSimpleName() + "_" + expNr + "_");
-			}
-		}
-	}
 
 	/**
 	 * @param args
@@ -176,7 +157,9 @@ public class Experiments {
 		Map<Modifier, Double> instanceModifiersAndRates = new HashMap<Modifier, Double>();
 		instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.2d);
 		instanceModifiersAndRates.put(new InstanceAbbreviationModifier(), 0.2d);
-		experiment.runOneClassModifierExperiments(instanceModifiersAndRates, 10, 100, 1, 0.5, "/mypartition2/Work/lassie/result/oneClassExperiment/tmp/");
+		
+		experiment.runExperiments(10, 100, 2, 2, 0.5, 0.5, 5,  "/mypartition2/Work/lassie/result/oneClassExperiment/twoClsTwoInsExperiments/");
+//		experiment.runOneClassModifierExperiments(instanceModifiersAndRates, 10, 100, 1, 0.5, "/mypartition2/Work/lassie/result/oneClassExperiment/tmp/");
 
 	}
 
