@@ -249,10 +249,10 @@ public class Evaluation {
 		// instance modifiers
 		//		instanceModefiersAndRates.put(new InstanceIdentityModifier(),1d);
 		instanceModifiersAndRates.put(new InstanceMisspellingModifier(),	0.2d);
-		//		instanceModefiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
-		//		instanceModefiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
-		//				instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
-		//		instanceModefiersAndRates.put(new InstanceSplitModifier(),			0.2d);
+		//		instanceModifiersAndRates.put(new InstanceAbbreviationModifier(),	0.2d);
+		//		instanceModifiersAndRates.put(new InstanceAcronymModifier(),		0.2d);
+		//		instanceModefiersAndRates.put(new InstanceMergeModifier(),			0.2d);
+		//		instanceModifiersAndRates.put(new InstanceSplitModifier(),			0.2d);
 
 
 		// class modifiers
@@ -290,10 +290,10 @@ public class Evaluation {
 		System.out.println("MODIFIER(S):");
 		int j=1;
 		for(Modifier m: classModifiersAndRates.keySet()){
-			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + classModifiersAndRates.get(m)*100 + "%");
+			System.out.println(j++ + ". " + m.getSimpleName() + "\t" + classModifiersAndRates.get(m)*100 + "%");
 		}
 		for(Modifier m: instanceModifiersAndRates.keySet()){
-			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + instanceModifiersAndRates.get(m)*100 + "%");
+			System.out.println(j++ + ". " + m.getSimpleName() + "\t" + instanceModifiersAndRates.get(m)*100 + "%");
 		}
 		for(String key:result.keySet()){
 			if(key.equals("mapping")){
@@ -371,8 +371,8 @@ public class Evaluation {
 		}
 	}
 
-	public void printShortResults(Map<String, Object> result, String resultId) throws FileNotFoundException {
-		System.setOut(new PrintStream(new FileOutputStream(resultId + ((maxNrOfClasses > 0) ? ("-" + maxNrOfClasses + "-" + maxNrOfInstancesPerClass) : "") + ".txt")));
+	public void printShortResults(Map<String, Object> result, String outputFile) throws FileNotFoundException {
+		System.setOut(new PrintStream(new FileOutputStream(outputFile )));
 
 		System.out.println("No of Classes:              " + maxNrOfClasses);
 		System.out.println("No of Instance per Classes: " + maxNrOfInstancesPerClass);
@@ -383,24 +383,27 @@ public class Evaluation {
 		}
 		for(Modifier m: instanceModifiersAndRates.keySet()){
 			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + instanceModifiersAndRates.get(m)*100 + "%");
-
-
-			Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get("coverage");
-			Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2PFMeasure");
-			System.out.println("IterationNr\tCoverage\tAVG-F");
-			//compute the average F measure for all classes instance mappings
-			double sum = 0d, count = 0f;
-			for(Integer i : iteration2coverage.keySet()){
-				Iterator<Map<NamedClass, Double>> iter = iteration2sourceClass2PFMeasure.get(i).iterator();
-				while(iter.hasNext()){
-					for(Double fm : iter.next().values()){
-						sum += fm;
-						count++; 
-					}
-				}
-				System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ (sum/count) );
-			}
 		}
+
+		Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get("coverage");
+		Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2PFMeasure");
+		System.out.println("IterationNr\tCoverage\tAVG-F");
+
+		//compute the average F measure for all classes instance mappings
+		double sum = 0d, count = 0f;
+		for(Integer i : iteration2coverage.keySet()){
+			Iterator<Map<NamedClass, Double>> iter = iteration2sourceClass2PFMeasure.get(i).iterator();
+			while(iter.hasNext()){
+				for(Double fm : iter.next().values()){
+					if(fm == 0) continue;
+					sum += fm;
+					count++; 
+				}
+			}
+			System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ (sum/count) );
+		}
+
+		System.out.println("Results: " + result);
 	}
 
 

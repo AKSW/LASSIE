@@ -68,10 +68,10 @@ public class ClassMergeModifier extends Modifier{
 			classNames = baseClasses;
 		}
 		
-		String mergeTargetClassUri = new String();
 		List<String> mergeSourceClassUris = new ArrayList<String>();
 		
 		for(int i=0 ; i<classNames.size() ; i+=mergeCount){
+			String mergeTargetClassUri = new String();
 			mergeSourceClassUris.removeAll(mergeSourceClassUris);
 			for(int j=0 ; j<mergeCount && i+j<classNames.size() ; j++){
 				mergeSourceClassUris.add(j,classNames.get(i+j)); 

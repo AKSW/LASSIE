@@ -267,7 +267,7 @@ public class ExpressiveSchemaMappingGenerator {
         //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
         for (NamedClass sourceClass : sourceClasses) {
 
-            logger.info("+++++++++++++++++++++++++++++++++" + sourceClass + "+++++++++++++++++++++");
+            logger.info("Source class: " + sourceClass);
             currentClass = sourceClass;
             try {
                 SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
@@ -473,6 +473,7 @@ public class ExpressiveSchemaMappingGenerator {
         
         return map;
     }
+    
 
     /**
      * Run LIMES to generate owl:sameAs links
