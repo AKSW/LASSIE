@@ -48,11 +48,11 @@ public class Experiments {
 		classModifiers.add(new ClassDeleteModifier());
 		classModifiers.add(new ClassIdentityModifier());
 		classModifiers.add(new ClassMergeModifier());
-//		classModifiers.add(new ClassSplitModifier());
+		//		classModifiers.add(new ClassSplitModifier());
 		classModifiers.add(new ClassTypeDeleteModifier());
 
 		instanceModifiers.add(new InstanceAbbreviationModifier());
-//		instanceModifiers.add(new InstanceAcronymModifier());
+		//		instanceModifiers.add(new InstanceAcronymModifier());
 		instanceModifiers.add(new InstanceIdentityModifier());
 		instanceModifiers.add(new InstanceMergeModifier());
 		instanceModifiers.add(new InstanceMisspellingModifier());
@@ -98,7 +98,7 @@ public class Experiments {
 
 	public void runExperiments(int noOfClasses, int noOfInstancesPerClass, 
 			int noOfClassModifiers, int noOfInstanceModifiers, 
-			double modifierDestructionRate, double instanceDestructionRate,
+			double classesDestructionRate, double instancesDestructionRate,
 			int noOfExperimentRepeats, String outputFolder) throws FileNotFoundException{
 
 		//create a folder for the results if not exist
@@ -113,21 +113,25 @@ public class Experiments {
 			long startTime = System.currentTimeMillis();
 
 			//pick random noOfClassModifiers class modifiers
-			Collections.shuffle(classModifiers);
 			Map<Modifier, Double> classModifiersAndRates = new HashMap<Modifier, Double>();
-			for(int i = 0 ; i < noOfClassModifiers ; i++){
-				classModifiersAndRates.put(classModifiers.get(i), modifierDestructionRate/(double)noOfClassModifiers);
+			if(noOfClassModifiers == 0){
+				classModifiersAndRates.put(new ClassIdentityModifier(), classesDestructionRate);
+			}else{
+				Collections.shuffle(classModifiers);
+				for(int i = 0 ; i < noOfClassModifiers ; i++){
+					classModifiersAndRates.put(classModifiers.get(i), classesDestructionRate/(double)noOfClassModifiers);
+				}
 			}
 
 			//pick random noOfClassModifiers instance modifiers
 			Collections.shuffle(instanceModifiers);
 			Map<Modifier, Double> instanceModifiersAndRates = new HashMap<Modifier, Double>();
 			for(int i = 0 ; i < noOfInstanceModifiers ; i++){
-				instanceModifiersAndRates.put(instanceModifiers.get(i), instanceDestructionRate/(double)noOfInstanceModifiers);
+				instanceModifiersAndRates.put(instanceModifiers.get(i), instancesDestructionRate/(double)noOfInstanceModifiers);
 			}
 
 			logger.info("Running experiment(" + (expNr+1) + ") for " + noOfClassModifiers + 
-					"class modifier(s) and " + noOfInstanceModifiers + " instance Modifier(s)") ;
+					" class modifier(s) and " + noOfInstanceModifiers + " instance Modifier(s)") ;
 			logger.info("Experiment class modifiers and rates: " + classModifiersAndRates);
 			logger.info("Experiment instance modifiers and rates:" + instanceModifiersAndRates);
 
@@ -147,20 +151,21 @@ public class Experiments {
 
 
 
-	/**
+	/** 
 	 * @param args
 	 * @author sherif
 	 * @throws FileNotFoundException 
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
-		Experiments experiment = new Experiments();
-		Map<Modifier, Double> instanceModifiersAndRates = new HashMap<Modifier, Double>();
-		instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.2d);
-		instanceModifiersAndRates.put(new InstanceAbbreviationModifier(), 0.2d);
-		
-		experiment.runExperiments(10, 100, 2, 2, 0.5, 0.5, 5,  "/mypartition2/Work/lassie/result/oneClassExperiment/twoClsTwoInsExperiments/");
-//		experiment.runOneClassModifierExperiments(instanceModifiersAndRates, 10, 100, 1, 0.5, "/mypartition2/Work/lassie/result/oneClassExperiment/tmp/");
+		if(args.length < 8 || args[0].equals("-?")){
+			System.err.println("parameters:\narg[0] = noOfClasses\narg[1] = noOfInstancesPerClass\narg[2] = noOfClassModifiers\n" +
+					"arg[3] = noOfInstanceModifiers\narg[4] = classesDestructionRate\narg[5] = instancesDestructionRate\n" +
+					"arg[6] = noOfExperimentRepeats\narg[7] = outputFolder");
+		}
 
+		Experiments experiment = new Experiments();
+		experiment.runExperiments(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]), 
+				Integer.parseInt(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), Integer.parseInt(args[6]),  args[7]);
 	}
 
 }

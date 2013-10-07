@@ -61,7 +61,7 @@ public class Evaluation {
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
-	//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
+//		private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), "cache");
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, "cache");
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
@@ -386,21 +386,37 @@ public class Evaluation {
 		}
 
 		Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get("coverage");
-		Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2PFMeasure");
-		System.out.println("IterationNr\tCoverage\tAVG-F");
+		Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2FMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2FMeasure");
+		Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2FMeasure");
+		System.out.println("IterationNr\tCoverage\tAVG-F\tAVG-PF");
 
-		//compute the average F measure for all classes instance mappings
 		double sum = 0d, count = 0f;
 		for(Integer i : iteration2coverage.keySet()){
-			Iterator<Map<NamedClass, Double>> iter = iteration2sourceClass2PFMeasure.get(i).iterator();
-			while(iter.hasNext()){
-				for(Double fm : iter.next().values()){
+			
+			//compute the average F measure for all classes instance mappings
+			Iterator<Map<NamedClass, Double>> fIter = iteration2sourceClass2FMeasure.get(i).iterator();
+			while(fIter.hasNext()){
+				for(Double fm : fIter.next().values()){
 					if(fm == 0) continue;
 					sum += fm;
 					count++; 
 				}
 			}
-			System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ (sum/count) );
+			double avgFMeasure = sum/count;
+			
+			//compute the average pseudo F measure for all classes instance mappings
+			sum = 0d; count = 0;
+			Iterator<Map<NamedClass, Double>> pfIter = iteration2sourceClass2PFMeasure.get(i).iterator();
+			while(pfIter.hasNext()){
+				for(Double fm : pfIter.next().values()){
+					if(fm == 0) continue;
+					sum += fm;
+					count++; 
+				}
+			}
+			double avgPFMeasure = sum/count;
+			
+			System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ avgFMeasure + "\t" + avgPFMeasure );
 		}
 
 		System.out.println("Results: " + result);
