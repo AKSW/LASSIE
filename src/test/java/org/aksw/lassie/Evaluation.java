@@ -62,17 +62,13 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
-import com.hp.hpl.jena.vocabulary.RDF;
 
 public class Evaluation {
 
 
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
-//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+	//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), "cache");
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, "cache");
@@ -215,15 +211,16 @@ public class Evaluation {
 		List<NamedClass> classesWithEnoughInstances = new ArrayList<NamedClass>();
 		while ( selectResult.hasNext())	{
 			QuerySolution soln = selectResult.nextSolution() ;
-			classesWithEnoughInstances.add(new NamedClass(classesWithEnoughInstances.toString()));
-			
+			RDFNode cls = soln.get("type");
+			classesWithEnoughInstances.add(new NamedClass(cls.toString()));
+
 			//shuffle and select first n classes
 			Collections.shuffle(classesWithEnoughInstances, new Random(123));
 			classesWithEnoughInstances = classesWithEnoughInstances.subList(0, Math.min(nrOfclasses, classesWithEnoughInstances.size()));
-			
+
 		}
 		classesToLearn = Sets.newHashSet(classesWithEnoughInstances);
-		
+
 		//add instances for each class
 		for(NamedClass cls : classesWithEnoughInstances){
 			Model m = ModelFactory.createDefaultModel();
@@ -237,13 +234,13 @@ public class Evaluation {
 		return resultModel;
 	}
 
-	public Map<String, Object> run(){
+	public Multimap<Integer, Map<String, Object>> run(){
 		//create a sample of the knowledge base
 		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
 
 		//we assume that the target is the sample KB itself
 		KnowledgeBase target = sampleKB;
-		
+
 
 		//we create the source KB by modifying the data of the sample KB  
 		Model sampleKBModel = sampleKB.getModel();
@@ -258,16 +255,16 @@ public class Evaluation {
 		Model modifiedReferenceDataset = createTestDataset(sampleKBModelCopy, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
 
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
-		try {
-			// just 4 test
-			modifiedReferenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+		//		try {
+		//			// just 4 test
+		//			modifiedReferenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
+		//		} catch (FileNotFoundException e) {
+		//			e.printStackTrace();
+		//		}
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		Map<String, Object> result = generator.run(modifiedDbpediaClasses);
+		Multimap<Integer, Map<String, Object>> result = generator.run(modifiedDbpediaClasses);
 
 		return result;
 	}
@@ -298,7 +295,7 @@ public class Evaluation {
 
 
 
-	public Map<String, Object> runIntensionalEvaluation(){
+	public Multimap<Integer, Map<String, Object>> runIntensionalEvaluation(){
 		//create a sample of the knowledge base
 		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass);
 
@@ -337,103 +334,108 @@ public class Evaluation {
 	}
 
 
-	/**
-	 * @param result
-	 * @author sherif
-	 * @throws FileNotFoundException 
-	 */
-	@SuppressWarnings("unchecked")
-	private void printResults(Map<String, Object> result) throws FileNotFoundException {
-		System.setOut(new PrintStream(new FileOutputStream("results"+ ((maxNrOfClasses > 0) ? ("-" + maxNrOfClasses + "-" + maxNrOfInstancesPerClass) : "") + ".txt")));
-
-		System.out.println("\n----------- RESULTS -----------");
-		System.out.println("No of Classes:              " + maxNrOfClasses);
-		System.out.println("No of Instance per Classes: " + maxNrOfInstancesPerClass);
-		System.out.println("MODIFIER(S):");
-		int j=1;
-		for(Modifier m: classModifiersAndRates.keySet()){
-			System.out.println(j++ + ". " + m.getSimpleName() + "\t" + classModifiersAndRates.get(m)*100 + "%");
-		}
-		for(Modifier m: instanceModifiersAndRates.keySet()){
-			System.out.println(j++ + ". " + m.getSimpleName() + "\t" + instanceModifiersAndRates.get(m)*100 + "%");
-		}
-		for(String key:result.keySet()){
-			if(key.equals("mapping")){
-				System.out.println("\nFINAL MAPPING:");
-
-				Map<NamedClass, Description> map = (Map<NamedClass, Description>) result.get(key);
-				for(NamedClass nC: map.keySet()){
-					System.out.println(nC + "\t" + map.get(nC));
-				}
-			}
-
-			if(key.equals("coverage")){
-				System.out.println("\nCOVERAGE:");
-				Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get(key);
-				Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2PFMeasure");
-				System.out.println("IterationNr\tCoverage\tAVG-F\tclass->FMeasure");
-				//compute the average F measure for all classes instance mappings
-				double sum = 0d, count = 0f;
-				for(Integer i : iteration2coverage.keySet()){
-					Iterator<Map<NamedClass, Double>> iter = iteration2sourceClass2PFMeasure.get(i).iterator();
-					while(iter.hasNext()){
-						for(Double fm : iter.next().values()){
-							sum += fm;
-							count++; 
-						}
-					}
-					System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ (sum/count) + "\t" + iteration2sourceClass2PFMeasure.get(i));
-				}
-			}
-
-			if(key.equals("mappingTop10")){
-				System.out.println("\nTOP 10 MAPPINGS:");
-
-				Map<NamedClass, List<? extends EvaluatedDescription>> map = (Map<NamedClass, List<? extends EvaluatedDescription>>) result.get(key);
-				for(NamedClass nC: map.keySet()){
-					System.out.println("\n"+ nC);
-					List<? extends EvaluatedDescription> mapList = map.get(nC);
-					int i=1;
-					for (EvaluatedDescription ed : mapList) {
-						System.out.println("\t" + i + ". " + ed.toString());
-						if(i>10) 
-							break;
-						i++;
-					}
-				}
-			}
-
-			if(key.equals("posExamples")){
-				System.out.println("\nPOSITIVE EXAMPLES:");
-
-				Multimap<NamedClass, String> map = (Multimap<NamedClass, String>) result.get(key);
-				for(NamedClass nC: map.keySet()){
-					System.out.println("\n"+ nC);
-					Collection<String> mapList = map.get(nC);
-					int i=1;
-					for (String str : mapList) {
-						System.out.println("\t" + i++ + ". " + str);
-					}
-				}
-			}
-
-			if(key.equals("Modifier2pos")){
-				Map<Modifier, Integer> map = (Map<Modifier, Integer>) result.get(key);
-				for(Modifier m: map.keySet()){
-					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m));
-				}
-			}
-
-			if(key.equals("modifier2optimalSolution")){
-				Map<Modifier, Description> map = (Map<Modifier, Description>) result.get(key);
-				for(Modifier m : map.keySet()){
-					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m).toString());
-				}
-			}
-		}
+//	/**
+//	 * @param result
+//	 * @author sherif
+//	 * @throws FileNotFoundException 
+//	 */
+//	@SuppressWarnings("unchecked")
+//	private void printResults(Map<String, Object> result) throws FileNotFoundException {
+//		System.setOut(new PrintStream(new FileOutputStream("results"+ ((maxNrOfClasses > 0) ? ("-" + maxNrOfClasses + "-" + maxNrOfInstancesPerClass) : "") + ".txt")));
+//
+//		System.out.println("\n----------- RESULTS -----------");
+//		System.out.println("No of Classes:              " + maxNrOfClasses);
+//		System.out.println("No of Instance per Classes: " + maxNrOfInstancesPerClass);
+//		System.out.println("MODIFIER(S):");
+//		int j=1;
+//		for(Modifier m: classModifiersAndRates.keySet()){
+//			System.out.println(j++ + ". " + m.getSimpleName() + "\t" + classModifiersAndRates.get(m)*100 + "%");
+//		}
+//		for(Modifier m: instanceModifiersAndRates.keySet()){
+//			System.out.println(j++ + ". " + m.getSimpleName() + "\t" + instanceModifiersAndRates.get(m)*100 + "%");
+//		}
+//		for(String key:result.keySet()){
+//			if(key.equals("mapping")){
+//				System.out.println("\nFINAL MAPPING:");
+//
+//				Map<NamedClass, Description> map = (Map<NamedClass, Description>) result.get(key);
+//				for(NamedClass nC: map.keySet()){
+//					System.out.println(nC + "\t" + map.get(nC));
+//				}
+//			}
+//
+//			if(key.equals("coverage")){
+//				System.out.println("\nCOVERAGE:");
+//				Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get(key);
+//				Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2PFMeasure");
+//				System.out.println("IterationNr\tCoverage\tAVG-F\tclass->FMeasure");
+//				//compute the average F measure for all classes instance mappings
+//				double sum = 0d, count = 0f;
+//				for(Integer i : iteration2coverage.keySet()){
+//					Iterator<Map<NamedClass, Double>> iter = iteration2sourceClass2PFMeasure.get(i).iterator();
+//					while(iter.hasNext()){
+//						for(Double fm : iter.next().values()){
+//							sum += fm;
+//							count++; 
+//						}
+//					}
+//					System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ (sum/count) + "\t" + iteration2sourceClass2PFMeasure.get(i));
+//				}
+//			}
+//
+//			if(key.equals("Top10Mapping")){
+//				System.out.println("\nTOP 10 MAPPINGS:");
+//
+//				Map<NamedClass, List<? extends EvaluatedDescription>> map = (Map<NamedClass, List<? extends EvaluatedDescription>>) result.get(key);
+//				for(NamedClass nC: map.keySet()){
+//					System.out.println("\n"+ nC);
+//					List<? extends EvaluatedDescription> mapList = map.get(nC);
+//					int i=1;
+//					for (EvaluatedDescription ed : mapList) {
+//						System.out.println("\t" + i + ". " + ed.toString());
+//						if(i>10) 
+//							break;
+//						i++;
+//					}
+//				}
+//			}
+//
+//			if(key.equals("posExamples")){
+//				System.out.println("\nPOSITIVE EXAMPLES:");
+//
+//				Multimap<NamedClass, String> map = (Multimap<NamedClass, String>) result.get(key);
+//				for(NamedClass nC: map.keySet()){
+//					System.out.println("\n"+ nC);
+//					Collection<String> mapList = map.get(nC);
+//					int i=1;
+//					for (String str : mapList) {
+//						System.out.println("\t" + i++ + ". " + str);
+//					}
+//				}
+//			}
+//
+//			if(key.equals("Modifier2pos")){
+//				Map<Modifier, Integer> map = (Map<Modifier, Integer>) result.get(key);
+//				for(Modifier m: map.keySet()){
+//					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m));
+//				}
+//			}
+//
+//			if(key.equals("modifier2optimalSolution")){
+//				Map<Modifier, Description> map = (Map<Modifier, Description>) result.get(key);
+//				for(Modifier m : map.keySet()){
+//					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m).toString());
+//				}
+//			}
+//		}
+//	}
+	
+	public void printResults(Multimap<Integer, Map<String, Object>> result, String outputFile) throws FileNotFoundException {
+		printResults(result, outputFile, false);
 	}
 
-	public void printShortResults(Map<String, Object> result, String outputFile) throws FileNotFoundException {
+	@SuppressWarnings("unchecked")
+	public void printResults(Multimap<Integer, Map<String, Object>> result, String outputFile, boolean printShortResults) throws FileNotFoundException {
 		System.setOut(new PrintStream(new FileOutputStream(outputFile )));
 
 		System.out.println("No of Classes:              " + maxNrOfClasses);
@@ -447,41 +449,108 @@ public class Evaluation {
 			System.out.println(j++ + ". " + m.getClass().getSimpleName() + "\t" + instanceModifiersAndRates.get(m)*100 + "%");
 		}
 
-		Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get("coverage");
-		Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2FMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2FMeasure");
-		Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2FMeasure");
-		System.out.println("IterationNr\tCoverage\tAVG-F\tAVG-PF");
+		//short version result
+		for(Integer iterationNr=1 ; iterationNr<result.size() ; iterationNr++){
+			double coverage = (Double) result.get(iterationNr).iterator().next().get("sourceClass2RealFMeasure");
 
-		double sum = 0d, count = 0f;
-		for(Integer i : iteration2coverage.keySet()){
-
-			//compute the average F measure for all classes instance mappings
-			Iterator<Map<NamedClass, Double>> fIter = iteration2sourceClass2FMeasure.get(i).iterator();
-			while(fIter.hasNext()){
-				for(Double fm : fIter.next().values()){
-					if(fm == 0) continue;
-					sum += fm;
-					count++; 
-				}
+			//compute avgRealFMeasure
+			double avgRealFMeasure = 0d;
+			Map<NamedClass, Double> mapF = (Map<NamedClass, Double>) result.get(iterationNr).iterator().next().get("sourceClass2RealFMeasure");
+			for(NamedClass nC: mapF.keySet()){
+				avgRealFMeasure += mapF.get(nC);
 			}
-			double avgFMeasure = sum/count;
+			avgRealFMeasure /= (double) mapF.size();
 
-			//compute the average pseudo F measure for all classes instance mappings
-			sum = 0d; count = 0;
-			Iterator<Map<NamedClass, Double>> pfIter = iteration2sourceClass2PFMeasure.get(i).iterator();
-			while(pfIter.hasNext()){
-				for(Double fm : pfIter.next().values()){
-					if(fm == 0) continue;
-					sum += fm;
-					count++; 
-				}
+			//compute avgPseudoFMeasure
+			double avgPseudoFMeasure = 0d;
+			Map<NamedClass, Double> mapPF = (Map<NamedClass, Double>) result.get(iterationNr).iterator().next().get("sourceClass2PseudoFMeasure");
+			for(NamedClass nC: mapPF.keySet()){
+				avgRealFMeasure += mapPF.get(nC);
 			}
-			double avgPFMeasure = sum/count;
+			avgRealFMeasure /= (double) mapPF.size();
 
-			System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ avgFMeasure + "\t" + avgPFMeasure );
+			System.out.println("IterationNr\tCoverage\tavgRealFMeasure\tavgPseudoFMeasure");
+			System.out.println(iterationNr + "\t" + coverage + "\t" + avgRealFMeasure + "\t" + avgPseudoFMeasure);
+
 		}
+		
+		if(printShortResults){
+			return;
+		}
+			
+		//long version result
+		for(Integer iterationNr=1 ; iterationNr<result.size() ; iterationNr++){
+			System.out.println("\n****************** " + iterationNr + ". ITERATION ******************");
+			Collection<Map<String, Object>> iterationResults = result.get(iterationNr);
+			for(Map<String, Object> resultEntry : iterationResults){
 
-		System.out.println("Results: " + result);
+				for(String key:resultEntry.keySet()){
+
+					if(key.equals("coverage")){
+						System.out.println("\nCOVERAGE: " + resultEntry.get(key));
+					}
+
+					if(key.equals("sourceClass2RealFMeasure")){
+						System.out.println("\nSourceClass\tRealFMeasure:");
+						Map<NamedClass, Double> map = (Map<NamedClass, Double>) resultEntry.get(key);
+						for(NamedClass nC: map.keySet()){
+							System.out.println(nC + "\t" + map.get(nC));
+						}
+					}
+
+					if(key.equals("sourceClass2PseudoFMeasure")){
+						System.out.println("\nSourceClass\tPseudoFMeasure:");
+						Map<NamedClass, Double> map = (Map<NamedClass, Double>) resultEntry.get(key);
+						for(NamedClass nC: map.keySet()){
+							System.out.println(nC + "\t" + map.get(nC));
+						}
+					}
+
+					if(key.equals("Top10Mapping")){
+						System.out.println("\nTOP 10 MAPPINGS:");
+
+						Map<NamedClass, List<? extends EvaluatedDescription>> map = (Map<NamedClass, List<? extends EvaluatedDescription>>) resultEntry.get(key);
+						for(NamedClass nC: map.keySet()){
+							System.out.println("\n"+ nC);
+							List<? extends EvaluatedDescription> mapList = map.get(nC);
+							int i=1;
+							for (EvaluatedDescription ed : mapList) {
+								System.out.println("\t" + i + ". " + ed.toString());
+								if(i>10) 
+									break;
+								i++;
+							}
+						}
+					}
+
+					if(key.equals("sourceClass2PosExamples")){
+						System.out.println("\nPOSITIVE EXAMPLES:");
+						Multimap<NamedClass, String> map = (Multimap<NamedClass, String>) resultEntry.get(key);
+						for(NamedClass nC: map.keySet()){
+							System.out.println("\n"+ nC);
+							Collection<String> mapList = map.get(nC);
+							int i=1;
+							for (String str : mapList) {
+								System.out.println("\t" + i++ + ". " + str);
+							}
+						}
+					}
+
+					if(key.equals("sourceClass2NegativeExample")){
+						System.out.println("\nNEGATIVE EXAMPLES:");
+						Map<NamedClass, SortedSet<Individual>> map = (Map<NamedClass, SortedSet<Individual>>) resultEntry.get(key);
+						for(NamedClass nC: map.keySet()){
+							System.out.println("\n"+ nC);
+							SortedSet<Individual> sortedSet = (SortedSet<Individual>) map.get(nC);
+							int i=1;
+							for (Individual ind : sortedSet) {
+								System.out.println("\t" + i++ + ". " + ind);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 
@@ -490,11 +559,11 @@ public class Evaluation {
 		Evaluation evaluator = new Evaluation();
 		long startTime = System.currentTimeMillis();
 		evaluator.setModefiersManually();
-		Map<String, Object> result = evaluator.run();
+		Multimap<Integer, Map<String, Object>> result = evaluator.run();
 		//		Map<String, Object> result = evaluator.runIntensionalEvaluation();
 		logger.info("FINAL RESULTS: " + result);
 
-		evaluator.printShortResults(result, "resultsOf");
+		evaluator.printResults(result, "resultsOf");
 
 		long endTime   = System.currentTimeMillis();
 		long totalTime = endTime - startTime;

@@ -9,19 +9,15 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.aksw.lassie.bmGenerator.ClassDeleteModifier;
 import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
 import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
-import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.ClassTypeDeleteModifier;
 import org.aksw.lassie.bmGenerator.InstanceAbbreviationModifier;
-import org.aksw.lassie.bmGenerator.InstanceAcronymModifier;
 import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
 import org.aksw.lassie.bmGenerator.InstanceMergeModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
@@ -30,8 +26,6 @@ import org.aksw.lassie.bmGenerator.InstanceSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.apache.log4j.Logger;
 
-import com.jamonapi.Monitor;
-import com.jamonapi.MonitorFactory;
 
 /**
  * @author sherif
@@ -87,7 +81,7 @@ public class Experiments {
 				Evaluation evaluator = new Evaluation(noOfClasses, noOfInstancePerClass, classModifiersAndRates, instanceModifiersAndRates);
 
 				//store result
-				evaluator.printShortResults(evaluator.run(), outputFolder + clsModifier.getSimpleName() + "_" + expNr + "_");
+				evaluator.printResults(evaluator.run(), outputFolder + clsModifier.getSimpleName() + "_" + expNr + "_");
 				long experimentTime = System.currentTimeMillis() - startTime;
 				System.out.println("Experiment time: " + experimentTime + "ms.");
 				logger.info("Experimrnt number " + (expNr+1) + " for class " + clsModifier.getSimpleName() + "is done in " + experimentTime + "ms.");
@@ -96,10 +90,10 @@ public class Experiments {
 	}
 
 
-	public void runExperiments(int noOfClasses, int noOfInstancesPerClass, 
-			int noOfClassModifiers, int noOfInstanceModifiers, 
+	public void runExperiments(int nrOfClasses, int nrOfInstancesPerClass, 
+			int nrOfClassModifiers, int nrOfInstanceModifiers, 
 			double classesDestructionRate, double instancesDestructionRate,
-			int noOfExperimentRepeats, String outputFolder) throws FileNotFoundException{
+			int nrOfExperimentRepeats, String outputFolder) throws FileNotFoundException{
 
 		//create a folder for the results if not exist
 		File folder = new File(outputFolder).getAbsoluteFile();
@@ -108,43 +102,43 @@ public class Experiments {
 		}
 
 		//do the experiment noOfExperimentRepeats times for each modifier 
-		for(int expNr = 0 ; expNr < noOfExperimentRepeats ; expNr++){
+		for(int expNr = 0 ; expNr < nrOfExperimentRepeats ; expNr++){
 			System.setOut(new PrintStream("/dev/null"));
 			long startTime = System.currentTimeMillis();
 
 			//pick random noOfClassModifiers class modifiers
 			Map<Modifier, Double> classModifiersAndRates = new HashMap<Modifier, Double>();
-			if(noOfClassModifiers == 0){
+			if(nrOfClassModifiers == 0){
 				classModifiersAndRates.put(new ClassIdentityModifier(), classesDestructionRate);
 			}else{
 				Collections.shuffle(classModifiers);
-				for(int i = 0 ; i < noOfClassModifiers ; i++){
-					classModifiersAndRates.put(classModifiers.get(i), classesDestructionRate/(double)noOfClassModifiers);
+				for(int i = 0 ; i < nrOfClassModifiers ; i++){
+					classModifiersAndRates.put(classModifiers.get(i), classesDestructionRate/(double)nrOfClassModifiers);
 				}
 			}
 
 			//pick random noOfClassModifiers instance modifiers
 			Collections.shuffle(instanceModifiers);
 			Map<Modifier, Double> instanceModifiersAndRates = new HashMap<Modifier, Double>();
-			for(int i = 0 ; i < noOfInstanceModifiers ; i++){
-				instanceModifiersAndRates.put(instanceModifiers.get(i), instancesDestructionRate/(double)noOfInstanceModifiers);
+			for(int i = 0 ; i < nrOfInstanceModifiers ; i++){
+				instanceModifiersAndRates.put(instanceModifiers.get(i), instancesDestructionRate/(double)nrOfInstanceModifiers);
 			}
 
-			logger.info("Running experiment(" + (expNr+1) + ") for " + noOfClassModifiers + 
-					" class modifier(s) and " + noOfInstanceModifiers + " instance Modifier(s)") ;
+			logger.info("Running experiment(" + (expNr+1) + ") for " + nrOfClassModifiers + 
+					" class modifier(s) and " + nrOfInstanceModifiers + " instance Modifier(s)") ;
 			logger.info("Experiment class modifiers and rates: " + classModifiersAndRates);
 			logger.info("Experiment instance modifiers and rates:" + instanceModifiersAndRates);
 
-			Evaluation evaluator = new Evaluation(noOfClasses, noOfInstancesPerClass, classModifiersAndRates, instanceModifiersAndRates);
+			Evaluation evaluator = new Evaluation(nrOfClasses, nrOfInstancesPerClass, classModifiersAndRates, instanceModifiersAndRates);
 
 			//store result
-			String outputFile = outputFolder + "result_" + noOfClassModifiers + "_" + noOfInstanceModifiers + "_" + expNr + "_"
-					+ ((noOfClasses > 0) ? ("-" + noOfClasses + "-" + noOfInstancesPerClass) : "") + ".txt";
-			evaluator.printShortResults(evaluator.run(), outputFile);
+			String outputFile = outputFolder + "result_" + nrOfClassModifiers + "_" + nrOfInstanceModifiers + "_" + expNr + "_"
+					+ ((nrOfClasses > 0) ? ("-" + nrOfClasses + "-" + nrOfInstancesPerClass) : "") + ".txt";
+			evaluator.printResults(evaluator.run(), outputFile);
 			long experimentTime = System.currentTimeMillis() - startTime;
 			System.out.println("Experiment time: " + experimentTime + "ms.");
-			logger.info("Experimrnt (" + (expNr+1) + ") for " + noOfClassModifiers + "class modifier(s) and "
-					+ noOfInstanceModifiers + " instance Modifier(s) is done in " + experimentTime + "ms.");
+			logger.info("Experimrnt (" + (expNr+1) + ") for " + nrOfClassModifiers + "class modifier(s) and "
+					+ nrOfInstanceModifiers + " instance Modifier(s) is done in " + experimentTime + "ms.");
 		}
 	}
 

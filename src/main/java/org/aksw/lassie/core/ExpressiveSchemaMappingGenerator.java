@@ -128,10 +128,9 @@ public class ExpressiveSchemaMappingGenerator {
 	protected List<Modifier> modifiers = new ArrayList<Modifier>();
 	protected Map<NamedClass, Map<Description, Mapping>> mappingResults = new HashMap<NamedClass, Map<Description, Mapping>>();
 	private int numberOfLinkingIterations = 5;
-	public Map<String, Object> evaluationResults = new HashMap<String, Object>();
+	public Multimap<Integer, Map<String, Object>> evaluationResults = HashMultimap.create();
+	Map<String, Object> resultEntry = new HashMap<String, Object>();
 	private int iterationNr = 1;
-	private Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2FMeasure = HashMultimap.create();
-	private Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = HashMultimap.create();
 	/**
 	 * @param modifiers the modifiers to set
 	 */
@@ -174,31 +173,34 @@ public class ExpressiveSchemaMappingGenerator {
 		run(sourceClasses, targetClasses);
 	}
 
-	public Map<String, Object> run(Set<NamedClass> sourceClasses) {
+	public Multimap<Integer, Map<String, Object>> run(Set<NamedClass> sourceClasses) {
 		// get all classes D_i in target KB
 		Set<NamedClass> targetClasses = getClasses(targetKB);
 
 		return run(sourceClasses, targetClasses);
 	}
 
-	public Map<String, Object> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+	public Multimap<Integer, Map<String, Object>> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
 
 		//initially, the class expressions E_i in the target KB are the named classes D_i
 		Collection<Description> targetClassExpressions = new TreeSet<Description>();
 		targetClassExpressions.addAll(targetClasses);
 
 		//perform the iterative schema matching
-		Map<NamedClass, Description> mapping = new HashMap<NamedClass, Description>();
-		Map<NamedClass, List<? extends EvaluatedDescription>> mappingTop10 = new HashMap<NamedClass, List<? extends EvaluatedDescription>>();
+		Map<NamedClass, Description> iterationResultConceptDescription = new HashMap<NamedClass, Description>();
+		Map<NamedClass, List<? extends EvaluatedDescription>> top10Mapping = new HashMap<NamedClass, List<? extends EvaluatedDescription>>();
 
 		double totalCoverage = 0;
-		Map<Integer, Double> coverageMap = new TreeMap<Integer, Double>();
 		do {
 			logger.info(iterationNr + ". ITERATION:");
 			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
 			//a map from C_i to a set of instances in the target KB
 			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
-			evaluationResults.put("posExamples", links);
+
+			//store posExamples
+			resultEntry.put("sourceClass2PosExamples", links);
+			evaluationResults.put(iterationNr, resultEntry);
+
 			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
 			for (NamedClass sourceClass : sourceClasses) {
 
@@ -207,10 +209,14 @@ public class ExpressiveSchemaMappingGenerator {
 				try {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
 					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
-					mappingTop10.put(sourceClass, mappingList);
-					EvaluatedDescription singleMapping = mappingList.get(0);
 
-					mapping.put(sourceClass, singleMapping.getDescription());
+					//store top10Mmapping 
+					top10Mapping.put(sourceClass, mappingList);
+					resultEntry.clear();
+					resultEntry.put("Top10Mapping", top10Mapping);
+					evaluationResults.put(iterationNr, resultEntry);
+
+					iterationResultConceptDescription.put(sourceClass, mappingList.get(0).getDescription());
 				} catch (NonExistingLinksException e) {
 					logger.warn(e.getMessage() + " Skipped learning.");
 				} catch (Exception e) {
@@ -219,9 +225,13 @@ public class ExpressiveSchemaMappingGenerator {
 			}
 
 			//set the target class expressions
-			targetClassExpressions = mapping.values();
-			double newTotalCoverage = computeCoverage(mapping);
-			coverageMap.put(iterationNr, newTotalCoverage);
+			targetClassExpressions = iterationResultConceptDescription.values();
+			double newTotalCoverage = computeCoverage(iterationResultConceptDescription);
+
+			//store coverage 
+			resultEntry.clear();
+			resultEntry.put("coverage", newTotalCoverage);
+			evaluationResults.put(iterationNr, resultEntry);
 
 			//if no better coverage then break
 			//            if ((newTotalCoverage - totalCoverage) <= coverageThreshold) {
@@ -233,9 +243,8 @@ public class ExpressiveSchemaMappingGenerator {
 
 		} while (iterationNr++ <= maxNrOfIterations);
 
-		evaluationResults.put("mapping", mapping);
-		evaluationResults.put("mappingTop10", mappingTop10);
-		evaluationResults.put("coverage", coverageMap);
+
+
 		return evaluationResults;
 	}
 
@@ -384,7 +393,7 @@ public class ExpressiveSchemaMappingGenerator {
 	 * @param targetClasses
 	 */
 	public Multimap<NamedClass, String> performUnsupervisedLinking(Set<NamedClass> sourceClasses, Collection<Description> targetClasses) {
-		Map<NamedClass, Double> sourceClass2FMeasure = new HashMap<NamedClass, Double>();
+		Map<NamedClass, Double> sourceClass2RealFMeasure = new HashMap<NamedClass, Double>();
 
 		logger.info("Computing links...");
 		logger.info("Source classes: " + sourceClasses);
@@ -461,15 +470,16 @@ public class ExpressiveSchemaMappingGenerator {
 					map.put(sourceClass, value.keySet().iterator().next());
 				}
 
-				//compute the instance mapping F-Measures for current class
+				//compute the instance mapping real F-Measures for current class
 				double f = MappingMath.computeFMeasure(result, cache2.size());
-				sourceClass2FMeasure.put(sourceClass, f);
+
+				//store the real F-Measures
+				sourceClass2RealFMeasure.put(sourceClass, f);
+				resultEntry.clear();
+				resultEntry.put("sourceClass2RealFMeasure", sourceClass2RealFMeasure);
+				evaluationResults.put(iterationNr, resultEntry);
 			}
 		}
-
-		//store the computed F-Measures 
-		iteration2sourceClass2FMeasure.put(iterationNr, sourceClass2FMeasure);
-		evaluationResults.put("iteration2sourceClass2FMeasure", iteration2sourceClass2FMeasure);
 
 		return map;
 	}
@@ -638,14 +648,13 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.info("Mapping size is " + map.getNumberofMappings());
 		logger.info("Pseudo F-measure is " + cc.fMeasure);
 
+		//store the pseudo F-Measures 
 		Map<NamedClass, Double> sourceClass2PFMeasure = new HashMap<NamedClass, Double>();
 		sourceClass2PFMeasure.put(currentClass, cc.fMeasure);
-
-		//store the pseudo F-Measures 
-		iteration2sourceClass2PFMeasure.put(iterationNr, sourceClass2PFMeasure);
-		evaluationResults.put("iteration2sourceClass2PFMeasure", iteration2sourceClass2PFMeasure);
-
-
+		resultEntry.clear();
+		resultEntry.put("sourceClass2PseudoFMeasure", sourceClass2PFMeasure);
+		evaluationResults.put(iterationNr, resultEntry);
+		
 		return map;
 	}
 
@@ -748,6 +757,14 @@ public class ExpressiveSchemaMappingGenerator {
 
 			//get a sample of the negative examples
 			SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);
+			
+			//store negativeExamples 
+			Map<NamedClass, SortedSet<Individual>> sourceClass2NegativeExample = new HashMap<NamedClass, SortedSet<Individual>>();
+			sourceClass2NegativeExample.put(currentClass, negativeExamplesSample);
+			resultEntry.clear();
+			resultEntry.put("sourceClass2NegativeExample", sourceClass2NegativeExample);
+			evaluationResults.put(iterationNr, resultEntry);
+			
 			//create fragment for negative examples
 			logger.info("Extracting fragment for negative examples...");
 			mon.start();
@@ -829,7 +846,6 @@ public class ExpressiveSchemaMappingGenerator {
 
 	private String print(Collection<Individual> individuals, int n) {
 		StringBuilder sb = new StringBuilder();
-		int i = 0;
 		for (Individual individual : individuals) {
 			sb.append(individual.getName() + ",");
 		}
@@ -951,7 +967,6 @@ public class ExpressiveSchemaMappingGenerator {
 	private Model getFragment(SortedSet<Individual> individuals, KnowledgeBase kb, int recursionDepth) {
 		//        OntModel fullFragment = ModelFactory.createOntologyModel();
 		Model fullFragment = ModelFactory.createDefaultModel();
-		int i = 1;
 		Model fragment;
 		for (Individual ind : individuals) {
 			fragment = getFragment(ind, kb, recursionDepth);
