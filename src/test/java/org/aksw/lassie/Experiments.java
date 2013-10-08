@@ -152,9 +152,9 @@ public class Experiments {
 	 */
 	public static void main(String[] args) throws FileNotFoundException {
 		if(args.length < 8 || args[0].equals("-?")){
-			System.err.println("parameters:\narg[0] = noOfClasses\narg[1] = noOfInstancesPerClass\narg[2] = noOfClassModifiers\n" +
-					"arg[3] = noOfInstanceModifiers\narg[4] = classesDestructionRate\narg[5] = instancesDestructionRate\n" +
-					"arg[6] = noOfExperimentRepeats\narg[7] = outputFolder");
+			System.err.println("parameters:\narg[0] = number of Classes\narg[1] = number of instances per class\narg[2] = number of class modifiers\n" +
+					"arg[3] = number of instance modifiers\narg[4] = classes destruction rate\narg[5] = instances destruction rate\n" +
+					"arg[6] = number of experiment repeats\narg[7] = output folder");
 		}
 
 		Experiments experiment = new Experiments();
