@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -52,16 +53,27 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.vocabulary.RDF;
 
 public class Evaluation {
 
 
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
-	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
-//		private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
+//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), "cache");
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, "cache");
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
@@ -160,8 +172,11 @@ public class Evaluation {
 		return null;
 	}
 
-	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModifiersAndRates, Map<Modifier, Double> classModifiersAndRates){
-		BenchmarkGenerator benchmarker= new BenchmarkGenerator(referenceDataset);
+	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModifiersAndRates, Map<Modifier, Double> classModifiersAndRates,
+			int noOfclasses, int noOfInstancePerClass){
+		Model classesWithAtLeastNInstancesModel = getModelOfClassesWithAtLeastNInstances(referenceDataset, noOfclasses, noOfInstancePerClass);
+		Model differenceModel = referenceDataset.difference(classesWithAtLeastNInstancesModel);
+		BenchmarkGenerator benchmarker= new BenchmarkGenerator(classesWithAtLeastNInstancesModel);
 		Modifier.setNameSpace(dbpediaNamespace);
 		benchmarker.setBaseClasses(classesToLearn);
 
@@ -174,26 +189,73 @@ public class Evaluation {
 		if(!classModifiersAndRates.isEmpty()){
 			testDataset = benchmarker.destroyClasses (classModifiersAndRates);
 		}
+		testDataset.add(differenceModel);
 		modifiedDbpediaClasses = benchmarker.getModifiedNamedClasses();
 		return testDataset;
 	}
 
+	/**
+	 * @param referenceDataset
+	 * @param nrOfclasses
+	 * @param nrOfInstancePerClass
+	 * @return
+	 * @author sherif
+	 */
+	private Model getModelOfClassesWithAtLeastNInstances(Model referenceDataset, int nrOfclasses, int nrOfInstancePerClass) {
+
+		//get list of classes
+		Model resultModel = ModelFactory.createDefaultModel();
+		String sparqlQueryString= 
+				"SELECT ?type WHERE{" +
+						"?s a ?type. FILTER regex(STR(?type), \"http://dbpedia.org/ontology/\") }" +
+						"GROUP BY ?type having count(?s) >= " + nrOfInstancePerClass;
+		QueryFactory.create(sparqlQueryString);
+		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, referenceDataset);
+		ResultSet selectResult = qexec.execSelect();
+		List<NamedClass> classesWithEnoughInstances = new ArrayList<NamedClass>();
+		while ( selectResult.hasNext())	{
+			QuerySolution soln = selectResult.nextSolution() ;
+			classesWithEnoughInstances.add(new NamedClass(classesWithEnoughInstances.toString()));
+			
+			//shuffle and select first n classes
+			Collections.shuffle(classesWithEnoughInstances, new Random(123));
+			classesWithEnoughInstances = classesWithEnoughInstances.subList(0, Math.min(nrOfclasses, classesWithEnoughInstances.size()));
+			
+		}
+		classesToLearn = Sets.newHashSet(classesWithEnoughInstances);
+		
+		//add instances for each class
+		for(NamedClass cls : classesWithEnoughInstances){
+			Model m = ModelFactory.createDefaultModel();
+			sparqlQueryString = "CONSTRUCT {?s ?p ?o} WHERE {?s a <" + cls.getName() + ">. ?s ?p ?o}";
+			QueryFactory.create(sparqlQueryString);
+			qexec = QueryExecutionFactory.create(sparqlQueryString, referenceDataset);
+			m = qexec.execConstruct();
+			resultModel.add(m);
+		}
+
+		return resultModel;
+	}
+
 	public Map<String, Object> run(){
 		//create a sample of the knowledge base
-		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass);
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
 
 		//we assume that the target is the sample KB itself
 		KnowledgeBase target = sampleKB;
+		
 
 		//we create the source KB by modifying the data of the sample KB  
 		Model sampleKBModel = sampleKB.getModel();
+		Model sampleKBModelCopy = ModelFactory.createDefaultModel();
+		sampleKBModelCopy.union(sampleKBModel);
 
 		if(instanceModifiersAndRates.isEmpty() && classModifiersAndRates.isEmpty()){
 			logger.error("No modifiers specified, EXIT");
 			System.exit(1);
 		}
 
-		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates);
+		Model modifiedReferenceDataset = createTestDataset(sampleKBModelCopy, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
 
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 		try {
@@ -262,7 +324,7 @@ public class Evaluation {
 		//		classModefiersAndRates.put(new ClassMergeModifier(),  		0.2d);
 		classModifiersAndRates.put(new ClassRenameModifier(), 		0.2d);
 		//		classModefiersAndRates.put(new ClassTypeDeleteModifier(), 	0.2d);
-		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates);
+		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
 
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
@@ -392,7 +454,7 @@ public class Evaluation {
 
 		double sum = 0d, count = 0f;
 		for(Integer i : iteration2coverage.keySet()){
-			
+
 			//compute the average F measure for all classes instance mappings
 			Iterator<Map<NamedClass, Double>> fIter = iteration2sourceClass2FMeasure.get(i).iterator();
 			while(fIter.hasNext()){
@@ -403,7 +465,7 @@ public class Evaluation {
 				}
 			}
 			double avgFMeasure = sum/count;
-			
+
 			//compute the average pseudo F measure for all classes instance mappings
 			sum = 0d; count = 0;
 			Iterator<Map<NamedClass, Double>> pfIter = iteration2sourceClass2PFMeasure.get(i).iterator();
@@ -415,7 +477,7 @@ public class Evaluation {
 				}
 			}
 			double avgPFMeasure = sum/count;
-			
+
 			System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ avgFMeasure + "\t" + avgPFMeasure );
 		}
 

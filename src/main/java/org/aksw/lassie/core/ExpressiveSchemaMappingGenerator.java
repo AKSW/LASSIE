@@ -463,7 +463,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 				//compute the instance mapping F-Measures for current class
 				double f = MappingMath.computeFMeasure(result, cache2.size());
-						sourceClass2FMeasure.put(sourceClass, f);
+				sourceClass2FMeasure.put(sourceClass, f);
 			}
 		}
 
@@ -1016,6 +1016,17 @@ public class ExpressiveSchemaMappingGenerator {
 			if (st.getPredicate().equals(RDF.type)) {
 				if (object.equals(RDFS.Class.asNode()) || object.equals(OWL.Class.asNode()) || object.equals(RDFS.Literal.asNode())
 						|| object.equals(RDFS.Resource)) {
+					statementsToRemove.add(st);
+				}
+			}
+
+			//remove unwanted properties
+			String dbo = "http://dbpedia.org/ontology/";
+			Set<String> blackList = Sets.newHashSet(dbo + "wikiPageDisambiguates",dbo + "wikiPageExternalLink",
+					dbo + "wikiPageID", dbo + "wikiPageInterLanguageLink", dbo + "wikiPageRedirects", dbo + "wikiPageRevisionID",
+					dbo + "wikiPageWikiLink");
+			for(String bl: blackList){
+				if (st.getPredicate().equals(bl)) {
 					statementsToRemove.add(st);
 				}
 			}
