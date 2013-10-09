@@ -124,10 +124,6 @@ public class Evaluation {
 				Collections.shuffle(tmp, new Random(123));
 				classesToLearn = new TreeSet<NamedClass>(tmp.subList(0, maxNrOfClasses));
 			}
-			//TODO remove
-			//			dbpediaClasses = Sets.newHashSet(
-			//					new NamedClass("http://dbpedia.org/ontology/Ambassador"), 
-			//					new NamedClass("http://dbpedia.org/ontology/Continent"));
 
 			Model model = ModelFactory.createDefaultModel();
 			//try to load sample from cache
@@ -170,12 +166,12 @@ public class Evaluation {
 
 	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModifiersAndRates, Map<Modifier, Double> classModifiersAndRates,
 			int noOfclasses, int noOfInstancePerClass){
+		
 		Model classesWithAtLeastNInstancesModel = getModelOfClassesWithAtLeastNInstances(referenceDataset, noOfclasses, noOfInstancePerClass);
 		Model differenceModel = referenceDataset.difference(classesWithAtLeastNInstancesModel);
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(classesWithAtLeastNInstancesModel);
 		Modifier.setNameSpace(dbpediaNamespace);
 		benchmarker.setBaseClasses(classesToLearn);
-
 		Model testDataset = ModelFactory.createDefaultModel();
 
 		if(!instanceModifiersAndRates.isEmpty()){
@@ -185,6 +181,7 @@ public class Evaluation {
 		if(!classModifiersAndRates.isEmpty()){
 			testDataset = benchmarker.destroyClasses (classModifiersAndRates);
 		}
+
 		testDataset.add(differenceModel);
 		modifiedDbpediaClasses = benchmarker.getModifiedNamedClasses();
 		return testDataset;
@@ -204,7 +201,8 @@ public class Evaluation {
 		String sparqlQueryString= 
 				"SELECT ?type WHERE{" +
 						"?s a ?type. FILTER regex(STR(?type), \"http://dbpedia.org/ontology/\") }" +
-						"GROUP BY ?type having count(?s) >= " + nrOfInstancePerClass;
+						"GROUP BY ?type " +
+						"HAVING (count(?s) >= " + nrOfInstancePerClass +")";
 		QueryFactory.create(sparqlQueryString);
 		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, referenceDataset);
 		ResultSet selectResult = qexec.execSelect();
@@ -231,6 +229,7 @@ public class Evaluation {
 			resultModel.add(m);
 		}
 
+		logger.info("resultModel size: " + resultModel.size());
 		return resultModel;
 	}
 
@@ -244,15 +243,14 @@ public class Evaluation {
 
 		//we create the source KB by modifying the data of the sample KB  
 		Model sampleKBModel = sampleKB.getModel();
-		Model sampleKBModelCopy = ModelFactory.createDefaultModel();
-		sampleKBModelCopy.union(sampleKBModel);
+		logger.info("sampleKBModel.size(): "+sampleKBModel.size());
 
 		if(instanceModifiersAndRates.isEmpty() && classModifiersAndRates.isEmpty()){
 			logger.error("No modifiers specified, EXIT");
 			System.exit(1);
 		}
 
-		Model modifiedReferenceDataset = createTestDataset(sampleKBModelCopy, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
+		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
 
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 		//		try {
