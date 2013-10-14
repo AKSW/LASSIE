@@ -5,6 +5,7 @@ package org.aksw.lassie;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +25,8 @@ import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.InstancePermutationModifier;
 import org.aksw.lassie.bmGenerator.InstanceSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
+import org.aksw.lassie.result.IterationRecord;
+import org.aksw.lassie.result.ResultRecord;
 import org.apache.log4j.Logger;
 
 
@@ -93,7 +96,7 @@ public class Experiments {
 	public void runExperiments(int nrOfClasses, int nrOfInstancesPerClass, 
 			int nrOfClassModifiers, int nrOfInstanceModifiers, 
 			double classesDestructionRate, double instancesDestructionRate,
-			int nrOfExperimentRepeats, String outputFolder) throws FileNotFoundException{
+			int nrOfExperimentRepeats, String outputFolder) throws IOException{
 
 		//create a folder for the results if not exist
 		File folder = new File(outputFolder).getAbsoluteFile();
@@ -134,7 +137,20 @@ public class Experiments {
 			//store result
 			String outputFile = outputFolder + "result_" + nrOfClassModifiers + "_" + nrOfInstanceModifiers + "_" + expNr + "_"
 					+ ((nrOfClasses > 0) ? ("-" + nrOfClasses + "-" + nrOfInstancesPerClass) : "") + ".txt";
-			evaluator.printResults(evaluator.run(), outputFile);
+
+			//			evaluator.printResults(evaluator.run(), outputFile);
+			
+			ResultRecord experimentResults = evaluator.runNew();
+			experimentResults.setNrOfIterations(10); //TODO generalize this step
+			experimentResults.setNrOfCLasses(nrOfClasses);
+			experimentResults.setNrOfInstancesPerClass(nrOfInstancesPerClass);
+			experimentResults.setNrOfClassModifiers(nrOfClassModifiers);
+			experimentResults.setNrOfInstanceModifiers(nrOfInstanceModifiers);
+			experimentResults.setClassModefiersAndRates(classModifiersAndRates);
+			experimentResults.setInstanceModefiersAndRates(instanceModifiersAndRates);
+			experimentResults.saveToFile(outputFile);
+			logger.info("Experiment Results:\n" + experimentResults.toString());
+			
 			long experimentTime = System.currentTimeMillis() - startTime;
 			System.out.println("Experiment time: " + experimentTime + "ms.");
 			logger.info("Experimrnt (" + (expNr+1) + ") for " + nrOfClassModifiers + "class modifier(s) and "
@@ -146,9 +162,10 @@ public class Experiments {
 	/** 
 	 * @param args
 	 * @author sherif
-	 * @throws FileNotFoundException 
+	 * @throws IOException 
+	 * @throws NumberFormatException 
 	 */
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) throws NumberFormatException, IOException {
 		if(args.length < 8 || args[0].equals("-?")){
 			System.err.println("parameters:\narg[0] = number of Classes\narg[1] = number of instances per class\narg[2] = number of class modifiers\n" +
 					"arg[3] = number of instance modifiers\narg[4] = classes destruction rate\narg[5] = instances destruction rate\n" +

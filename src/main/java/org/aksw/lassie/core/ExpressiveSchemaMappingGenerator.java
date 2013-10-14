@@ -31,6 +31,9 @@ import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
+import org.aksw.lassie.result.ClassRecord;
+import org.aksw.lassie.result.IterationRecord;
+import org.aksw.lassie.result.ResultRecord;
 import org.aksw.lassie.util.PrintUtils;
 import org.apache.log4j.Logger;
 import org.dllearner.algorithms.celoe.CELOE;
@@ -131,6 +134,10 @@ public class ExpressiveSchemaMappingGenerator {
 	public Multimap<Integer, Map<String, Object>> evaluationResults = HashMultimap.create();
 	Map<String, Object> resultEntry = new HashMap<String, Object>();
 	private int iterationNr = 1;
+
+	ResultRecord resultRecord;
+
+
 	/**
 	 * @param modifiers the modifiers to set
 	 */
@@ -178,6 +185,13 @@ public class ExpressiveSchemaMappingGenerator {
 		Set<NamedClass> targetClasses = getClasses(targetKB);
 
 		return run(sourceClasses, targetClasses);
+	}
+
+	public ResultRecord runNew(Set<NamedClass> sourceClasses) {
+		// get all classes D_i in target KB
+		Set<NamedClass> targetClasses = getClasses(targetKB);
+
+		return runNew(sourceClasses, targetClasses);
 	}
 
 	public Multimap<Integer, Map<String, Object>> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
@@ -247,6 +261,76 @@ public class ExpressiveSchemaMappingGenerator {
 
 		return evaluationResults;
 	}
+
+
+	public ResultRecord runNew(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+		ResultRecord resultRecord = new ResultRecord();
+
+		//initially, the class expressions E_i in the target KB are the named classes D_i
+		Collection<Description> targetClassExpressions = new TreeSet<Description>();
+		targetClassExpressions.addAll(targetClasses);
+
+		//perform the iterative schema matching
+		Map<NamedClass, Description> iterationResultConceptDescription = new HashMap<NamedClass, Description>();
+		Map<NamedClass, List<? extends EvaluatedDescription>> top10Mapping = new HashMap<NamedClass, List<? extends EvaluatedDescription>>();
+
+		double totalCoverage = 0;
+		do {
+			//add iteration results
+			resultRecord.addIterationRecord(iterationNr, new IterationRecord(iterationNr));
+			//add all classes' names to this iteration results
+			for (NamedClass sourceCls : sourceClasses) {
+				resultRecord.iterationsRecords.get(iterationNr).addClassRecord(new ClassRecord(sourceCls));
+			}
+
+			logger.info(iterationNr + ". ITERATION:");
+			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
+			//a map from C_i to a set of instances in the target KB
+			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
+
+			//store posExamples
+			resultEntry.put("sourceClass2PosExamples", links);
+			evaluationResults.put(iterationNr, resultEntry);
+
+			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
+			for (NamedClass sourceClass : sourceClasses) {
+				
+				logger.info("+++++++++++++++++++++" + sourceClass + "+++++++++++++++++++++");
+				currentClass = sourceClass;
+				try {
+					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
+
+					resultRecord.setPositiveExample(targetInstances, iterationNr, currentClass);
+
+					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
+					resultRecord.setMapping(mappingList, iterationNr, currentClass);
+
+					iterationResultConceptDescription.put(sourceClass, mappingList.get(0).getDescription());
+				} catch (NonExistingLinksException e) {
+					logger.warn(e.getMessage() + " Skipped learning.");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
+			//set the target class expressions
+			targetClassExpressions = iterationResultConceptDescription.values();
+			double newTotalCoverage = computeCoverage(iterationResultConceptDescription);
+
+			//if no better coverage then break
+			//            if ((newTotalCoverage - totalCoverage) <= coverageThreshold) {
+			//                break;
+			//            }
+
+			totalCoverage = newTotalCoverage;
+
+			
+
+		} while (iterationNr++ <= maxNrOfIterations);
+		
+		return resultRecord;
+	}
+
 
 	public Map<String, Object> runIntensionalEvaluation(Set<NamedClass> sourceClasses,
 			Set<NamedClass> targetClasses, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates) {
@@ -342,11 +426,10 @@ public class ExpressiveSchemaMappingGenerator {
 
 			SortedSet<Individual> sourceInstances = getInstances(sourceClass, sourceKB);
 			SortedSet<Individual> targetInstances = getInstances(targetDescription, targetKB);
-
-			System.out.println(sourceInstances.size() + " sourceInstances : " + sourceInstances);
-			System.out.println(targetInstances.size() + " targetInstances: " + targetInstances);
-
 			double coverage = computeJaccardSimilarity(sourceInstances, targetInstances);
+
+			resultRecord.setCoverage(coverage, iterationNr, currentClass);
+
 			totalCoverage += coverage;
 		}
 
@@ -472,6 +555,8 @@ public class ExpressiveSchemaMappingGenerator {
 
 				//compute the instance mapping real F-Measures for current class
 				double f = MappingMath.computeFMeasure(result, cache2.size());
+				
+				resultRecord.setFMeasure(f, iterationNr, currentClass);
 
 				//store the real F-Measures
 				sourceClass2RealFMeasure.put(sourceClass, f);
@@ -647,6 +732,8 @@ public class ExpressiveSchemaMappingGenerator {
 		Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
 		logger.info("Mapping size is " + map.getNumberofMappings());
 		logger.info("Pseudo F-measure is " + cc.fMeasure);
+		
+		resultRecord.setPFMeasure(cc.fMeasure, iterationNr, currentClass);
 
 		//store the pseudo F-Measures 
 		Map<NamedClass, Double> sourceClass2PFMeasure = new HashMap<NamedClass, Double>();
@@ -654,7 +741,7 @@ public class ExpressiveSchemaMappingGenerator {
 		resultEntry.clear();
 		resultEntry.put("sourceClass2PseudoFMeasure", sourceClass2PFMeasure);
 		evaluationResults.put(iterationNr, resultEntry);
-		
+
 		return map;
 	}
 
@@ -727,6 +814,7 @@ public class ExpressiveSchemaMappingGenerator {
 	}
 
 	public List<? extends EvaluatedDescription> computeMappings(SortedSet<Individual> positiveExamples) throws NonExistingLinksException {
+		logger.info("positiveExamples: " + positiveExamples);
 		//if there are no links to the target KB, then we can skip learning
 		if (positiveExamples.isEmpty()) {
 			throw new NonExistingLinksException();
@@ -746,44 +834,47 @@ public class ExpressiveSchemaMappingGenerator {
 			//						com.hp.hpl.jena.query.QueryExecutionFactory.create("SELECT * WHERE {<" + ind.getName() + "> a ?o.}", positiveFragment).execSelect()));
 			//			}
 
-			//compute the negative examples
-			logger.info("Computing negative examples...");
-			MonitorFactory.getTimeMonitor("negative examples").start();
-			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
-			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
-			negativeExamples.removeAll(positiveExamples);
-			MonitorFactory.getTimeMonitor("negative examples").stop();
-			logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
-
-			//get a sample of the negative examples
-			SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);
-			
-			//store negativeExamples 
-			Map<NamedClass, SortedSet<Individual>> sourceClass2NegativeExample = new HashMap<NamedClass, SortedSet<Individual>>();
-			sourceClass2NegativeExample.put(currentClass, negativeExamplesSample);
-			resultEntry.clear();
-			resultEntry.put("sourceClass2NegativeExample", sourceClass2NegativeExample);
-			evaluationResults.put(iterationNr, resultEntry);
-			
-			//create fragment for negative examples
-			logger.info("Extracting fragment for negative examples...");
-			mon.start();
-			Model negativeFragment = getFragment(negativeExamplesSample, targetKB);
-			mon.stop();
-			logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
-
-			logger.info("Learning input:");
-			logger.info("Positive examples: " + positiveExamplesSample.size() + " with " + positiveFragment.size() + " triples, e.g. \n" + print(positiveExamplesSample, 3));
-			logger.info("Negative examples: " + negativeExamplesSample.size() + " with " + negativeFragment.size() + " triples, e.g. \n" + print(negativeExamplesSample, 3));
+//			//compute the negative examples
+//			logger.info("Computing negative examples...");
+//			MonitorFactory.getTimeMonitor("negative examples").start();
+//			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
+//			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
+//			negativeExamples.removeAll(positiveExamples);
+//			MonitorFactory.getTimeMonitor("negative examples").stop();
+//			logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
+//
+//			resultRecord.setNegativeExample(negativeExamples, iterationNr, currentClass);
+//
+//			//get a sample of the negative examples
+//			SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);
+//
+//			//store negativeExamples 
+//			Map<NamedClass, SortedSet<Individual>> sourceClass2NegativeExample = new HashMap<NamedClass, SortedSet<Individual>>();
+//			sourceClass2NegativeExample.put(currentClass, negativeExamplesSample);
+//			resultEntry.clear();
+//			resultEntry.put("sourceClass2NegativeExample", sourceClass2NegativeExample);
+//			evaluationResults.put(iterationNr, resultEntry);
+//
+//			//create fragment for negative examples
+//			logger.info("Extracting fragment for negative examples...");
+//			mon.start();
+//			Model negativeFragment = getFragment(negativeExamplesSample, targetKB);
+//			mon.stop();
+//			logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
+//
+//			logger.info("Learning input:");
+//			logger.info("Positive examples: " + positiveExamplesSample.size() + " with " + positiveFragment.size() + " triples, e.g. \n" + print(positiveExamplesSample, 3));
+//			logger.info("Negative examples: " + negativeExamplesSample.size() + " with " + negativeFragment.size() + " triples, e.g. \n" + print(negativeExamplesSample, 3));
 
 			//create fragment consisting of both
 			OntModel fullFragment = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM);
 			fullFragment.add(positiveFragment);
-			fullFragment.add(negativeFragment);
+//			fullFragment.add(negativeFragment);
 			filter(fullFragment, targetKB.getNamespace());
 
 			//learn the class expressions
-			return learnClassExpressions(fullFragment, positiveExamplesSample, negativeExamplesSample);
+//			return learnClassExpressions(fullFragment, positiveExamplesSample, negativeExamplesSample);
+			return learnClassExpressions(fullFragment, positiveExamplesSample, null);
 		}
 	}
 

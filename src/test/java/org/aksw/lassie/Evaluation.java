@@ -35,6 +35,7 @@ import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.KnowledgebaseSampleGenerator;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
+import org.aksw.lassie.result.ResultRecord;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
@@ -65,11 +66,10 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 
 public class Evaluation {
 
-
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
-	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
-//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
+//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), "cache");
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, "cache");
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
@@ -90,6 +90,7 @@ public class Evaluation {
 
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
 
+	
 	//constructors
 	public Evaluation(){
 		super();
@@ -266,6 +267,40 @@ public class Evaluation {
 
 		return result;
 	}
+	
+	//TODO remove previous Method
+	public ResultRecord runNew(){
+		//create a sample of the knowledge base
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
+
+		//we assume that the target is the sample KB itself
+		KnowledgeBase target = sampleKB;
+
+
+		//we create the source KB by modifying the data of the sample KB  
+		Model sampleKBModel = sampleKB.getModel();
+		logger.info("sampleKBModel.size(): "+sampleKBModel.size());
+
+		if(instanceModifiersAndRates.isEmpty() && classModifiersAndRates.isEmpty()){
+			logger.error("No modifiers specified, EXIT");
+			System.exit(1);
+		}
+
+		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
+
+		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
+		//		try {
+		//			// just 4 test
+		//			modifiedReferenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
+		//		} catch (FileNotFoundException e) {
+		//			e.printStackTrace();
+		//		}
+
+		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
+		generator.setTargetDomainNameSpace(dbpediaNamespace);
+		return generator.runNew(modifiedDbpediaClasses);
+
+	}
 
 	/** 
 	 * 
@@ -331,102 +366,6 @@ public class Evaluation {
 
 	}
 
-
-//	/**
-//	 * @param result
-//	 * @author sherif
-//	 * @throws FileNotFoundException 
-//	 */
-//	@SuppressWarnings("unchecked")
-//	private void printResults(Map<String, Object> result) throws FileNotFoundException {
-//		System.setOut(new PrintStream(new FileOutputStream("results"+ ((maxNrOfClasses > 0) ? ("-" + maxNrOfClasses + "-" + maxNrOfInstancesPerClass) : "") + ".txt")));
-//
-//		System.out.println("\n----------- RESULTS -----------");
-//		System.out.println("No of Classes:              " + maxNrOfClasses);
-//		System.out.println("No of Instance per Classes: " + maxNrOfInstancesPerClass);
-//		System.out.println("MODIFIER(S):");
-//		int j=1;
-//		for(Modifier m: classModifiersAndRates.keySet()){
-//			System.out.println(j++ + ". " + m.getSimpleName() + "\t" + classModifiersAndRates.get(m)*100 + "%");
-//		}
-//		for(Modifier m: instanceModifiersAndRates.keySet()){
-//			System.out.println(j++ + ". " + m.getSimpleName() + "\t" + instanceModifiersAndRates.get(m)*100 + "%");
-//		}
-//		for(String key:result.keySet()){
-//			if(key.equals("mapping")){
-//				System.out.println("\nFINAL MAPPING:");
-//
-//				Map<NamedClass, Description> map = (Map<NamedClass, Description>) result.get(key);
-//				for(NamedClass nC: map.keySet()){
-//					System.out.println(nC + "\t" + map.get(nC));
-//				}
-//			}
-//
-//			if(key.equals("coverage")){
-//				System.out.println("\nCOVERAGE:");
-//				Map<Integer, Double> iteration2coverage = (Map<Integer, Double>) result.get(key);
-//				Multimap<Integer, Map<NamedClass, Double>> iteration2sourceClass2PFMeasure = (Multimap<Integer, Map<NamedClass, Double>>) result.get("iteration2sourceClass2PFMeasure");
-//				System.out.println("IterationNr\tCoverage\tAVG-F\tclass->FMeasure");
-//				//compute the average F measure for all classes instance mappings
-//				double sum = 0d, count = 0f;
-//				for(Integer i : iteration2coverage.keySet()){
-//					Iterator<Map<NamedClass, Double>> iter = iteration2sourceClass2PFMeasure.get(i).iterator();
-//					while(iter.hasNext()){
-//						for(Double fm : iter.next().values()){
-//							sum += fm;
-//							count++; 
-//						}
-//					}
-//					System.out.println(i + "\t" + iteration2coverage.get(i) + "\t"+ (sum/count) + "\t" + iteration2sourceClass2PFMeasure.get(i));
-//				}
-//			}
-//
-//			if(key.equals("Top10Mapping")){
-//				System.out.println("\nTOP 10 MAPPINGS:");
-//
-//				Map<NamedClass, List<? extends EvaluatedDescription>> map = (Map<NamedClass, List<? extends EvaluatedDescription>>) result.get(key);
-//				for(NamedClass nC: map.keySet()){
-//					System.out.println("\n"+ nC);
-//					List<? extends EvaluatedDescription> mapList = map.get(nC);
-//					int i=1;
-//					for (EvaluatedDescription ed : mapList) {
-//						System.out.println("\t" + i + ". " + ed.toString());
-//						if(i>10) 
-//							break;
-//						i++;
-//					}
-//				}
-//			}
-//
-//			if(key.equals("posExamples")){
-//				System.out.println("\nPOSITIVE EXAMPLES:");
-//
-//				Multimap<NamedClass, String> map = (Multimap<NamedClass, String>) result.get(key);
-//				for(NamedClass nC: map.keySet()){
-//					System.out.println("\n"+ nC);
-//					Collection<String> mapList = map.get(nC);
-//					int i=1;
-//					for (String str : mapList) {
-//						System.out.println("\t" + i++ + ". " + str);
-//					}
-//				}
-//			}
-//
-//			if(key.equals("Modifier2pos")){
-//				Map<Modifier, Integer> map = (Map<Modifier, Integer>) result.get(key);
-//				for(Modifier m: map.keySet()){
-//					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m));
-//				}
-//			}
-//
-//			if(key.equals("modifier2optimalSolution")){
-//				Map<Modifier, Description> map = (Map<Modifier, Description>) result.get(key);
-//				for(Modifier m : map.keySet()){
-//					System.out.println("\nModifier: " + m + " Pos: "+ map.get(m).toString());
-//				}
-//			}
-//		}
-//	}
 	
 	public void printResults(Multimap<Integer, Map<String, Object>> result, String outputFile) throws FileNotFoundException {
 		printResults(result, outputFile, false);
