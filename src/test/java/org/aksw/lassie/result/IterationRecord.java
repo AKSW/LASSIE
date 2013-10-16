@@ -3,28 +3,23 @@
  */
 package org.aksw.lassie.result;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
 
-import org.dllearner.core.EvaluatedDescription;
-import org.dllearner.core.owl.Individual;
-import org.dllearner.core.owl.NamedClass;
+import org.apache.log4j.Logger;
 
-import com.google.common.collect.Multimap;
 
 /**
  * @author sherif
  *
  */
 public class IterationRecord {
-
-	public int IterationNr; ///////////////////////////////////////
-	public List<ClassRecord> classesRecords;//////////////////////
-	public double avgCoverage;//////
-	public double avgFMeasure;//////////
-	public double avgPFMeasure;////////////
+	
+	public int IterationNr; 
+	public List<ClassRecord> classesRecords = new ArrayList<ClassRecord>();
+	public double avgCoverage;
+	public double avgFMeasure;
+	public double avgPFMeasure;
 	
 	
 	
@@ -87,6 +82,9 @@ public class IterationRecord {
 	 * @return the avgCoverage
 	 */
 	public double getAvgCoverage() {
+		if(classesRecords.size() == 0)
+			return 0d;
+		
 		double sum = 0d;
 		int count = 0;
 		for(ClassRecord cR: classesRecords){
@@ -110,6 +108,9 @@ public class IterationRecord {
 	 * @return the avgFMeasure
 	 */
 	public double getAvgFMeasure() {
+		if(classesRecords.size() == 0)
+			return 0d;
+		
 		double sum = 0d;
 		int count = 0;
 		for(ClassRecord cR: classesRecords){
@@ -133,6 +134,9 @@ public class IterationRecord {
 	 * @return the avgPFMeasure
 	 */
 	public double getAvgPFMeasure() {
+		if(classesRecords.size() == 0)
+			return 0d;
+		
 		double sum = 0d;
 		int count = 0;
 		for(ClassRecord cR: classesRecords){

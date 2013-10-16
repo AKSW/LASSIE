@@ -9,40 +9,27 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
-import org.aksw.lassie.Evaluation;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
-import org.h2.util.New;
 
-import com.google.common.collect.Multimap;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.util.FileManager;
 
 /**
  * @author sherif
  *
  */
 public class ResultRecord {
-	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
+	private static final Logger logger = Logger.getLogger(ResultRecord.class.getName());
 	public int nrOfClasses;////////////////
 	public int nrOfInstancesPerClass;////////////////
 	public int nrOfClassModifiers;/////////////////
@@ -56,6 +43,38 @@ public class ResultRecord {
 	public ResultRecord(){
 	}
 	
+	/**
+	 * Initialize all iterations and all classes 
+	 * @param iterationCount
+	 * @param sourceClasses
+	 *@author sherif
+	 */
+	public ResultRecord(int iterationCount, Set<NamedClass> inputClasses) {
+		NrOfIterations = iterationCount;
+		nrOfClasses = inputClasses.size();
+		for(int i=1 ; i <= iterationCount ; i++){
+			IterationRecord ir = new IterationRecord(i);
+			for(NamedClass nc : inputClasses){
+				ir.addClassRecord(new ClassRecord(nc));
+			}
+			this.addIterationRecord(ir);
+		}
+	}
+
+	/**
+	 * Returns specific iterationRecord giving its number as input if fund, otherwise returns null
+	 * @param iterationNr
+	 * @return
+	 * @author sherif
+	 */
+	public IterationRecord getIterationRecord(int iterationNr){
+		for(IterationRecord ir : iterationsRecords){
+			if(ir.getIterationNr() == iterationNr){
+				return ir;
+			}
+		}
+		return null;
+	}
 	/**
 	 * Set positive examples for a given named class in a given iteration  
 	 * @param positiveExamples
@@ -98,7 +117,7 @@ public class ResultRecord {
 	 * @author sherif
 	 */
 	public void setCoverage(double coverage, int iterationNr, NamedClass nc){
-		for(ClassRecord cr : iterationsRecords.get(iterationNr).classesRecords){
+		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setCoverage(coverage);
 				return;
@@ -115,7 +134,13 @@ public class ResultRecord {
 	 * @author sherif
 	 */
 	public void setFMeasure(double fMeasure, int iterationNr, NamedClass nc){
-		for(ClassRecord cr : iterationsRecords.get(iterationNr).classesRecords){
+//		logger.info("fMeasure: " + fMeasure);
+//		logger.info("iterationNr: " + iterationNr);
+//		logger.info("nc: " + nc);
+//		logger.info("getIterationRecord(iterationNr): " + getIterationRecord(iterationNr));
+//		logger.info("this: " + this.toString());
+		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
+//			logger.info("cr: " + cr);
 			if(cr.namedClass.equals(nc) ){
 				cr.setFMeasure(fMeasure);
 				return;
@@ -132,6 +157,7 @@ public class ResultRecord {
 	 * @author sherif
 	 */
 	public void setMapping(List<? extends EvaluatedDescription> mapping, int iterationNr, NamedClass nc){
+		
 		for(ClassRecord cr : iterationsRecords.get(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setMapping(mapping);
@@ -148,7 +174,13 @@ public class ResultRecord {
 	 * @author sherif
 	 */
 	public void setPFMeasure(double pFMesure, int iterationNr, NamedClass nc){
-		for(ClassRecord cr : iterationsRecords.get(iterationNr).classesRecords){
+//		logger.info("fMeasure: " + pFMesure);
+//		logger.info("iterationNr: " + iterationNr);
+//		logger.info("nc: " + nc);
+//		logger.info("getIterationRecord(iterationNr): " + getIterationRecord(iterationNr));
+//		logger.info("this: " + this.toString());
+		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
+			logger.info("cr: " + cr);
 			if(cr.namedClass.equals(nc) ){
 				cr.setPFMesure(pFMesure);
 				return;
@@ -362,6 +394,12 @@ public class ResultRecord {
 
 
 	public static void main(String[] args){
+		Set<NamedClass> inputClasses = new HashSet<NamedClass>();
+		inputClasses.add(new NamedClass("a"));
+		inputClasses.add(new NamedClass("b"));
+		inputClasses.add(new NamedClass("c"));
+		inputClasses.add(new NamedClass("d"));
+		ResultRecord rr = new ResultRecord(3, inputClasses);
 
 	}
 

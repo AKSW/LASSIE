@@ -264,7 +264,8 @@ public class ExpressiveSchemaMappingGenerator {
 
 
 	public ResultRecord runNew(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
-		ResultRecord resultRecord = new ResultRecord();
+		
+		resultRecord = new ResultRecord(iterationNr, sourceClasses);
 
 		//initially, the class expressions E_i in the target KB are the named classes D_i
 		Collection<Description> targetClassExpressions = new TreeSet<Description>();
@@ -272,15 +273,14 @@ public class ExpressiveSchemaMappingGenerator {
 
 		//perform the iterative schema matching
 		Map<NamedClass, Description> iterationResultConceptDescription = new HashMap<NamedClass, Description>();
-		Map<NamedClass, List<? extends EvaluatedDescription>> top10Mapping = new HashMap<NamedClass, List<? extends EvaluatedDescription>>();
 
 		double totalCoverage = 0;
 		do {
 			//add iteration results
-			resultRecord.addIterationRecord(iterationNr, new IterationRecord(iterationNr));
+//			resultRecord.addIterationRecord(new IterationRecord(iterationNr));
 			//add all classes' names to this iteration results
 			for (NamedClass sourceCls : sourceClasses) {
-				resultRecord.iterationsRecords.get(iterationNr).addClassRecord(new ClassRecord(sourceCls));
+				resultRecord.getIterationRecord(iterationNr).addClassRecord(new ClassRecord(sourceCls));
 			}
 
 			logger.info(iterationNr + ". ITERATION:");
@@ -519,6 +519,7 @@ public class ExpressiveSchemaMappingGenerator {
 		for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
 			NamedClass sourceClass = entry.getKey();
 			Model sourceClassModel = entry.getValue();
+			currentClass = sourceClass; 
 
 			Cache cache = getCache(sourceClassModel);
 
@@ -556,6 +557,10 @@ public class ExpressiveSchemaMappingGenerator {
 				//compute the instance mapping real F-Measures for current class
 				double f = MappingMath.computeFMeasure(result, cache2.size());
 				
+				
+				logger.info("_fMeasure: " + f);
+				logger.info("_iterationNr: " + iterationNr);
+				logger.info("_nc: " + sourceClass);
 				resultRecord.setFMeasure(f, iterationNr, currentClass);
 
 				//store the real F-Measures

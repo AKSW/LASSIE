@@ -3,8 +3,10 @@
  */
 package org.aksw.lassie.result;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.owl.Individual;
@@ -17,13 +19,13 @@ import org.dllearner.core.owl.NamedClass;
  */
 public class ClassRecord {
 
-	public NamedClass namedClass;//////
-	public double coverage;///////////////
-	public double FMeasure;////////////
-	public double PFMesure;//////////////////
-	public List<? extends EvaluatedDescription> mapping ;////////
-	public SortedSet<Individual> posExamples;//////////////
-	public SortedSet<Individual> negExamples;/////////////
+	public NamedClass namedClass;
+	public double coverage;
+	public double FMeasure;
+	public double PFMesure;
+	public List<? extends EvaluatedDescription> mapping = new ArrayList<EvaluatedDescription>();
+	public SortedSet<Individual> posExamples = new TreeSet<Individual>();
+	public SortedSet<Individual> negExamples = new TreeSet<Individual>();
 	
 	
 	public ClassRecord(){
@@ -157,26 +159,27 @@ public class ClassRecord {
 	 */
 	@Override
 	public String toString() {
-		String str = "Class name: " + namedClass.getName() + "\n" +
-			"Coverage: " + coverage + "\n" +
-				"F-Measure: " + FMeasure + "\n" +
-				"P-F-FMesure: "	+ PFMesure + "\n" +
-				"Mapping:\n";
+		String str = 
+			"\tClass name: " + namedClass.getName() + "\n" +
+			"\tCoverage: " + coverage + "\n" +
+			"\tF-Measure: " + FMeasure + "\n" +
+			"\tP-F-FMesure: "	+ PFMesure + "\n" +
+			"\tMapping:\n";
 		int i =1;
 		for(EvaluatedDescription eD: mapping){
-			str += "\t(" + i + ") " + eD + "\n";
+			str += "\t\t(" + i + ") " + eD + "\n";
 		}
 
-		str +=	"Positive examples:\n";
+		str +=	"\tPositive examples:\n";
 		i =1;
 		for(Individual in: posExamples){
-			 str += "\t(" + i + ") " + in.getName() + "\n";
+			 str += "\t\t(" + i + ") " + in.getName() + "\n";
 		}
 		
-		str += "Negative examples:\n ";
+		str += "\tNegative examples:\n ";
 		i =1;
 		for(Individual in: negExamples){
-			 str += "\t(" + i + ")" + in.getName() +"\n"; 
+			 str += "\t\t(" + i + ")" + in.getName() +"\n"; 
 		}
 		return str;
 	}

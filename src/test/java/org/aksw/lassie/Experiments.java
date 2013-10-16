@@ -35,7 +35,7 @@ import org.apache.log4j.Logger;
  *
  */
 public class Experiments {
-	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
+	private static final Logger logger = Logger.getLogger(Experiments.class.getName());
 
 	private List<Modifier> classModifiers = new ArrayList<Modifier>();
 	private List<Modifier> instanceModifiers = new ArrayList<Modifier>();
@@ -127,7 +127,7 @@ public class Experiments {
 				instanceModifiersAndRates.put(instanceModifiers.get(i), instancesDestructionRate/(double)nrOfInstanceModifiers);
 			}
 
-			logger.info("Running experiment(" + (expNr+1) + ") for " + nrOfClassModifiers + 
+			logger.info("Running experiment  (" + (expNr+1) + ") for " + nrOfClassModifiers + 
 					" class modifier(s) and " + nrOfInstanceModifiers + " instance Modifier(s)") ;
 			logger.info("Experiment class modifiers and rates: " + classModifiersAndRates);
 			logger.info("Experiment instance modifiers and rates:" + instanceModifiersAndRates);
