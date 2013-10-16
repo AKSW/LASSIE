@@ -68,8 +68,8 @@ public class Evaluation {
 
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
-//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
-	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
+	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
+//	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
 	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), "cache");
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, "cache");
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
