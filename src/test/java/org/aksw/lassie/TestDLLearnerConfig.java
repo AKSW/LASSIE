@@ -61,7 +61,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private String cacheDirectory = "cache";
-	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cache), cacheDirectory);
+	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cacheDirectory), cacheDirectory);
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
 	private int maxNrOfClasses = 5;//20;//-1 all classes
 	private int maxNrOfInstancesPerClass = 20;
