@@ -25,7 +25,6 @@ import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.InstancePermutationModifier;
 import org.aksw.lassie.bmGenerator.InstanceSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
-import org.aksw.lassie.result.IterationRecord;
 import org.aksw.lassie.result.ResultRecord;
 import org.apache.log4j.Logger;
 

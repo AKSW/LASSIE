@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -32,7 +31,6 @@ import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.aksw.lassie.result.ClassRecord;
-import org.aksw.lassie.result.IterationRecord;
 import org.aksw.lassie.result.ResultRecord;
 import org.aksw.lassie.util.PrintUtils;
 import org.apache.log4j.Logger;
@@ -52,7 +50,6 @@ import org.dllearner.learningproblems.PosNegLPStandard;
 import org.dllearner.learningproblems.PosOnlyLP;
 import org.dllearner.reasoning.FastInstanceChecker;
 import org.dllearner.utilities.datastructures.SetManipulation;
-import org.dllearner.utilities.examples.AutomaticNegativeExampleFinderSPARQL2;
 import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
@@ -218,7 +215,7 @@ public class ExpressiveSchemaMappingGenerator {
 			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
 			for (NamedClass sourceClass : sourceClasses) {
 
-				logger.info("+++++++++++++++++++++" + sourceClass + "+++++++++++++++++++++");
+				logger.info("sourceClass: " + sourceClass );
 				currentClass = sourceClass;
 				try {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
@@ -558,9 +555,9 @@ public class ExpressiveSchemaMappingGenerator {
 				double f = MappingMath.computeFMeasure(result, cache2.size());
 				
 				
-				logger.info("_fMeasure: " + f);
-				logger.info("_iterationNr: " + iterationNr);
-				logger.info("_nc: " + sourceClass);
+//				logger.info("_fMeasure: " + f);
+//				logger.info("_iterationNr: " + iterationNr);
+//				logger.info("_nc: " + sourceClass);
 				resultRecord.setFMeasure(f, iterationNr, currentClass);
 
 				//store the real F-Measures
