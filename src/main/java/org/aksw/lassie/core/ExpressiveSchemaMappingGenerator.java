@@ -50,6 +50,7 @@ import org.dllearner.learningproblems.PosNegLPStandard;
 import org.dllearner.learningproblems.PosOnlyLP;
 import org.dllearner.reasoning.FastInstanceChecker;
 import org.dllearner.utilities.datastructures.SetManipulation;
+import org.dllearner.utilities.examples.AutomaticNegativeExampleFinderSPARQL2;
 import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
@@ -836,47 +837,46 @@ public class ExpressiveSchemaMappingGenerator {
 			//						com.hp.hpl.jena.query.QueryExecutionFactory.create("SELECT * WHERE {<" + ind.getName() + "> a ?o.}", positiveFragment).execSelect()));
 			//			}
 
-//			//compute the negative examples
-//			logger.info("Computing negative examples...");
-//			MonitorFactory.getTimeMonitor("negative examples").start();
-//			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
-//			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
-//			negativeExamples.removeAll(positiveExamples);
-//			MonitorFactory.getTimeMonitor("negative examples").stop();
-//			logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
-//
-//			resultRecord.setNegativeExample(negativeExamples, iterationNr, currentClass);
-//
-//			//get a sample of the negative examples
-//			SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);
-//
-//			//store negativeExamples 
-//			Map<NamedClass, SortedSet<Individual>> sourceClass2NegativeExample = new HashMap<NamedClass, SortedSet<Individual>>();
-//			sourceClass2NegativeExample.put(currentClass, negativeExamplesSample);
-//			resultEntry.clear();
-//			resultEntry.put("sourceClass2NegativeExample", sourceClass2NegativeExample);
-//			evaluationResults.put(iterationNr, resultEntry);
-//
-//			//create fragment for negative examples
-//			logger.info("Extracting fragment for negative examples...");
-//			mon.start();
-//			Model negativeFragment = getFragment(negativeExamplesSample, targetKB);
-//			mon.stop();
-//			logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
-//
-//			logger.info("Learning input:");
-//			logger.info("Positive examples: " + positiveExamplesSample.size() + " with " + positiveFragment.size() + " triples, e.g. \n" + print(positiveExamplesSample, 3));
-//			logger.info("Negative examples: " + negativeExamplesSample.size() + " with " + negativeFragment.size() + " triples, e.g. \n" + print(negativeExamplesSample, 3));
+			//compute the negative examples
+			logger.info("Computing negative examples...");
+			MonitorFactory.getTimeMonitor("negative examples").start();
+			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
+			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
+			negativeExamples.removeAll(positiveExamples);
+			MonitorFactory.getTimeMonitor("negative examples").stop();
+			logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
+
+			resultRecord.setNegativeExample(negativeExamples, iterationNr, currentClass);
+
+			//get a sample of the negative examples
+			SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);
+
+			//store negativeExamples 
+			Map<NamedClass, SortedSet<Individual>> sourceClass2NegativeExample = new HashMap<NamedClass, SortedSet<Individual>>();
+			sourceClass2NegativeExample.put(currentClass, negativeExamplesSample);
+			resultEntry.clear();
+			resultEntry.put("sourceClass2NegativeExample", sourceClass2NegativeExample);
+			evaluationResults.put(iterationNr, resultEntry);
+
+			//create fragment for negative examples
+			logger.info("Extracting fragment for negative examples...");
+			mon.start();
+			Model negativeFragment = getFragment(negativeExamplesSample, targetKB);
+			mon.stop();
+			logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
+
+			logger.info("Learning input:");
+			logger.info("Positive examples: " + positiveExamplesSample.size() + " with " + positiveFragment.size() + " triples, e.g. \n" + print(positiveExamplesSample, 3));
+			logger.info("Negative examples: " + negativeExamplesSample.size() + " with " + negativeFragment.size() + " triples, e.g. \n" + print(negativeExamplesSample, 3));
 
 			//create fragment consisting of both
 			OntModel fullFragment = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM);
 			fullFragment.add(positiveFragment);
-//			fullFragment.add(negativeFragment);
+			fullFragment.add(negativeFragment);
 			filter(fullFragment, targetKB.getNamespace());
 
 			//learn the class expressions
-//			return learnClassExpressions(fullFragment, positiveExamplesSample, negativeExamplesSample);
-			return learnClassExpressions(fullFragment, positiveExamplesSample, null);
+			return learnClassExpressions(fullFragment, positiveExamplesSample, negativeExamplesSample);
 		}
 	}
 
