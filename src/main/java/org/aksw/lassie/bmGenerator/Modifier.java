@@ -14,7 +14,6 @@ import java.util.TreeSet;
 import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.NamedClass;
 
-import com.clarkparsia.sparqlowl.parser.antlr.SparqlOwlParser.booleanLiteral_return;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;

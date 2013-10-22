@@ -263,7 +263,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 	public ResultRecord runNew(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
 		
-		resultRecord = new ResultRecord(iterationNr, sourceClasses);
+		resultRecord = new ResultRecord(maxNrOfIterations, sourceClasses);
 
 		//initially, the class expressions E_i in the target KB are the named classes D_i
 		Collection<Description> targetClassExpressions = new TreeSet<Description>();
@@ -840,6 +840,12 @@ public class ExpressiveSchemaMappingGenerator {
 			//compute the negative examples
 			logger.info("Computing negative examples...");
 			MonitorFactory.getTimeMonitor("negative examples").start();
+			
+			//TODO remove next logger statements
+			logger.debug("targetKB.getReasoner(): " + targetKB.getReasoner().toString());
+			logger.debug("targetKB.getNamespace(): " + targetKB.getNamespace().toString());
+			logger.debug("positiveExamples: " + positiveExamples.toString());
+			
 			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
 			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
 			negativeExamples.removeAll(positiveExamples);

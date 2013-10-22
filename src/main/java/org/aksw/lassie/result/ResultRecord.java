@@ -164,7 +164,7 @@ public class ResultRecord {
 	 */
 	public void setMapping(List<? extends EvaluatedDescription> mapping, int iterationNr, NamedClass nc){
 		
-		for(ClassRecord cr : iterationsRecords.get(iterationNr).classesRecords){
+		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setMapping(mapping);
 				return;
