@@ -1124,6 +1124,9 @@ public class ExpressiveSchemaMappingGenerator {
 				} else if (lit.getDatatype().getURI().equals(XSD.gYear.getURI())) {
 					statementsToRemove.add(st);
 					//                    System.err.println("REMOVE " + st);
+				} else if (lit.getDatatype().getURI().equals(XSD.gYearMonth.getURI())) {
+					statementsToRemove.add(st);
+					//                    System.err.println("REMOVE " + st);
 				}
 			}
 			//remove statements like <x a owl:Class>
