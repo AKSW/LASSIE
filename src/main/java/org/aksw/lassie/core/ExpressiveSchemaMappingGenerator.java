@@ -879,6 +879,7 @@ public class ExpressiveSchemaMappingGenerator {
 			OntModel fullFragment = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM);
 			fullFragment.add(positiveFragment);
 			fullFragment.add(negativeFragment);
+			fullFragment.add(targetKB.executeConstruct("CONSTRUCT {?s <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?o.} WHERE {?s <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?o.}"));
 			filter(fullFragment, targetKB.getNamespace());
 
 			//learn the class expressions
