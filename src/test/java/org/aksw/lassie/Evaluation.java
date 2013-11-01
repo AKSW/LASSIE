@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -35,11 +33,10 @@ import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.KnowledgebaseSampleGenerator;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
-import org.aksw.lassie.result.ResultRecord;
+import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
-import org.dllearner.core.owl.Description;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 import org.dllearner.kb.SparqlEndpointKS;
@@ -89,19 +86,27 @@ public class Evaluation {
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
-
+	protected static int maxNrOfIterations;
 	
 	//constructors
 	public Evaluation(){
 		super();
 	}
 
-	public Evaluation(int maxNrOfClasses,int maxNrOfInstancesPerClass, Map<Modifier, Double> classModifiers2Rates, Map<Modifier, Double> instanceModifiers2Rates) {
+	public Evaluation(int maxNrOfClasses,int maxNrOfInstancesPerClass, 
+			Map<Modifier, Double> classModifiers2Rates, Map<Modifier, Double> instanceModifiers2Rates) {
 		super();
 		this.maxNrOfClasses = maxNrOfClasses;
 		this.maxNrOfInstancesPerClass = maxNrOfInstancesPerClass;
 		classModifiersAndRates = classModifiers2Rates;
 		instanceModifiersAndRates = instanceModifiers2Rates;
+	}
+	
+	public Evaluation(int nrOfIterations, int maxNrOfClasses,int maxNrOfInstancesPerClass, 
+			Map<Modifier, Double> classModifiers2Rates, Map<Modifier, Double> instanceModifiers2Rates) {
+		this(maxNrOfClasses, maxNrOfInstancesPerClass, classModifiers2Rates, instanceModifiers2Rates);
+		maxNrOfIterations = nrOfIterations;
+		
 	}
 
 	/**
@@ -269,10 +274,9 @@ public class Evaluation {
 	}
 	
 	//TODO remove previous Method
-	public ResultRecord runNew(){
+	public LassieResultRecorder runNew(){
 		//create a sample of the knowledge base
 //		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
-		//TODO check if it works ??
 		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
 
 		//we assume that the target is the sample KB itself
@@ -298,7 +302,7 @@ public class Evaluation {
 		//			e.printStackTrace();
 		//		}
 
-		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB);
+		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 		return generator.runNew(modifiedDbpediaClasses);
 
