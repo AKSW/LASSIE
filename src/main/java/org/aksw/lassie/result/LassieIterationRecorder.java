@@ -180,7 +180,7 @@ public class LassieIterationRecorder {
 				"Average real F-Measure:   " + getAvgFMeasure()   + "\n" +
 				"Average pseudo F-Measure: " + getAvgPFMeasure()  + "\n" +
 				"Average coverage:         " + getAvgCoverage()   + "\n" +
-				"Execution time:           " + getExecutionTime() + "\n" +
+				"Execution time:           " + getExecutionTime() + "ms.\n" +
 				"CLASSES' RESULTS DETAILS:\n";
 		int i = 1;
 		for(LassieClassRecorder cR : classesRecords){

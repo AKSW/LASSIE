@@ -145,7 +145,7 @@ public class LassieResultRecorder {
 	 */
 	public void setNegativeExample(SortedSet<Individual> negativeExamples, int iterationNr, NamedClass nc){
 		if(negativeExamples.size() == 0){
-			logger.error("No negative example to set");
+			logger.warn("No negative example to set");
 			return;
 		}
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
@@ -413,8 +413,8 @@ public class LassieResultRecorder {
 		}
 		
 		str += "Number of iterations:\t" + NrOfIterations + "\n";
-		str += "Average iteration execution time:  " + getAvgIterationExecutionTime() + "\n" ;
-		str += "Total execution time:  " + getTotalExecutionTime() + "\n" ;
+		str += "Average iteration execution time:  " + getAvgIterationExecutionTime() + "ms.\n" ;
+		str += "Total execution time:  " + getTotalExecutionTime() + "ms.\n" ;
 		str += "ITERATIONS' RESULTS DETAILS:\n";
 
 		for(LassieIterationRecorder iR : iterationsRecords){
@@ -424,6 +424,7 @@ public class LassieResultRecorder {
 	}
 	
 	public void saveToFile(String fileName) throws IOException{
+		logger.info("Saving results to file: " + fileName + " ...");
 		long startTime = System.currentTimeMillis();
 		String content = this.toString();
 		 
@@ -437,9 +438,9 @@ public class LassieResultRecorder {
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file.getAbsoluteFile()));
 		bw.write(content);
 		bw.close();
-
+		
 		long totalTime = System.currentTimeMillis() - startTime;
-		logger.info("Results file writing done in " + totalTime + "ms.");
+		logger.info("Done in "+ totalTime + "ms.");
 	}
 
 

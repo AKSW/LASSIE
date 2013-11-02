@@ -280,12 +280,6 @@ public class ExpressiveSchemaMappingGenerator {
 		double totalCoverage = 0;
 		do {
 			long itrStartTime = System.currentTimeMillis();
-			//add iteration results
-			//			resultRecord.addIterationRecord(new IterationRecord(iterationNr));
-			//add all classes' names to this iteration results
-			for (NamedClass sourceCls : sourceClasses) {
-				resultRecorder.getIterationRecord(iterationNr).addClassRecord(new LassieClassRecorder(sourceCls));
-			}
 
 			logger.info(iterationNr + ". ITERATION:");
 			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
@@ -441,34 +435,22 @@ public class ExpressiveSchemaMappingGenerator {
 	}
 
 	double computeJaccardSimilarity(Set<Individual> sourceInstances, Set<Individual> targetInstances) {
-		// JaccardDistance = 2*|C_i n D_j|/(|C_i|+|D_j|)
 		SetView<Individual> intersection = Sets.intersection(sourceInstances, targetInstances);
 		SetView<Individual> union = Sets.union(sourceInstances, targetInstances);
 
-
-
-		System.out.println("intersection.size: " + intersection.size() + "\n intersection instances: " + intersection);
-
-		//TODO  remove comment and delete next statement
-		int targetInstancesSize = targetInstances.size();
-		//		int targetInstancesSize = sourceInstances.size();
-		double dice = 2 * ((double) intersection.size()) / (double)(sourceInstances.size() + targetInstancesSize);
-		System.out.println("Dice distance: " + dice);
-
-		//TODO  remove comment and delete next statement
-		double jaccard = (double) intersection.size() / (double) union.size();
-		//		double jaccard = (double) intersection.size() / (double) targetInstancesSize;
-		System.out.println("Jaccard distance: " + jaccard);
-
-		double overlap = (double) intersection.size() / (double) Math.min(sourceInstances.size(), targetInstancesSize);
-		System.out.println("Overlap distance: " + overlap);
-
+		double dice = 2 * ((double) intersection.size()) / (double)(sourceInstances.size() + targetInstances.size());
+		double jaccard = (double) intersection.size() / (double) targetInstances.size();
+		double overlap = (double) intersection.size() / (double) Math.min(sourceInstances.size(), targetInstances.size());
+		
 		double alpha = 1, beta = 0.2;
 		SetView<Individual> sourceDifTarget = Sets.difference(sourceInstances, targetInstances);
 		SetView<Individual> targetDifsource = Sets.difference(targetInstances, sourceInstances);
 		double tversky = intersection.size() / (intersection.size() + alpha * sourceDifTarget.size() + beta * targetDifsource.size());
-		System.out.println("Tversky distance: " + tversky);
-
+		
+		logger.debug("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ");
+		logger.debug("sourceInstances.size(): " + sourceInstances.size());
+		logger.debug("targetInstances.size(): " + targetInstances.size());
+		logger.debug("intersection.size(): " + intersection.size());
 		return dice;
 	}
 
@@ -560,10 +542,13 @@ public class ExpressiveSchemaMappingGenerator {
 				//compute the instance mapping real F-Measures for current class
 				double f = MappingMath.computeFMeasure(result, cache2.size());
 
-
-				//				logger.info("_fMeasure: " + f);
-				//				logger.info("_iterationNr: " + iterationNr);
-				//				logger.info("_nc: " + sourceClass);
+				logger.debug("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+				logger.debug("cache1(" + cache.size() + "): " + cache.toString());
+				logger.debug("cache2(" + cache2.size() + "): " + cache2.toString());
+				logger.debug("resultMapping(" + result.size() + "): " + result.toString());
+				logger.debug("fMeasure: " + f);
+				logger.debug("iterationNr: " + iterationNr);
+				logger.debug("currentClass: " + currentClass);
 				resultRecorder.setFMeasure(f, iterationNr, currentClass);
 
 				//store the real F-Measures
@@ -738,8 +723,12 @@ public class ExpressiveSchemaMappingGenerator {
 
 		ComplexClassifier cc = bsc.getZoomedHillTop(5, numberOfLinkingIterations, cp);
 		Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
-		logger.info("Mapping size is " + map.getNumberofMappings());
-		logger.info("Pseudo F-measure is " + cc.fMeasure);
+		
+		logger.debug("PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
+		logger.debug("Mapping size is " + map.getNumberofMappings());
+		logger.debug("Pseudo F-measure is " + cc.fMeasure);
+		logger.debug("iterationNr " + iterationNr);
+		logger.debug("currentClass " + currentClass);
 
 		resultRecorder.setPFMeasure(cc.fMeasure, iterationNr, currentClass);
 
@@ -845,11 +834,6 @@ public class ExpressiveSchemaMappingGenerator {
 			//compute the negative examples
 			logger.info("Computing negative examples...");
 			MonitorFactory.getTimeMonitor("negative examples").start();
-
-			//TODO remove next logger statements
-			logger.debug("targetKB.getReasoner(): " + targetKB.getReasoner().toString());
-			logger.debug("targetKB.getNamespace(): " + targetKB.getNamespace().toString());
-			logger.debug("positiveExamples: " + positiveExamples.toString());
 
 			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
 			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
