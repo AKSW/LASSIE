@@ -128,9 +128,9 @@ public class ExpressiveSchemaMappingGenerator {
 	protected final int linkingMaxRecursionDepth_LIMES = 0;
 	private int numberOfLinkingIterations = 5;
 	protected String linkingProperty = OWL.sameAs.getURI();
+	protected Map<NamedClass, Map<Description, Mapping>> mappingResults = new HashMap<NamedClass, Map<Description, Mapping>>();
 
 	//result recording
-	protected Map<NamedClass, Map<Description, Mapping>> mappingResults = new HashMap<NamedClass, Map<Description, Mapping>>();
 	public Multimap<Integer, Map<String, Object>> evaluationResults = HashMultimap.create();
 	Map<String, Object> resultEntry = new HashMap<String, Object>();
 	LassieResultRecorder resultRecorder;
@@ -504,7 +504,7 @@ public class ExpressiveSchemaMappingGenerator {
 		for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
 			NamedClass sourceClass = entry.getKey();
 			Model sourceClassModel = entry.getValue();
-			currentClass = sourceClass; 
+//			currentClass = sourceClass; 
 
 			Cache cache = getCache(sourceClassModel);
 
@@ -526,7 +526,7 @@ public class ExpressiveSchemaMappingGenerator {
 				}
 
 				if (result == null) {
-					result = getDeterministicUnsupervisedMappings(cache, cache2);
+					result = getDeterministicUnsupervisedMappings(cache, cache2, sourceClass);
 					if (!mappingResults.containsKey(sourceClass)) {
 						mappingResults.put(sourceClass, new HashMap<Description, Mapping>());
 					}
@@ -543,13 +543,14 @@ public class ExpressiveSchemaMappingGenerator {
 				double f = MappingMath.computeFMeasure(result, cache2.size());
 
 				logger.debug("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-				logger.debug("cache1(" + cache.size() + "): " + cache.toString());
-				logger.debug("cache2(" + cache2.size() + "): " + cache2.toString());
+//				logger.debug("cache1(" + cache.size() + "): " + cache.toString());
+//				logger.debug("cache2(" + cache2.size() + "): " + cache2.toString());
 				logger.debug("resultMapping(" + result.size() + "): " + result.toString());
 				logger.debug("fMeasure: " + f);
 				logger.debug("iterationNr: " + iterationNr);
-				logger.debug("currentClass: " + currentClass);
-				resultRecorder.setFMeasure(f, iterationNr, currentClass);
+				logger.debug("currentClass: " + sourceClass);
+				resultRecorder.setFMeasure(f, iterationNr, sourceClass);
+				resultRecorder.setInstanceMapping(result, iterationNr, sourceClass);
 
 				//store the real F-Measures
 				sourceClass2RealFMeasure.put(sourceClass, f);
@@ -695,9 +696,10 @@ public class ExpressiveSchemaMappingGenerator {
 
 	/**
 	 * Computes initial mappings
+	 * @param sourceClass 
 	 *
 	 */
-	public Mapping getDeterministicUnsupervisedMappings(Cache source, Cache target) {
+	public Mapping getDeterministicUnsupervisedMappings(Cache source, Cache target, NamedClass sourceClass) {
 		logger.info("Source size = " + source.getAllUris().size());
 		logger.info("Target size = " + target.getAllUris().size());
 
@@ -728,13 +730,13 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.debug("Mapping size is " + map.getNumberofMappings());
 		logger.debug("Pseudo F-measure is " + cc.fMeasure);
 		logger.debug("iterationNr " + iterationNr);
-		logger.debug("currentClass " + currentClass);
+		logger.debug("currentClass " + sourceClass);
 
-		resultRecorder.setPFMeasure(cc.fMeasure, iterationNr, currentClass);
+		resultRecorder.setPFMeasure(cc.fMeasure, iterationNr, sourceClass);
 
 		//store the pseudo F-Measures 
 		Map<NamedClass, Double> sourceClass2PFMeasure = new HashMap<NamedClass, Double>();
-		sourceClass2PFMeasure.put(currentClass, cc.fMeasure);
+		sourceClass2PFMeasure.put(sourceClass, cc.fMeasure);
 		resultEntry.clear();
 		resultEntry.put("sourceClass2PseudoFMeasure", sourceClass2PFMeasure);
 		evaluationResults.put(iterationNr, resultEntry);

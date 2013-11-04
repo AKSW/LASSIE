@@ -21,6 +21,8 @@ import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 
+import de.uni_leipzig.simba.data.Mapping;
+
 
 /**
  * @author sherif
@@ -236,6 +238,22 @@ public class LassieResultRecorder {
 		}
 	}
 	
+	/**
+	 * Set instance mapping for a given named class in a given iteration 
+	 * @param coverage
+	 * @param iterationNr
+	 * @param nc
+	 * @author sherif
+	 */
+	public void setInstanceMapping(Mapping instanceMapping, int iterationNr, NamedClass nc){
+		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
+			if(cr.namedClass.equals(nc) ){
+				cr.setInstanceMapping(instanceMapping);
+				return;
+			}
+		}
+	}
+	
 
 	/**
 	 * @return the nrOfCLasses
@@ -400,6 +418,7 @@ public class LassieResultRecorder {
 				"Number of classModifiers:      " + nrOfClassModifiers + "\n" +
 				"Number of instance modifiers:  " + nrOfInstanceModifiers + "\n" +
 				"Class modifier:\n";
+		
 		int i=1;
 		for( Modifier m : classModefiersAndRates.keySet()){
 			str += "\t" + i++ + ". " + m.getSimpleName() + "\tRate: " + classModefiersAndRates.get(m)*100 + "%\n" ;
@@ -415,6 +434,12 @@ public class LassieResultRecorder {
 		str += "Number of iterations:\t" + NrOfIterations + "\n";
 		str += "Average iteration execution time:  " + getAvgIterationExecutionTime() + "ms.\n" ;
 		str += "Total execution time:  " + getTotalExecutionTime() + "ms.\n" ;
+		
+		str += "\nitrNr\tavgCoverage\tavgF\tavgPF\tTime\n"; 
+		for(LassieIterationRecorder iR : iterationsRecords){
+			str += iR.getIterationNr() + "\t" + iR.getAvgCoverage()+ "\t" + iR.getAvgFMeasure()+ "\t" + iR.getAvgPFMeasure()+ "\t" + iR.getExecutionTime() + "\n\n";
+		}
+		
 		str += "ITERATIONS' RESULTS DETAILS:\n";
 
 		for(LassieIterationRecorder iR : iterationsRecords){

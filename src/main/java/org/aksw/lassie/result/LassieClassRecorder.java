@@ -12,6 +12,8 @@ import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 
+import de.uni_leipzig.simba.data.Mapping;
+
 
 /**
  * @author sherif
@@ -26,8 +28,25 @@ public class LassieClassRecorder {
 	public List<? extends EvaluatedDescription> mapping = new ArrayList<EvaluatedDescription>();
 	public SortedSet<Individual> posExamples = new TreeSet<Individual>();
 	public SortedSet<Individual> negExamples = new TreeSet<Individual>();
+	public Mapping instanceMapping = new Mapping();
 	
 	
+	/**
+	 * @return the instanceMapping
+	 */
+	public Mapping getInstanceMapping() {
+		return instanceMapping;
+	}
+
+
+	/**
+	 * @param instanceMapping the instanceMapping to set
+	 */
+	public void setInstanceMapping(Mapping instanceMapping) {
+		this.instanceMapping = instanceMapping;
+	}
+
+
 	public LassieClassRecorder(){
 	}
 	
@@ -181,6 +200,10 @@ public class LassieClassRecorder {
 		for(Individual in: negExamples){
 			 str += "\t\t(" + i++ + ") " + in.getName() +"\n"; 
 		}
+		
+		str += "\tINSTANCE MAPPINGS(LIMES RESULTS):\n ";
+		str += "\t\t(" + i++ + ") " + getInstanceMapping().toString() +"\n"; 
+			 
 		return str;
 	}
 }
