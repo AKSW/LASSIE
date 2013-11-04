@@ -117,7 +117,7 @@ public class Experiments {
 			
 			long experimentTime = System.currentTimeMillis() - startTime;
 			System.out.println("Experiment time: " + experimentTime + "ms.");
-			logger.info("Experimrnt (" + (expNr+1) + ") for " + nrOfClassModifiers + "class modifier(s) and "
+			logger.info("Experimrnt (" + (expNr+1) + ") for " + nrOfClassModifiers + " class modifier(s) and "
 					+ nrOfInstanceModifiers + " instance Modifier(s) is done in " + experimentTime + "ms.");
 		}
 	}

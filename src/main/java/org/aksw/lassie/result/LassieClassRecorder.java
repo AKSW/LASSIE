@@ -12,6 +12,8 @@ import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 
+import com.jamonapi.utils.Logger;
+
 import de.uni_leipzig.simba.data.Mapping;
 
 
@@ -43,7 +45,14 @@ public class LassieClassRecorder {
 	 * @param instanceMapping the instanceMapping to set
 	 */
 	public void setInstanceMapping(Mapping instanceMapping) {
-		this.instanceMapping = instanceMapping;
+		if(this.instanceMapping.size == 0){
+			this.instanceMapping = instanceMapping;
+		}else{
+			for( String url1 : this.instanceMapping.map.keySet()){
+				for (String url2 : this.instanceMapping.map.get(url1).keySet())
+				this.instanceMapping.add(url1, url2, this.instanceMapping.getSimilarity(url1, url1));
+			}
+		}
 	}
 
 
@@ -202,7 +211,7 @@ public class LassieClassRecorder {
 		}
 		
 		str += "\tINSTANCE MAPPINGS(LIMES RESULTS):\n ";
-		str += "\t\t(" + i++ + ") " + getInstanceMapping().toString() +"\n"; 
+		str += "\t\t" + getInstanceMapping().toString() +"\n"; 
 			 
 		return str;
 	}

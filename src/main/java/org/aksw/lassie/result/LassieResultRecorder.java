@@ -246,9 +246,13 @@ public class LassieResultRecorder {
 	 * @author sherif
 	 */
 	public void setInstanceMapping(Mapping instanceMapping, int iterationNr, NamedClass nc){
+		logger.error("iterationNr: "+iterationNr);
+		logger.error("cc: "+nc);
+		logger.error("instanceMapping: "+instanceMapping);
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setInstanceMapping(instanceMapping);
+				logger.error("THIS: " + this.toString());
 				return;
 			}
 		}

@@ -551,6 +551,7 @@ public class ExpressiveSchemaMappingGenerator {
 				logger.debug("currentClass: " + sourceClass);
 				resultRecorder.setFMeasure(f, iterationNr, sourceClass);
 				resultRecorder.setInstanceMapping(result, iterationNr, sourceClass);
+				logger.debug("resultRecorder:" + resultRecorder);
 
 				//store the real F-Measures
 				sourceClass2RealFMeasure.put(sourceClass, f);
