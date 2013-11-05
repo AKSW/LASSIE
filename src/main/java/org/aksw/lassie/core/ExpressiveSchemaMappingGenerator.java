@@ -3,6 +3,7 @@ package org.aksw.lassie.core;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -1110,7 +1111,7 @@ public class ExpressiveSchemaMappingGenerator {
 		return cbd;
 	}
 
-	private void cleanUpModel(Model model) {
+	private static void cleanUpModel(Model model) {
 		// filter out triples with String literals, as therein often occur
 		// some syntax errors and they are not relevant for learning
 		List<Statement> statementsToRemove = new ArrayList<Statement>();
@@ -1127,7 +1128,7 @@ public class ExpressiveSchemaMappingGenerator {
 					//                    System.err.println("REMOVE " + st);
 				} else if (lit.getDatatype().getURI().equals(XSD.gYearMonth.getURI())) {
 					statementsToRemove.add(st);
-					//                    System.err.println("REMOVE " + st);
+//					                    System.err.println("REMOVE " + st);
 				}
 			}
 			//remove statements like <x a owl:Class>
@@ -1267,5 +1268,11 @@ public class ExpressiveSchemaMappingGenerator {
 			this.target = target;
 			this.mapping = mapping;
 		}
+	}
+	
+	public static void main(String[] args) throws Exception {
+		Model m = ModelFactory.createDefaultModel();
+		m.read(new FileInputStream(new File("/tmp/inc.owl")), null);
+		cleanUpModel(m);
 	}
 }
