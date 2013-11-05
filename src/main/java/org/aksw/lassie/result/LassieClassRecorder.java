@@ -12,12 +12,16 @@ import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 
+import com.jamonapi.utils.Logger;
+
+import de.uni_leipzig.simba.data.Mapping;
+
 
 /**
  * @author sherif
  *
  */
-public class ClassRecord {
+public class LassieClassRecorder {
 
 	public NamedClass namedClass;
 	public double coverage;
@@ -26,9 +30,33 @@ public class ClassRecord {
 	public List<? extends EvaluatedDescription> mapping = new ArrayList<EvaluatedDescription>();
 	public SortedSet<Individual> posExamples = new TreeSet<Individual>();
 	public SortedSet<Individual> negExamples = new TreeSet<Individual>();
+	public Mapping instanceMapping = new Mapping();
 	
 	
-	public ClassRecord(){
+	/**
+	 * @return the instanceMapping
+	 */
+	public Mapping getInstanceMapping() {
+		return instanceMapping;
+	}
+
+
+	/**
+	 * @param instanceMapping the instanceMapping to set
+	 */
+	public void setInstanceMapping(Mapping instanceMapping) {
+		if(this.instanceMapping.size == 0){
+			this.instanceMapping = instanceMapping;
+		}else{
+			for( String url1 : this.instanceMapping.map.keySet()){
+				for (String url2 : this.instanceMapping.map.get(url1).keySet())
+				this.instanceMapping.add(url1, url2, this.instanceMapping.getSimilarity(url1, url1));
+			}
+		}
+	}
+
+
+	public LassieClassRecorder(){
 	}
 	
 	
@@ -36,7 +64,7 @@ public class ClassRecord {
 	 * @param namedClass
 	 *@author sherif
 	 */
-	public ClassRecord(NamedClass namedClass) {
+	public LassieClassRecorder(NamedClass namedClass) {
 		super();
 		this.namedClass = namedClass;
 	}
@@ -160,27 +188,31 @@ public class ClassRecord {
 	@Override
 	public String toString() {
 		String str = 
-			"\tClass name: " + namedClass.getName() + "\n" +
-			"\tCoverage: " + coverage + "\n" +
-			"\tF-Measure: " + FMeasure + "\n" +
+			" Class name:  " + namedClass.getName() + "\n" +
+			"\tCoverage:    " + coverage + "\n" +
+			"\tF-Measure:   " + FMeasure + "\n" +
 			"\tP-F-FMesure: "	+ PFMesure + "\n" +
 			"\tMapping:\n";
 		int i =1;
 		for(EvaluatedDescription eD: mapping){
-			str += "\t\t(" + i + ") " + eD + "\n";
+			str += "\t\t(" + i++ + ") " + eD + "\n";
 		}
 
 		str +=	"\tPositive examples:\n";
 		i =1;
 		for(Individual in: posExamples){
-			 str += "\t\t(" + i + ") " + in.getName() + "\n";
+			 str += "\t\t(" + i++ + ") " + in.getName() + "\n";
 		}
 		
 		str += "\tNegative examples:\n ";
 		i =1;
 		for(Individual in: negExamples){
-			 str += "\t\t(" + i + ")" + in.getName() +"\n"; 
+			 str += "\t\t(" + i++ + ") " + in.getName() +"\n"; 
 		}
+		
+		str += "\tINSTANCE MAPPINGS(LIMES RESULTS):\n ";
+		str += "\t\t" + getInstanceMapping().toString() +"\n"; 
+			 
 		return str;
 	}
 }

@@ -31,8 +31,9 @@ import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
-import org.aksw.lassie.result.ClassRecord;
-import org.aksw.lassie.result.ResultRecord;
+import org.aksw.lassie.result.LassieClassRecorder;
+import org.aksw.lassie.result.LassieIterationRecorder;
+import org.aksw.lassie.result.LassieResultRecorder;
 import org.aksw.lassie.util.PrintUtils;
 import org.apache.log4j.Logger;
 import org.dllearner.algorithms.celoe.CELOE;
@@ -96,45 +97,44 @@ import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 
 public class ExpressiveSchemaMappingGenerator {
 
+	//current status trackers
 	protected static final Logger logger = Logger.getLogger(ExpressiveSchemaMappingGenerator.class.getName());
 	protected Monitor mon;
+	protected NamedClass currentClass;
+	private int iterationNr = 1;
+
+	//LASSIE configurations
 	protected boolean posNegLearning = true;
 	protected final boolean performCrossValidation = true;
-	protected static final int maxNrOfIterations = 10;
+	protected static int maxNrOfIterations = 10;
 	protected static final int coverageThreshold = 0;
-	protected static final int numberOfDimensions = 3;
-	/**
-	 * The maximum number of positive examples, used for the SPARQL extraction
-	 * and learning algorithm
-	 */
+	private String targetDomainNameSpace = "";
+	protected List<Modifier> modifiers = new ArrayList<Modifier>();
+
+	//DL-Learner configurations
+	/** The maximum number of positive examples, used for the SPARQL extraction and learning algorithm */
 	protected int maxNrOfPositiveExamples = 100;// 20;
-	/**
-	 * The maximum number of negative examples, used for the SPARQL extraction
-	 * and learning algorithm
-	 */
+	/** The maximum number of negative examples, used for the SPARQL extraction and learning algorithm */
 	protected int maxNrOfNegativeExamples = 100;//20;
-	protected NamedClass currentClass;
 	protected KnowledgeBase sourceKB;
 	protected KnowledgeBase targetKB;
-	protected String linkingProperty = OWL.sameAs.getURI();
 	protected int maxRecursionDepth = 2;
-	/**
-	 * LIMES Config
-	 */
+
+	// LIMES Configurations
+	protected static final int numberOfDimensions = 3;
 	static double coverage_LIMES = 0.8;
 	static double beta_LIMES = 1d;
 	static String fmeasure_LIMES = "own";
 	protected final int linkingMaxNrOfExamples_LIMES = 100;
 	protected final int linkingMaxRecursionDepth_LIMES = 0;
-	private String targetDomainNameSpace = "";
-	protected List<Modifier> modifiers = new ArrayList<Modifier>();
-	protected Map<NamedClass, Map<Description, Mapping>> mappingResults = new HashMap<NamedClass, Map<Description, Mapping>>();
 	private int numberOfLinkingIterations = 5;
+	protected String linkingProperty = OWL.sameAs.getURI();
+	protected Map<NamedClass, Map<Description, Mapping>> mappingResults = new HashMap<NamedClass, Map<Description, Mapping>>();
+
+	//result recording
 	public Multimap<Integer, Map<String, Object>> evaluationResults = HashMultimap.create();
 	Map<String, Object> resultEntry = new HashMap<String, Object>();
-	private int iterationNr = 1;
-
-	ResultRecord resultRecord;
+	LassieResultRecorder resultRecorder;
 
 
 	/**
@@ -154,6 +154,11 @@ public class ExpressiveSchemaMappingGenerator {
 	public ExpressiveSchemaMappingGenerator() {
 	}
 
+	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, int nrOfIterations) {
+		this(source, target, OWL.sameAs.getURI());
+		maxNrOfIterations = nrOfIterations;
+	}
+	
 	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target) {
 		this(source, target, OWL.sameAs.getURI());
 	}
@@ -186,7 +191,7 @@ public class ExpressiveSchemaMappingGenerator {
 		return run(sourceClasses, targetClasses);
 	}
 
-	public ResultRecord runNew(Set<NamedClass> sourceClasses) {
+	public LassieResultRecorder runNew(Set<NamedClass> sourceClasses) {
 		// get all classes D_i in target KB
 		Set<NamedClass> targetClasses = getClasses(targetKB);
 
@@ -262,9 +267,9 @@ public class ExpressiveSchemaMappingGenerator {
 	}
 
 
-	public ResultRecord runNew(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
-		
-		resultRecord = new ResultRecord(maxNrOfIterations, sourceClasses);
+	public LassieResultRecorder runNew(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+
+		resultRecorder = new LassieResultRecorder(maxNrOfIterations, sourceClasses);
 
 		//initially, the class expressions E_i in the target KB are the named classes D_i
 		Collection<Description> targetClassExpressions = new TreeSet<Description>();
@@ -275,12 +280,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 		double totalCoverage = 0;
 		do {
-			//add iteration results
-//			resultRecord.addIterationRecord(new IterationRecord(iterationNr));
-			//add all classes' names to this iteration results
-			for (NamedClass sourceCls : sourceClasses) {
-				resultRecord.getIterationRecord(iterationNr).addClassRecord(new ClassRecord(sourceCls));
-			}
+			long itrStartTime = System.currentTimeMillis();
 
 			logger.info(iterationNr + ". ITERATION:");
 			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
@@ -293,16 +293,16 @@ public class ExpressiveSchemaMappingGenerator {
 
 			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
 			for (NamedClass sourceClass : sourceClasses) {
-				
+
 				logger.info("+++++++++++++++++++++" + sourceClass + "+++++++++++++++++++++");
 				currentClass = sourceClass;
 				try {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
 
-					resultRecord.setPositiveExample(targetInstances, iterationNr, currentClass);
+					resultRecorder.setPositiveExample(targetInstances, iterationNr, currentClass);
 
 					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
-					resultRecord.setMapping(mappingList, iterationNr, currentClass);
+					resultRecorder.setMapping(mappingList, iterationNr, currentClass);
 
 					iterationResultConceptDescription.put(sourceClass, mappingList.get(0).getDescription());
 				} catch (NonExistingLinksException e) {
@@ -322,12 +322,11 @@ public class ExpressiveSchemaMappingGenerator {
 			//            }
 
 			totalCoverage = newTotalCoverage;
+			resultRecorder.getIterationRecord(iterationNr).setExecutionTime(System.currentTimeMillis() - itrStartTime);
 
-			
+		} while (iterationNr++ < maxNrOfIterations);
 
-		} while (iterationNr++ <= maxNrOfIterations);
-		
-		return resultRecord;
+		return resultRecorder;
 	}
 
 
@@ -427,7 +426,7 @@ public class ExpressiveSchemaMappingGenerator {
 			SortedSet<Individual> targetInstances = getInstances(targetDescription, targetKB);
 			double coverage = computeJaccardSimilarity(sourceInstances, targetInstances);
 
-			resultRecord.setCoverage(coverage, iterationNr, currentClass);
+			resultRecorder.setCoverage(coverage, iterationNr, currentClass);
 
 			totalCoverage += coverage;
 		}
@@ -437,34 +436,22 @@ public class ExpressiveSchemaMappingGenerator {
 	}
 
 	double computeJaccardSimilarity(Set<Individual> sourceInstances, Set<Individual> targetInstances) {
-		// JaccardDistance = 2*|C_i n D_j|/(|C_i|+|D_j|)
 		SetView<Individual> intersection = Sets.intersection(sourceInstances, targetInstances);
 		SetView<Individual> union = Sets.union(sourceInstances, targetInstances);
 
-
-
-		System.out.println("intersection.size: " + intersection.size() + "\n intersection instances: " + intersection);
-
-		//TODO  remove comment and delete next statement
-		int targetInstancesSize = targetInstances.size();
-		//		int targetInstancesSize = sourceInstances.size();
-		double dice = 2 * ((double) intersection.size()) / (double)(sourceInstances.size() + targetInstancesSize);
-		System.out.println("Dice distance: " + dice);
-
-		//TODO  remove comment and delete next statement
-		double jaccard = (double) intersection.size() / (double) union.size();
-		//		double jaccard = (double) intersection.size() / (double) targetInstancesSize;
-		System.out.println("Jaccard distance: " + jaccard);
-
-		double overlap = (double) intersection.size() / (double) Math.min(sourceInstances.size(), targetInstancesSize);
-		System.out.println("Overlap distance: " + overlap);
-
+		double dice = 2 * ((double) intersection.size()) / (double)(sourceInstances.size() + targetInstances.size());
+		double jaccard = (double) intersection.size() / (double) targetInstances.size();
+		double overlap = (double) intersection.size() / (double) Math.min(sourceInstances.size(), targetInstances.size());
+		
 		double alpha = 1, beta = 0.2;
 		SetView<Individual> sourceDifTarget = Sets.difference(sourceInstances, targetInstances);
 		SetView<Individual> targetDifsource = Sets.difference(targetInstances, sourceInstances);
 		double tversky = intersection.size() / (intersection.size() + alpha * sourceDifTarget.size() + beta * targetDifsource.size());
-		System.out.println("Tversky distance: " + tversky);
-
+		
+		logger.debug("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ");
+		logger.debug("sourceInstances.size(): " + sourceInstances.size());
+		logger.debug("targetInstances.size(): " + targetInstances.size());
+		logger.debug("intersection.size(): " + intersection.size());
 		return dice;
 	}
 
@@ -518,7 +505,7 @@ public class ExpressiveSchemaMappingGenerator {
 		for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
 			NamedClass sourceClass = entry.getKey();
 			Model sourceClassModel = entry.getValue();
-			currentClass = sourceClass; 
+//			currentClass = sourceClass; 
 
 			Cache cache = getCache(sourceClassModel);
 
@@ -540,7 +527,7 @@ public class ExpressiveSchemaMappingGenerator {
 				}
 
 				if (result == null) {
-					result = getDeterministicUnsupervisedMappings(cache, cache2);
+					result = getDeterministicUnsupervisedMappings(cache, cache2, sourceClass);
 					if (!mappingResults.containsKey(sourceClass)) {
 						mappingResults.put(sourceClass, new HashMap<Description, Mapping>());
 					}
@@ -555,12 +542,17 @@ public class ExpressiveSchemaMappingGenerator {
 
 				//compute the instance mapping real F-Measures for current class
 				double f = MappingMath.computeFMeasure(result, cache2.size());
-				
-				
-//				logger.info("_fMeasure: " + f);
-//				logger.info("_iterationNr: " + iterationNr);
-//				logger.info("_nc: " + sourceClass);
-				resultRecord.setFMeasure(f, iterationNr, currentClass);
+
+				logger.debug("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+//				logger.debug("cache1(" + cache.size() + "): " + cache.toString());
+//				logger.debug("cache2(" + cache2.size() + "): " + cache2.toString());
+				logger.debug("resultMapping(" + result.size() + "): " + result.toString());
+				logger.debug("fMeasure: " + f);
+				logger.debug("iterationNr: " + iterationNr);
+				logger.debug("currentClass: " + sourceClass);
+				resultRecorder.setFMeasure(f, iterationNr, sourceClass);
+				resultRecorder.setInstanceMapping(result, iterationNr, sourceClass);
+				logger.debug("resultRecorder:" + resultRecorder);
 
 				//store the real F-Measures
 				sourceClass2RealFMeasure.put(sourceClass, f);
@@ -706,9 +698,10 @@ public class ExpressiveSchemaMappingGenerator {
 
 	/**
 	 * Computes initial mappings
+	 * @param sourceClass 
 	 *
 	 */
-	public Mapping getDeterministicUnsupervisedMappings(Cache source, Cache target) {
+	public Mapping getDeterministicUnsupervisedMappings(Cache source, Cache target, NamedClass sourceClass) {
 		logger.info("Source size = " + source.getAllUris().size());
 		logger.info("Target size = " + target.getAllUris().size());
 
@@ -734,14 +727,18 @@ public class ExpressiveSchemaMappingGenerator {
 
 		ComplexClassifier cc = bsc.getZoomedHillTop(5, numberOfLinkingIterations, cp);
 		Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
-		logger.info("Mapping size is " + map.getNumberofMappings());
-		logger.info("Pseudo F-measure is " + cc.fMeasure);
 		
-		resultRecord.setPFMeasure(cc.fMeasure, iterationNr, currentClass);
+		logger.debug("PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
+		logger.debug("Mapping size is " + map.getNumberofMappings());
+		logger.debug("Pseudo F-measure is " + cc.fMeasure);
+		logger.debug("iterationNr " + iterationNr);
+		logger.debug("currentClass " + sourceClass);
+
+		resultRecorder.setPFMeasure(cc.fMeasure, iterationNr, sourceClass);
 
 		//store the pseudo F-Measures 
 		Map<NamedClass, Double> sourceClass2PFMeasure = new HashMap<NamedClass, Double>();
-		sourceClass2PFMeasure.put(currentClass, cc.fMeasure);
+		sourceClass2PFMeasure.put(sourceClass, cc.fMeasure);
 		resultEntry.clear();
 		resultEntry.put("sourceClass2PseudoFMeasure", sourceClass2PFMeasure);
 		evaluationResults.put(iterationNr, resultEntry);
@@ -841,19 +838,14 @@ public class ExpressiveSchemaMappingGenerator {
 			//compute the negative examples
 			logger.info("Computing negative examples...");
 			MonitorFactory.getTimeMonitor("negative examples").start();
-			
-			//TODO remove next logger statements
-			logger.debug("targetKB.getReasoner(): " + targetKB.getReasoner().toString());
-			logger.debug("targetKB.getNamespace(): " + targetKB.getNamespace().toString());
-			logger.debug("positiveExamples: " + positiveExamples.toString());
-			
+
 			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
 			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
 			negativeExamples.removeAll(positiveExamples);
 			MonitorFactory.getTimeMonitor("negative examples").stop();
 			logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
 
-			resultRecord.setNegativeExample(negativeExamples, iterationNr, currentClass);
+			resultRecorder.setNegativeExample(negativeExamples, iterationNr, currentClass);
 
 			//get a sample of the negative examples
 			SortedSet<Individual> negativeExamplesSample = SetManipulation.stableShrinkInd(negativeExamples, maxNrOfNegativeExamples);

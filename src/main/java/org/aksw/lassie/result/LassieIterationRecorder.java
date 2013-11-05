@@ -11,21 +11,38 @@ import java.util.List;
  * @author sherif
  *
  */
-public class IterationRecord {
+public class LassieIterationRecorder {
 	
 	public int IterationNr; 
-	public List<ClassRecord> classesRecords = new ArrayList<ClassRecord>();
+	public List<LassieClassRecorder> classesRecords = new ArrayList<LassieClassRecorder>();
 	public double avgCoverage;
 	public double avgFMeasure;
 	public double avgPFMeasure;
+	public long executionTime;
 	
 	
 	
 	/**
+	 * @return the executionTime
+	 */
+	public long getExecutionTime() {
+		return executionTime;
+	}
+
+
+	/**
+	 * @param executionTime the executionTime to set
+	 */
+	public void setExecutionTime(long executionTime) {
+		this.executionTime = executionTime;
+	}
+
+
+	/**
 	 * @param iterationNr
 	 *@author sherif
 	 */
-	public IterationRecord(int iterationNr) {
+	public LassieIterationRecorder(int iterationNr) {
 		super();
 		IterationNr = iterationNr;
 	}
@@ -35,7 +52,7 @@ public class IterationRecord {
 	 * 
 	 *@author sherif
 	 */
-	public IterationRecord() {
+	public LassieIterationRecorder() {
 		super();
 	}
 	
@@ -59,7 +76,7 @@ public class IterationRecord {
 	/**
 	 * @return the classesRecords
 	 */
-	public List<ClassRecord> getClassesRecords() {
+	public List<LassieClassRecorder> getClassesRecords() {
 		return classesRecords;
 	}
 
@@ -67,11 +84,11 @@ public class IterationRecord {
 	/**
 	 * @param classesRecords the classesRecords to set
 	 */
-	public void setClassesRecords(List<ClassRecord> classRecord) {
+	public void setClassesRecords(List<LassieClassRecorder> classRecord) {
 		this.classesRecords = classRecord;
 	}
 	
-	public void addClassRecord(ClassRecord classRecord) {
+	public void addClassRecord(LassieClassRecorder classRecord) {
 		this.classesRecords.add(classRecord);
 	}
 
@@ -85,7 +102,7 @@ public class IterationRecord {
 		
 		double sum = 0d;
 		int count = 0;
-		for(ClassRecord cR: classesRecords){
+		for(LassieClassRecorder cR: classesRecords){
 			sum += cR.getCoverage();
 			count++;
 		}
@@ -111,7 +128,7 @@ public class IterationRecord {
 		
 		double sum = 0d;
 		int count = 0;
-		for(ClassRecord cR: classesRecords){
+		for(LassieClassRecorder cR: classesRecords){
 			sum += cR.getFMeasure();
 			count++;
 		}
@@ -137,7 +154,7 @@ public class IterationRecord {
 		
 		double sum = 0d;
 		int count = 0;
-		for(ClassRecord cR: classesRecords){
+		for(LassieClassRecorder cR: classesRecords){
 			sum += cR.getPFMesure();
 			count++;
 		}
@@ -160,16 +177,18 @@ public class IterationRecord {
 	@Override
 	public String toString() {
 		String str = "---------- " + IterationNr + ". Iteration ----------\n" +
-				"Average real F-Measure: " + getAvgFMeasure() + "\n" +
-				"Average pseudo F-Measure="	+ getAvgPFMeasure() + "\n" +
-				"Average coverage: " + getAvgCoverage() + "\n" +
-				"Details:\n";
+				"Average real F-Measure:   " + getAvgFMeasure()   + "\n" +
+				"Average pseudo F-Measure: " + getAvgPFMeasure()  + "\n" +
+				"Average coverage:         " + getAvgCoverage()   + "\n" +
+				"Execution time:           " + getExecutionTime() + "ms.\n" +
+				"CLASSES' RESULTS DETAILS:\n";
 		int i = 1;
-		for(ClassRecord cR : classesRecords){
+		for(LassieClassRecorder cR : classesRecords){
 			str += "(" + i++ + ") " + cR.toString() + "\n";
 		}
 
 		return str;
 	}
+
 
 }

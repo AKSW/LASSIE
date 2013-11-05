@@ -21,24 +21,48 @@ import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 
+import de.uni_leipzig.simba.data.Mapping;
+
 
 /**
  * @author sherif
  *
  */
-public class ResultRecord {
-	private static final Logger logger = Logger.getLogger(ResultRecord.class.getName());
-	public int nrOfClasses;////////////////
-	public int nrOfInstancesPerClass;////////////////
-	public int nrOfClassModifiers;/////////////////
-	public int nrOfInstanceModifiers;////////////////
-	public Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();////////////
-	public Map<Modifier, Double> classModefiersAndRates = new HashMap<Modifier, Double>();/////////////////
-	public int NrOfIterations;//////////////////
-	public List<IterationRecord> iterationsRecords = new ArrayList<IterationRecord>();  ////////////////////////
+public class LassieResultRecorder {
+	private static final Logger logger = Logger.getLogger(LassieResultRecorder.class.getName());
+	public int nrOfClasses;
+	public int nrOfInstancesPerClass;
+	public int nrOfClassModifiers;
+	public int nrOfInstanceModifiers;
+	public Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
+	public Map<Modifier, Double> classModefiersAndRates = new HashMap<Modifier, Double>();
+	public int NrOfIterations;
+	public List<LassieIterationRecorder> iterationsRecords = new ArrayList<LassieIterationRecorder>(); 
+	public long totalExecutionTime;
+	public double avgIterationExecutionTime;
+	
+	
+	/**
+	 * @return the totalExecutionTime
+	 */
+	public long getTotalExecutionTime() {
+		totalExecutionTime = 0l;
+		for(LassieIterationRecorder ir : iterationsRecords){
+			totalExecutionTime += ir.getExecutionTime();
+		}
+		return totalExecutionTime;
+	}
+
+	/**
+	 * @param totalExecutionTime the totalExecutionTime to set
+	 */
+	public void setTotalExecutionTime(long totalExecutionTime) {
+		this.totalExecutionTime = totalExecutionTime;
+	}
+
 
 	//Contractors
-	public ResultRecord(){
+	public LassieResultRecorder(){
 	}
 	
 	/**
@@ -47,16 +71,35 @@ public class ResultRecord {
 	 * @param sourceClasses
 	 *@author sherif
 	 */
-	public ResultRecord(int iterationCount, Set<NamedClass> inputClasses) {
+	public LassieResultRecorder(int iterationCount, Set<NamedClass> inputClasses) {
 		NrOfIterations = iterationCount;
 		nrOfClasses = inputClasses.size();
 		for(int i=1 ; i <= iterationCount ; i++){
-			IterationRecord ir = new IterationRecord(i);
+			LassieIterationRecorder ir = new LassieIterationRecorder(i);
 			for(NamedClass nc : inputClasses){
-				ir.addClassRecord(new ClassRecord(nc));
+				ir.addClassRecord(new LassieClassRecorder(nc));
 			}
 			this.addIterationRecord(ir);
 		}
+	}
+	
+	/**
+	 * @return the avgIterationExecutionTime
+	 */
+	public double getAvgIterationExecutionTime() {
+		double sum = 0d;
+		for(LassieIterationRecorder ir : iterationsRecords){
+			sum += ir.getExecutionTime();
+		}
+		avgIterationExecutionTime = sum / (double) iterationsRecords.size();
+		return avgIterationExecutionTime;
+	}
+
+	/**
+	 * @param avgIterationExecutionTime the avgIterationExecutionTime to set
+	 */
+	public void setAvgIterationExecutionTime(long avgIterationExecutionTime) {
+		this.avgIterationExecutionTime = avgIterationExecutionTime;
 	}
 
 	/**
@@ -65,14 +108,15 @@ public class ResultRecord {
 	 * @return
 	 * @author sherif
 	 */
-	public IterationRecord getIterationRecord(int iterationNr){
-		for(IterationRecord ir : iterationsRecords){
+	public LassieIterationRecorder getIterationRecord(int iterationNr){
+		for(LassieIterationRecorder ir : iterationsRecords){
 			if(ir.getIterationNr() == iterationNr){
 				return ir;
 			}
 		}
 		return null;
 	}
+	
 	/**
 	 * Set positive examples for a given named class in a given iteration  
 	 * @param positiveExamples
@@ -85,7 +129,7 @@ public class ResultRecord {
 			logger.warn("No positive example to set");
 			return;
 		}
-		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
+		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setPosExamples(positiveExamples);
 				return;
@@ -103,10 +147,10 @@ public class ResultRecord {
 	 */
 	public void setNegativeExample(SortedSet<Individual> negativeExamples, int iterationNr, NamedClass nc){
 		if(negativeExamples.size() == 0){
-			logger.error("No negative example to set");
+			logger.warn("No negative example to set");
 			return;
 		}
-		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
+		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setNegExamples(negativeExamples);
 				return;
@@ -123,7 +167,7 @@ public class ResultRecord {
 	 * @author sherif
 	 */
 	public void setCoverage(double coverage, int iterationNr, NamedClass nc){
-		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
+		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setCoverage(coverage);
 				return;
@@ -145,7 +189,7 @@ public class ResultRecord {
 //		logger.info("nc: " + nc);
 //		logger.info("getIterationRecord(iterationNr): " + getIterationRecord(iterationNr));
 //		logger.info("this: " + this.toString());
-		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
+		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 //			logger.info("cr: " + cr);
 			if(cr.namedClass.equals(nc) ){
 				cr.setFMeasure(fMeasure);
@@ -164,7 +208,7 @@ public class ResultRecord {
 	 */
 	public void setMapping(List<? extends EvaluatedDescription> mapping, int iterationNr, NamedClass nc){
 		
-		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
+		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setMapping(mapping);
 				return;
@@ -185,10 +229,30 @@ public class ResultRecord {
 //		logger.info("nc: " + nc);
 //		logger.info("getIterationRecord(iterationNr): " + getIterationRecord(iterationNr));
 //		logger.info("this: " + this.toString());
-		for(ClassRecord cr : getIterationRecord(iterationNr).classesRecords){
+		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 //			logger.info("cr: " + cr);
 			if(cr.namedClass.equals(nc) ){
 				cr.setPFMesure(pFMesure);
+				return;
+			}
+		}
+	}
+	
+	/**
+	 * Set instance mapping for a given named class in a given iteration 
+	 * @param coverage
+	 * @param iterationNr
+	 * @param nc
+	 * @author sherif
+	 */
+	public void setInstanceMapping(Mapping instanceMapping, int iterationNr, NamedClass nc){
+		logger.error("iterationNr: "+iterationNr);
+		logger.error("cc: "+nc);
+		logger.error("instanceMapping: "+instanceMapping);
+		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
+			if(cr.namedClass.equals(nc) ){
+				cr.setInstanceMapping(instanceMapping);
+				logger.error("THIS: " + this.toString());
 				return;
 			}
 		}
@@ -326,7 +390,7 @@ public class ResultRecord {
 	/**
 	 * @return the iterationsRecords
 	 */
-	public List<IterationRecord> getIterationsRecords() {
+	public List<LassieIterationRecorder> getIterationsRecords() {
 		return iterationsRecords;
 	}
 
@@ -335,15 +399,15 @@ public class ResultRecord {
 	/**
 	 * @param iterationsRecords the iterationsRecords to set
 	 */
-	public void setIterationsRecords(List<IterationRecord> iterationRecord) {
+	public void setIterationsRecords(List<LassieIterationRecorder> iterationRecord) {
 		this.iterationsRecords = iterationRecord;
 	}
 
-	public void addIterationRecord(IterationRecord iterationRecord) {
+	public void addIterationRecord(LassieIterationRecorder iterationRecord) {
 		this.iterationsRecords.add(iterationRecord);
 	}
 	
-	public void addIterationRecord(int i, IterationRecord iterationRecord) {
+	public void addIterationRecord(int i, LassieIterationRecorder iterationRecord) {
 		this.iterationsRecords.add(i, iterationRecord);
 	}
 
@@ -353,32 +417,43 @@ public class ResultRecord {
 	@Override
 	public String toString() {
 		String str = "********** Results **********\n" +
-				"# of classes:\t" + nrOfClasses + "\n" +
-				"# of instances per class:\t" + nrOfInstancesPerClass + "\n" +
-				"# of classModifiers:\t" + nrOfClassModifiers + "\n" +
-				"# of instance modifiers:\t" + nrOfInstanceModifiers + "\n" +
+				"Number of classes:             " + nrOfClasses + "\n" +
+				"Number of instances per class: " + nrOfInstancesPerClass + "\n" +
+				"Number of classModifiers:      " + nrOfClassModifiers + "\n" +
+				"Number of instance modifiers:  " + nrOfInstanceModifiers + "\n" +
 				"Class modifier:\n";
+		
 		int i=1;
 		for( Modifier m : classModefiersAndRates.keySet()){
-			str += "\t" + i + ". " + m.getSimpleName() + "\tRate: " + instanceModefiersAndRates.get(m)*100 + "%\n" ;
+			str += "\t" + i++ + ". " + m.getSimpleName() + "\tRate: " + classModefiersAndRates.get(m)*100 + "%\n" ;
 		}
 		
 		str += "Instance modifiers:\n";
 		
 		i=1;
 		for( Modifier m : instanceModefiersAndRates.keySet()){
-			str += "\t" + i + ". " + m.getSimpleName() + "\tRate: " + instanceModefiersAndRates.get(m)*100 + "%\n" ;
+			str += "\t" + i++ + ". " + m.getSimpleName() + "\tRate: " + instanceModefiersAndRates.get(m)*100 + "%\n" ;
 		}
 		
-		str += "# of iterations:\t" + NrOfIterations + "\n";
+		str += "Number of iterations:\t" + NrOfIterations + "\n";
+		str += "Average iteration execution time:  " + getAvgIterationExecutionTime() + "ms.\n" ;
+		str += "Total execution time:  " + getTotalExecutionTime() + "ms.\n" ;
 		
-		for(IterationRecord iR : iterationsRecords){
+		str += "\nitrNr\tavgCoverage\tavgF\tavgPF\tTime\n"; 
+		for(LassieIterationRecorder iR : iterationsRecords){
+			str += iR.getIterationNr() + "\t" + iR.getAvgCoverage()+ "\t" + iR.getAvgFMeasure()+ "\t" + iR.getAvgPFMeasure()+ "\t" + iR.getExecutionTime() + "\n\n";
+		}
+		
+		str += "ITERATIONS' RESULTS DETAILS:\n";
+
+		for(LassieIterationRecorder iR : iterationsRecords){
 			str += iR.toString() + "\n";
 		}
 		return str;
 	}
 	
 	public void saveToFile(String fileName) throws IOException{
+		logger.info("Saving results to file: " + fileName + " ...");
 		long startTime = System.currentTimeMillis();
 		String content = this.toString();
 		 
@@ -392,20 +467,21 @@ public class ResultRecord {
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file.getAbsoluteFile()));
 		bw.write(content);
 		bw.close();
-
+		
 		long totalTime = System.currentTimeMillis() - startTime;
-		logger.info("Results file writing done in " + totalTime + "ms.");
+		logger.info("Done in "+ totalTime + "ms.");
 	}
 
 
 
-	public static void main(String[] args){
+	public static void main(String[] args) throws IOException{
 		Set<NamedClass> inputClasses = new HashSet<NamedClass>();
 		inputClasses.add(new NamedClass("a"));
 		inputClasses.add(new NamedClass("b"));
 		inputClasses.add(new NamedClass("c"));
 		inputClasses.add(new NamedClass("d"));
-		ResultRecord rr = new ResultRecord(3, inputClasses);
+		LassieResultRecorder rr = new LassieResultRecorder(3, inputClasses);
+		rr.saveToFile("test.txt");
 
 	}
 
