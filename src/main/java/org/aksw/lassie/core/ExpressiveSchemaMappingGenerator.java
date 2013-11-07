@@ -286,10 +286,6 @@ public class ExpressiveSchemaMappingGenerator {
 			//a map from C_i to a set of instances in the target KB
 			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
 
-			//store posExamples
-			resultEntry.put("sourceClass2PosExamples", links);
-			evaluationResults.put(iterationNr, resultEntry);
-
 			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
 			for (NamedClass sourceClass : sourceClasses) {
 
