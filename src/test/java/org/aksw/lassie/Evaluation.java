@@ -239,17 +239,19 @@ public class Evaluation {
 		return resultModel;
 	}
 
-	public Multimap<Integer, Map<String, Object>> run(){
+
+	public LassieResultRecorder runNew(){
 		//create a sample of the knowledge base
-		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
+		//LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
 
 		//we assume that the target is the sample KB itself
-		KnowledgeBase target = sampleKB;
+		KnowledgeBase targetKB = sampleKB;
 
 
 		//we create the source KB by modifying the data of the sample KB  
 		Model sampleKBModel = sampleKB.getModel();
-		logger.info("sampleKBModel.size(): "+sampleKBModel.size());
+		logger.info("sampleKBModel.size(): " + sampleKBModel.size());
 
 		if(instanceModifiersAndRates.isEmpty() && classModifiersAndRates.isEmpty()){
 			logger.error("No modifiers specified, EXIT");
@@ -258,7 +260,7 @@ public class Evaluation {
 
 		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
 
-		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
+		KnowledgeBase sourceKB = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 		//		try {
 		//			// just 4 test
 		//			modifiedReferenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
@@ -266,15 +268,13 @@ public class Evaluation {
 		//			e.printStackTrace();
 		//		}
 
-		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
+		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		Multimap<Integer, Map<String, Object>> result = generator.run(modifiedDbpediaClasses);
-
-		return result;
+		return generator.runNew(modifiedDbpediaClasses);
 	}
 	
-	//TODO remove previous Method
-	public LassieResultRecorder runNew(){
+	
+	public LassieResultRecorder runTest(Set<NamedClass> testClasses){
 		//create a sample of the knowledge base
 //		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
 		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
@@ -304,8 +304,7 @@ public class Evaluation {
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		return generator.runNew(modifiedDbpediaClasses);
-
+		return generator.runNew(testClasses);
 	}
 
 	/** 
@@ -498,19 +497,7 @@ public class Evaluation {
 
 
 	public static void main(String[] args) throws Exception {
-		System.setOut(new PrintStream("/dev/null"));
-		Evaluation evaluator = new Evaluation();
-		long startTime = System.currentTimeMillis();
-		evaluator.setModefiersManually();
-		Multimap<Integer, Map<String, Object>> result = evaluator.run();
-		//		Map<String, Object> result = evaluator.runIntensionalEvaluation();
-		logger.info("FINAL RESULTS: " + result);
 
-		evaluator.printResults(result, "resultsOf");
-
-		long endTime   = System.currentTimeMillis();
-		long totalTime = endTime - startTime;
-		System.out.println("\nTotal Time: " + totalTime + " ms");
 	}
 
 }

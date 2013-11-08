@@ -441,8 +441,9 @@ public class LassieResultRecorder {
 		
 		str += "\nitrNr\tavgCoverage\tavgF\tavgPF\tTime\n"; 
 		for(LassieIterationRecorder iR : iterationsRecords){
-			str += iR.getIterationNr() + "\t" + iR.getAvgCoverage()+ "\t" + iR.getAvgFMeasure()+ "\t" + iR.getAvgPFMeasure()+ "\t" + iR.getExecutionTime() + "\n\n";
+			str += iR.getIterationNr() + "\t" + iR.getAvgCoverage()+ "\t" + iR.getAvgFMeasure()+ "\t" + iR.getAvgPFMeasure()+ "\t" + iR.getExecutionTime() + "\n";
 		}
+		str += "\n";
 		
 		str += "ITERATIONS' RESULTS DETAILS:\n";
 
