@@ -120,7 +120,7 @@ public class ExpressiveSchemaMappingGenerator {
 	protected int maxRecursionDepth = 2;
 
 	// LIMES Configurations
-	protected static final int numberOfDimensions = 3;
+	protected static final int numberOfDimensions = 7;
 	static double coverage_LIMES = 0.8;
 	static double beta_LIMES = 1d;
 	static String fmeasure_LIMES = "own";
@@ -294,10 +294,10 @@ public class ExpressiveSchemaMappingGenerator {
 				try {
 					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
 
-					resultRecorder.setPositiveExample(targetInstances, iterationNr, currentClass);
+					resultRecorder.setPositiveExample(targetInstances, iterationNr, sourceClass);
 
 					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
-					resultRecorder.setMapping(mappingList, iterationNr, currentClass);
+					resultRecorder.setMapping(mappingList, iterationNr, sourceClass);
 
 					iterationResultConceptDescription.put(sourceClass, mappingList.get(0).getDescription());
 				} catch (NonExistingLinksException e) {
@@ -374,7 +374,7 @@ public class ExpressiveSchemaMappingGenerator {
 				e.printStackTrace();
 			}
 		}
-		//			if(pos<0)
+		//			if(pos<0)result
 		//				break;
 		//		} while (i++ <= maxNrOfIterations);
 		result.put("Modifier2pos", modifier2pos);
@@ -538,16 +538,8 @@ public class ExpressiveSchemaMappingGenerator {
 				//compute the instance mapping real F-Measures for current class
 				double f = MappingMath.computeFMeasure(result, cache2.size());
 
-				logger.debug("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-//				logger.debug("cache1(" + cache.size() + "): " + cache.toString());
-//				logger.debug("cache2(" + cache2.size() + "): " + cache2.toString());
-				logger.debug("resultMapping(" + result.size() + "): " + result.toString());
-				logger.debug("fMeasure: " + f);
-				logger.debug("iterationNr: " + iterationNr);
-				logger.debug("currentClass: " + sourceClass);
 				resultRecorder.setFMeasure(f, iterationNr, sourceClass);
 				resultRecorder.setInstanceMapping(result, iterationNr, sourceClass);
-				logger.debug("resultRecorder:" + resultRecorder);
 
 				//store the real F-Measures
 				sourceClass2RealFMeasure.put(sourceClass, f);
@@ -723,12 +715,6 @@ public class ExpressiveSchemaMappingGenerator {
 		ComplexClassifier cc = bsc.getZoomedHillTop(5, numberOfLinkingIterations, cp);
 		Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
 		
-		logger.debug("PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
-		logger.debug("Mapping size is " + map.getNumberofMappings());
-		logger.debug("Pseudo F-measure is " + cc.fMeasure);
-		logger.debug("iterationNr " + iterationNr);
-		logger.debug("currentClass " + sourceClass);
-
 		resultRecorder.setPFMeasure(cc.fMeasure, iterationNr, sourceClass);
 
 		//store the pseudo F-Measures 

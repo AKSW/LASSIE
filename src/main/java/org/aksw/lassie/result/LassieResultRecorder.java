@@ -184,13 +184,7 @@ public class LassieResultRecorder {
 	 * @author sherif
 	 */
 	public void setFMeasure(double fMeasure, int iterationNr, NamedClass nc){
-//		logger.info("fMeasure: " + fMeasure);
-//		logger.info("iterationNr: " + iterationNr);
-//		logger.info("nc: " + nc);
-//		logger.info("getIterationRecord(iterationNr): " + getIterationRecord(iterationNr));
-//		logger.info("this: " + this.toString());
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
-//			logger.info("cr: " + cr);
 			if(cr.namedClass.equals(nc) ){
 				cr.setFMeasure(fMeasure);
 				return;
@@ -224,13 +218,7 @@ public class LassieResultRecorder {
 	 * @author sherif
 	 */
 	public void setPFMeasure(double pFMesure, int iterationNr, NamedClass nc){
-//		logger.info("fMeasure: " + pFMesure);
-//		logger.info("iterationNr: " + iterationNr);
-//		logger.info("nc: " + nc);
-//		logger.info("getIterationRecord(iterationNr): " + getIterationRecord(iterationNr));
-//		logger.info("this: " + this.toString());
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
-//			logger.info("cr: " + cr);
 			if(cr.namedClass.equals(nc) ){
 				cr.setPFMesure(pFMesure);
 				return;
@@ -246,13 +234,9 @@ public class LassieResultRecorder {
 	 * @author sherif
 	 */
 	public void setInstanceMapping(Mapping instanceMapping, int iterationNr, NamedClass nc){
-		logger.error("iterationNr: "+iterationNr);
-		logger.error("cc: "+nc);
-		logger.error("instanceMapping: "+instanceMapping);
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setInstanceMapping(instanceMapping);
-				logger.error("THIS: " + this.toString());
 				return;
 			}
 		}

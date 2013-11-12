@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 
-import com.jamonapi.utils.Logger;
 
 import de.uni_leipzig.simba.data.Mapping;
 
@@ -22,7 +22,7 @@ import de.uni_leipzig.simba.data.Mapping;
  *
  */
 public class LassieClassRecorder {
-
+	private static final Logger logger = Logger.getLogger(LassieClassRecorder.class.getName());
 	public NamedClass namedClass;
 	public double coverage;
 	public double FMeasure;
@@ -45,12 +45,14 @@ public class LassieClassRecorder {
 	 * @param instanceMapping the instanceMapping to set
 	 */
 	public void setInstanceMapping(Mapping instanceMapping) {
+		
 		if(this.instanceMapping.size == 0){
 			this.instanceMapping = instanceMapping;
 		}else{
-			for( String url1 : this.instanceMapping.map.keySet()){
-				for (String url2 : this.instanceMapping.map.get(url1).keySet())
-				this.instanceMapping.add(url1, url2, this.instanceMapping.getSimilarity(url1, url1));
+			for( String url1 : instanceMapping.map.keySet()){
+				for (String url2 : instanceMapping.map.get(url1).keySet()){
+					this.instanceMapping.add(url1, url2, instanceMapping.getSimilarity(url1, url1));
+				}
 			}
 		}
 	}

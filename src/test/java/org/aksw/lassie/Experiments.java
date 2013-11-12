@@ -106,11 +106,7 @@ public class Experiments {
 					+ ((nrOfClasses > 0) ? (nrOfClasses ) : "all") + "Classes_" + nrOfInstancesPerClass + "insPerCls.txt";
 			
 			LassieResultRecorder experimentResults;
-			if(testClasses.size() == 0){
-				experimentResults = evaluator.runNew();
-			}else{
-				experimentResults = evaluator.runTest(testClasses);
-			}
+			experimentResults = evaluator.runNew(testClasses);
 			
 			experimentResults.setNrOfInstancesPerClass(nrOfInstancesPerClass);
 			experimentResults.setNrOfClassModifiers(nrOfClassModifiers);
@@ -163,7 +159,8 @@ public class Experiments {
 		
 		Experiments experiment = new Experiments();
 		experiment.runExperiments(nrOfClasses, Integer.parseInt(args[1]), Integer.parseInt(args[2]), 
-				Integer.parseInt(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), Integer.parseInt(args[6]), Integer.parseInt(args[7]), args[8], testClasses);
+				Integer.parseInt(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), 
+				Integer.parseInt(args[6]), Integer.parseInt(args[7]), args[8], testClasses);
 	}
 
 }
