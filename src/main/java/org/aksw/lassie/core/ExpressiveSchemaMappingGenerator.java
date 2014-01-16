@@ -67,6 +67,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Query;
@@ -474,7 +475,7 @@ public class ExpressiveSchemaMappingGenerator {
 			//get the fragment describing the instances of C_i
 			logger.debug("Computing fragment...");
 			Model sourceFragment = getFragment(sourceInstances, sourceKB, linkingMaxRecursionDepth_LIMES);
-			removeNonLiteralStatements(sourceFragment);
+			removeNonStringLiteralStatements(sourceFragment);
 			logger.debug("...got " + sourceFragment.size() + " triples.");
 			sourceClassToModel.put(sourceClass, sourceFragment);
 		}
@@ -490,7 +491,7 @@ public class ExpressiveSchemaMappingGenerator {
 			// get the fragment describing the instances of D_i
 			logger.debug("Computing fragment...");
 			Model targetFragment = getFragment(targetInstances, targetKB, linkingMaxRecursionDepth_LIMES);
-			removeNonLiteralStatements(targetFragment);
+			removeNonStringLiteralStatements(targetFragment);
 			logger.debug("...got " + targetFragment.size() + " triples.");
 			targetClassExpressionToModel.put(targetClass, targetFragment);
 		}
@@ -583,7 +584,7 @@ public class ExpressiveSchemaMappingGenerator {
 			//get the fragment describing the instances of C_i
 			logger.debug("Computing fragment...");
 			Model sourceFragment = getFragment(sourceInstances, sourceKB, linkingMaxRecursionDepth_LIMES);
-			removeNonLiteralStatements(sourceFragment);
+			removeNonStringLiteralStatements(sourceFragment);
 			logger.debug("...got " + sourceFragment.size() + " triples.");
 			sourceClassToModel.put(sourceClass, sourceFragment);
 		}
@@ -602,7 +603,7 @@ public class ExpressiveSchemaMappingGenerator {
 			// get the fragment describing the instances of D_i
 			logger.debug("Computing fragment...");
 			Model targetFragment = getFragment(targetInstances, targetKB, linkingMaxRecursionDepth_LIMES);
-			removeNonLiteralStatements(targetFragment);
+			removeNonStringLiteralStatements(targetFragment);
 			logger.debug("...got " + targetFragment.size() + " triples.");
 			targetClassExpressionToModel.put(targetClass, targetFragment);
 		}
@@ -667,12 +668,14 @@ public class ExpressiveSchemaMappingGenerator {
 		return map;
 	}
 
-	private void removeNonLiteralStatements(Model m) {
+	private void removeNonStringLiteralStatements(Model m) {
 		StmtIterator iterator = m.listStatements();
 		List<Statement> statements2Remove = new ArrayList<Statement>();
 		while (iterator.hasNext()) {
 			Statement st = iterator.next();
-			if (!st.getObject().isLiteral()) {
+			if (!st.getObject().isLiteral()
+					|| !(st.getObject().asLiteral().getDatatype() == null || 
+							st.getObject().asLiteral().getDatatypeURI().equals(XSDDatatype.XSDstring.getURI()))){
 				statements2Remove.add(st);
 			}
 		}
