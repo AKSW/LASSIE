@@ -1331,7 +1331,7 @@ CLASSES' RESULTS DETAILS:
 		(34) http://dbpedia.org/resource/A._J._Quinnell
 		(35) http://dbpedia.org/resource/ACM_Transactions_on_Computer-Human_Interaction
 		(36) http://dbpedia.org/resource/AD_Arganda
-		(37) http://dbpedia.org/resource/AEGON_Classic
+		(37) http://dbpedia.org/resource/AEGON_ClHospitalassic
 		(38) http://dbpedia.org/resource/AIDA_Cruises
 		(39) http://dbpedia.org/resource/Abraham_Haskel_Taub
 		(40) http://dbpedia.org/resource/Acas%C4%83

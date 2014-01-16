@@ -240,41 +240,41 @@ public class Evaluation {
 	}
 
 
-	public LassieResultRecorder runNew(){
-		//create a sample of the knowledge base
-		//LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
-		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
-
-		//we assume that the target is the sample KB itself
-		KnowledgeBase targetKB = sampleKB;
-
-
-		//we create the source KB by modifying the data of the sample KB  
-		Model sampleKBModel = sampleKB.getModel();
-		logger.info("sampleKBModel.size(): " + sampleKBModel.size());
-
-		if(instanceModifiersAndRates.isEmpty() && classModifiersAndRates.isEmpty()){
-			logger.error("No modifiers specified, EXIT");
-			System.exit(1);
-		}
-
-		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
-
-		KnowledgeBase sourceKB = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
-		//		try {
-		//			// just 4 test
-		//			modifiedReferenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
-		//		} catch (FileNotFoundException e) {
-		//			e.printStackTrace();
-		//		}
-
-		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
-		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		return generator.runNew(modifiedDbpediaClasses);
-	}
+//	public LassieResultRecorder runNew(){
+//		//create a sample of the knowledge base
+//		//LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
+//		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
+//
+//		//we assume that the target is the sample KB itself
+//		KnowledgeBase targetKB = sampleKB;
+//
+//
+//		//we create the source KB by modifying the data of the sample KB  
+//		Model sampleKBModel = sampleKB.getModel();
+//		logger.info("sampleKBModel.size(): " + sampleKBModel.size());
+//
+//		if(instanceModifiersAndRates.isEmpty() && classModifiersAndRates.isEmpty()){
+//			logger.error("No modifiers specified, EXIT");
+//			System.exit(1);
+//		}
+//
+//		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
+//
+//		KnowledgeBase sourceKB = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
+//		//		try {
+//		//			// just 4 test
+//		//			modifiedReferenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
+//		//		} catch (FileNotFoundException e) {
+//		//			e.printStackTrace();
+//		//		}
+//
+//		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
+//		generator.setTargetDomainNameSpace(dbpediaNamespace);
+//		return generator.runNew(modifiedDbpediaClasses);
+//	}
 	
 	
-	public LassieResultRecorder runTest(Set<NamedClass> testClasses){
+	public LassieResultRecorder runNew(Set<NamedClass> testClasses){
 		//create a sample of the knowledge base
 //		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
 		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
@@ -304,7 +304,10 @@ public class Evaluation {
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
-		return generator.runNew(testClasses);
+		if(testClasses.size()>0){
+			return generator.runNew(testClasses);
+		}
+		return generator.runNew(modifiedDbpediaClasses);
 	}
 
 	/** 
