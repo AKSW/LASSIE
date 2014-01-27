@@ -40,8 +40,8 @@ public class LassieResultRecorder {
 	public List<LassieIterationRecorder> iterationsRecords = new ArrayList<LassieIterationRecorder>(); 
 	public long totalExecutionTime;
 	public double avgIterationExecutionTime;
-	
-	
+
+
 	/**
 	 * @return the totalExecutionTime
 	 */
@@ -64,7 +64,7 @@ public class LassieResultRecorder {
 	//Contractors
 	public LassieResultRecorder(){
 	}
-	
+
 	/**
 	 * Initialize all iterations and all classes 
 	 * @param iterationCount
@@ -82,7 +82,7 @@ public class LassieResultRecorder {
 			this.addIterationRecord(ir);
 		}
 	}
-	
+
 	/**
 	 * @return the avgIterationExecutionTime
 	 */
@@ -116,7 +116,7 @@ public class LassieResultRecorder {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Set positive examples for a given named class in a given iteration  
 	 * @param positiveExamples
@@ -136,8 +136,8 @@ public class LassieResultRecorder {
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Set negative examples for a given named class in a given iteration  
 	 * @param negativeExamples
@@ -157,8 +157,8 @@ public class LassieResultRecorder {
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Set coverage for a given named class in a given iteration 
 	 * @param coverage
@@ -174,8 +174,8 @@ public class LassieResultRecorder {
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Set F-Measure for a given named class in a given iteration 
 	 * @param fMeasure
@@ -191,8 +191,8 @@ public class LassieResultRecorder {
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Set pseudo mapping for a given named class in a given iteration 
 	 * @param mapping
@@ -201,7 +201,7 @@ public class LassieResultRecorder {
 	 * @author sherif
 	 */
 	public void setMapping(List<? extends EvaluatedDescription> mapping, int iterationNr, NamedClass nc){
-		
+
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setMapping(mapping);
@@ -209,7 +209,7 @@ public class LassieResultRecorder {
 			}
 		}
 	}
-	
+
 	/**
 	 * Set pseudo F-Measure for a given named class in a given iteration 
 	 * @param pFMesure
@@ -218,14 +218,15 @@ public class LassieResultRecorder {
 	 * @author sherif
 	 */
 	public void setPFMeasure(double pFMesure, int iterationNr, NamedClass nc){
-		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
-			if(cr.namedClass.equals(nc) ){
-				cr.setPFMesure(pFMesure);
-				return;
+		for(int itr = iterationNr ; itr <= NrOfIterations; itr++){
+			for(LassieClassRecorder cr : getIterationRecord(itr).classesRecords){
+				if(cr.namedClass.equals(nc) ){
+					cr.setPFMesure(pFMesure);
+				}
 			}
 		}
 	}
-	
+
 	/**
 	 * Set instance mapping for a given named class in a given iteration 
 	 * @param coverage
@@ -241,7 +242,7 @@ public class LassieResultRecorder {
 			}
 		}
 	}
-	
+
 
 	/**
 	 * @return the nrOfCLasses
@@ -390,7 +391,7 @@ public class LassieResultRecorder {
 	public void addIterationRecord(LassieIterationRecorder iterationRecord) {
 		this.iterationsRecords.add(iterationRecord);
 	}
-	
+
 	public void addIterationRecord(int i, LassieIterationRecorder iterationRecord) {
 		this.iterationsRecords.add(i, iterationRecord);
 	}
@@ -406,29 +407,29 @@ public class LassieResultRecorder {
 				"Number of classModifiers:      " + nrOfClassModifiers + "\n" +
 				"Number of instance modifiers:  " + nrOfInstanceModifiers + "\n" +
 				"Class modifier:\n";
-		
+
 		int i=1;
 		for( Modifier m : classModefiersAndRates.keySet()){
 			str += "\t" + i++ + ". " + m.getSimpleName() + "\tRate: " + classModefiersAndRates.get(m)*100 + "%\n" ;
 		}
-		
+
 		str += "Instance modifiers:\n";
-		
+
 		i=1;
 		for( Modifier m : instanceModefiersAndRates.keySet()){
 			str += "\t" + i++ + ". " + m.getSimpleName() + "\tRate: " + instanceModefiersAndRates.get(m)*100 + "%\n" ;
 		}
-		
+
 		str += "Number of iterations:\t" + NrOfIterations + "\n";
 		str += "Average iteration execution time:  " + getAvgIterationExecutionTime() + "ms.\n" ;
 		str += "Total execution time:  " + getTotalExecutionTime() + "ms.\n" ;
-		
+
 		str += "\nitrNr\tavgCoverage\tavgF\tavgPF\tTime\n"; 
 		for(LassieIterationRecorder iR : iterationsRecords){
 			str += iR.getIterationNr() + "\t" + iR.getAvgCoverage()+ "\t" + iR.getAvgFMeasure()+ "\t" + iR.getAvgPFMeasure()+ "\t" + iR.getExecutionTime() + "\n";
 		}
 		str += "\n";
-		
+
 		str += "ITERATIONS' RESULTS DETAILS:\n";
 
 		for(LassieIterationRecorder iR : iterationsRecords){
@@ -436,12 +437,12 @@ public class LassieResultRecorder {
 		}
 		return str;
 	}
-	
+
 	public void saveToFile(String fileName) throws IOException{
 		logger.info("Saving results to file: " + fileName + " ...");
 		long startTime = System.currentTimeMillis();
 		String content = this.toString();
-		 
+
 		File file = new File(fileName);
 
 		// if file does not exists, then create it
@@ -452,7 +453,7 @@ public class LassieResultRecorder {
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file.getAbsoluteFile()));
 		bw.write(content);
 		bw.close();
-		
+
 		long totalTime = System.currentTimeMillis() - startTime;
 		logger.info("Done in "+ totalTime + "ms.");
 	}

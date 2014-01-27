@@ -90,19 +90,19 @@ public class OntologyMatchingTest {
 	@Test
 	public void testDBpediaWorldFactbook() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, worldFactBook);
-		matcher.run();
+//		matcher.run();
 	}
 
 	@Test
 	public void testDBpediaOpenCyc() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, openCyc);
-		matcher.run();
+//		matcher.run();
 	}
 
 	@Test
 	public void testDBpediaLinkedGeoData() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
-		matcher.run();
+//		matcher.run();
 	}
 
 	@Test

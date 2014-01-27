@@ -193,7 +193,7 @@ public class LassieClassRecorder {
 			" Class name:  " + namedClass.getName() + "\n" +
 			"\tCoverage:    " + coverage + "\n" +
 			"\tF-Measure:   " + FMeasure + "\n" +
-			"\tP-F-FMesure: "	+ PFMesure + "\n" +
+			"\tP-F-Measure: "	+ PFMesure + "\n" +
 			"\tMapping:\n";
 		int i =1;
 		for(EvaluatedDescription eD: mapping){

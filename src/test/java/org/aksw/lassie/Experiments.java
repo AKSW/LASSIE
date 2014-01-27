@@ -71,7 +71,7 @@ public class Experiments {
 			folder.mkdirs();
 		}
 
-		//do the experiment noOfExperimentRepeats times for each modifier 
+		//do the experiment nrOfExperimentRepeats times for each modifier 
 		for(int expNr = 0 ; expNr < nrOfExperimentRepeats ; expNr++){
 			System.setOut(new PrintStream("/dev/null"));
 			long startTime = System.currentTimeMillis();

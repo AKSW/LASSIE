@@ -170,7 +170,7 @@ public class Evaluation {
 		return null;
 	}
 
-	private Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModifiersAndRates, Map<Modifier, Double> classModifiersAndRates,
+	public Model createTestDataset(Model referenceDataset, Map<Modifier, Double> instanceModifiersAndRates, Map<Modifier, Double> classModifiersAndRates,
 			int noOfclasses, int noOfInstancePerClass){
 		
 		Model classesWithAtLeastNInstancesModel = getModelOfClassesWithAtLeastNInstances(referenceDataset, noOfclasses, noOfInstancePerClass);
@@ -305,9 +305,9 @@ public class Evaluation {
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 		if(testClasses.size()>0){
-			return generator.runNew(testClasses);
+			return generator.run(testClasses);
 		}
-		return generator.runNew(modifiedDbpediaClasses);
+		return generator.run(modifiedDbpediaClasses);
 	}
 
 	/** 
@@ -336,7 +336,7 @@ public class Evaluation {
 
 
 
-	public Multimap<Integer, Map<String, Object>> runIntensionalEvaluation(){
+	public LassieResultRecorder runIntensionalEvaluation(){
 		//create a sample of the knowledge base
 		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass);
 

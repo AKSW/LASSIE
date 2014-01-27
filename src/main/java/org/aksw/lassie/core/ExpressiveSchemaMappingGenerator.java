@@ -94,6 +94,7 @@ import de.uni_leipzig.simba.data.Mapping;
 import de.uni_leipzig.simba.multilinker.MappingMath;
 import de.uni_leipzig.simba.selfconfig.ComplexClassifier;
 import de.uni_leipzig.simba.selfconfig.MeshBasedSelfConfigurator;
+import de.uni_leipzig.simba.selfconfig.ReferencePseudoMeasures;
 import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 
 public class ExpressiveSchemaMappingGenerator {
@@ -133,8 +134,8 @@ public class ExpressiveSchemaMappingGenerator {
 	protected Map<NamedClass, Map<Description, Mapping>> mappingResults = new HashMap<NamedClass, Map<Description, Mapping>>();
 
 	//result recording
-	public Multimap<Integer, Map<String, Object>> evaluationResults = HashMultimap.create();
-	Map<String, Object> resultEntry = new HashMap<String, Object>();
+	//	public Multimap<Integer, Map<String, Object>> evaluationResults = HashMultimap.create();
+	//	Map<String, Object> resultEntry = new HashMap<String, Object>();
 	LassieResultRecorder resultRecorder;
 
 
@@ -159,7 +160,7 @@ public class ExpressiveSchemaMappingGenerator {
 		this(source, target, OWL.sameAs.getURI());
 		maxNrOfIterations = nrOfIterations;
 	}
-	
+
 	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target) {
 		this(source, target, OWL.sameAs.getURI());
 	}
@@ -175,100 +176,100 @@ public class ExpressiveSchemaMappingGenerator {
 		target.getReasoner().prepareSubsumptionHierarchy();
 	}
 
-	public void run() {
-		// get all classes C_i in source KB
-		Set<NamedClass> sourceClasses = getClasses(sourceKB);
+	//	public void run() {
+	//		// get all classes C_i in source KB
+	//		Set<NamedClass> sourceClasses = getClasses(sourceKB);
+	//
+	//		// get all classes D_i in target KB
+	//		Set<NamedClass> targetClasses = getClasses(targetKB);
+	//
+	//		run(sourceClasses, targetClasses);
+	//	}
 
-		// get all classes D_i in target KB
-		Set<NamedClass> targetClasses = getClasses(targetKB);
+	//	public Multimap<Integer, Map<String, Object>> run(Set<NamedClass> sourceClasses) {
+	//		// get all classes D_i in target KB
+	//		Set<NamedClass> targetClasses = getClasses(targetKB);
+	//
+	//		return run(sourceClasses, targetClasses);
+	//	}
 
-		run(sourceClasses, targetClasses);
-	}
-
-	public Multimap<Integer, Map<String, Object>> run(Set<NamedClass> sourceClasses) {
+	public LassieResultRecorder run(Set<NamedClass> sourceClasses) {
 		// get all classes D_i in target KB
 		Set<NamedClass> targetClasses = getClasses(targetKB);
 
 		return run(sourceClasses, targetClasses);
 	}
 
-	public LassieResultRecorder runNew(Set<NamedClass> sourceClasses) {
-		// get all classes D_i in target KB
-		Set<NamedClass> targetClasses = getClasses(targetKB);
+	//	public Multimap<Integer, Map<String, Object>> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+	//
+	//		//initially, the class expressions E_i in the target KB are the named classes D_i
+	//		Collection<Description> targetClassExpressions = new TreeSet<Description>();
+	//		targetClassExpressions.addAll(targetClasses);
+	//
+	//		//perform the iterative schema matching
+	//		Map<NamedClass, Description> iterationResultConceptDescription = new HashMap<NamedClass, Description>();
+	//		Map<NamedClass, List<? extends EvaluatedDescription>> top10Mapping = new HashMap<NamedClass, List<? extends EvaluatedDescription>>();
+	//
+	//		double totalCoverage = 0;
+	//		do {
+	//			logger.info(iterationNr + ". ITERATION:");
+	//			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
+	//			//a map from C_i to a set of instances in the target KB
+	//			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
+	//
+	//			//store posExamples
+	//			resultEntry.put("sourceClass2PosExamples", links);
+	//			evaluationResults.put(iterationNr, resultEntry);
+	//
+	//			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
+	//			for (NamedClass sourceClass : sourceClasses) {
+	//
+	//				logger.info("sourceClass: " + sourceClass );
+	//				currentClass = sourceClass;
+	//				try {
+	//					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
+	//					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
+	//
+	//					//store top10Mmapping 
+	//					top10Mapping.put(sourceClass, mappingList);
+	//					resultEntry.clear();
+	//					resultEntry.put("Top10Mapping", top10Mapping);
+	//					evaluationResults.put(iterationNr, resultEntry);
+	//
+	//					iterationResultConceptDescription.put(sourceClass, mappingList.get(0).getDescription());
+	//				} catch (NonExistingLinksException e) {
+	//					logger.warn(e.getMessage() + " Skipped learning.");
+	//				} catch (Exception e) {
+	//					e.printStackTrace();
+	//				}
+	//			}
+	//
+	//			//set the target class expressions
+	//			targetClassExpressions = iterationResultConceptDescription.values();
+	//			double newTotalCoverage = computeCoverage(iterationResultConceptDescription);
+	//
+	//			//store coverage 
+	//			resultEntry.clear();
+	//			resultEntry.put("coverage", newTotalCoverage);
+	//			evaluationResults.put(iterationNr, resultEntry);
+	//
+	//			//if no better coverage then break
+	//			//            if ((newTotalCoverage - totalCoverage) <= coverageThreshold) {
+	//			//                break;
+	//			//            }
+	//
+	//			totalCoverage = newTotalCoverage;
+	//
+	//
+	//		} while (iterationNr++ <= maxNrOfIterations);
+	//
+	//
+	//
+	//		return evaluationResults;
+	//	}
+	//
 
-		return runNew(sourceClasses, targetClasses);
-	}
-
-	public Multimap<Integer, Map<String, Object>> run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
-
-		//initially, the class expressions E_i in the target KB are the named classes D_i
-		Collection<Description> targetClassExpressions = new TreeSet<Description>();
-		targetClassExpressions.addAll(targetClasses);
-
-		//perform the iterative schema matching
-		Map<NamedClass, Description> iterationResultConceptDescription = new HashMap<NamedClass, Description>();
-		Map<NamedClass, List<? extends EvaluatedDescription>> top10Mapping = new HashMap<NamedClass, List<? extends EvaluatedDescription>>();
-
-		double totalCoverage = 0;
-		do {
-			logger.info(iterationNr + ". ITERATION:");
-			//compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
-			//a map from C_i to a set of instances in the target KB
-			Multimap<NamedClass, String> links = performUnsupervisedLinking(sourceClasses, targetClassExpressions);
-
-			//store posExamples
-			resultEntry.put("sourceClass2PosExamples", links);
-			evaluationResults.put(iterationNr, resultEntry);
-
-			//for each source class C_i, compute a mapping to a class expression in the target KB based on the links
-			for (NamedClass sourceClass : sourceClasses) {
-
-				logger.info("sourceClass: " + sourceClass );
-				currentClass = sourceClass;
-				try {
-					SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
-					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
-
-					//store top10Mmapping 
-					top10Mapping.put(sourceClass, mappingList);
-					resultEntry.clear();
-					resultEntry.put("Top10Mapping", top10Mapping);
-					evaluationResults.put(iterationNr, resultEntry);
-
-					iterationResultConceptDescription.put(sourceClass, mappingList.get(0).getDescription());
-				} catch (NonExistingLinksException e) {
-					logger.warn(e.getMessage() + " Skipped learning.");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-
-			//set the target class expressions
-			targetClassExpressions = iterationResultConceptDescription.values();
-			double newTotalCoverage = computeCoverage(iterationResultConceptDescription);
-
-			//store coverage 
-			resultEntry.clear();
-			resultEntry.put("coverage", newTotalCoverage);
-			evaluationResults.put(iterationNr, resultEntry);
-
-			//if no better coverage then break
-			//            if ((newTotalCoverage - totalCoverage) <= coverageThreshold) {
-			//                break;
-			//            }
-
-			totalCoverage = newTotalCoverage;
-
-
-		} while (iterationNr++ <= maxNrOfIterations);
-
-
-
-		return evaluationResults;
-	}
-
-
-	public LassieResultRecorder runNew(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+	public LassieResultRecorder run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
 
 		resultRecorder = new LassieResultRecorder(maxNrOfIterations, sourceClasses);
 
@@ -423,7 +424,7 @@ public class ExpressiveSchemaMappingGenerator {
 			SortedSet<Individual> targetInstances = getInstances(targetDescription, targetKB);
 			double coverage = computeJaccardSimilarity(sourceInstances, targetInstances);
 
-			resultRecorder.setCoverage(coverage, iterationNr, currentClass);
+			resultRecorder.setCoverage(coverage, iterationNr, sourceClass);
 
 			totalCoverage += coverage;
 		}
@@ -439,16 +440,11 @@ public class ExpressiveSchemaMappingGenerator {
 		double dice = 2 * ((double) intersection.size()) / (double)(sourceInstances.size() + targetInstances.size());
 		double jaccard = (double) intersection.size() / (double) targetInstances.size();
 		double overlap = (double) intersection.size() / (double) Math.min(sourceInstances.size(), targetInstances.size());
-		
+
 		double alpha = 1, beta = 0.2;
 		SetView<Individual> sourceDifTarget = Sets.difference(sourceInstances, targetInstances);
 		SetView<Individual> targetDifsource = Sets.difference(targetInstances, sourceInstances);
 		double tversky = intersection.size() / (intersection.size() + alpha * sourceDifTarget.size() + beta * targetDifsource.size());
-		
-		logger.debug("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ");
-		logger.debug("sourceInstances.size(): " + sourceInstances.size());
-		logger.debug("targetInstances.size(): " + targetInstances.size());
-		logger.debug("intersection.size(): " + intersection.size());
 		return dice;
 	}
 
@@ -459,7 +455,6 @@ public class ExpressiveSchemaMappingGenerator {
 	 * @param targetClasses
 	 */
 	public Multimap<NamedClass, String> performUnsupervisedLinking(Set<NamedClass> sourceClasses, Collection<Description> targetClasses) {
-		Map<NamedClass, Double> sourceClass2RealFMeasure = new HashMap<NamedClass, Double>();
 
 		logger.info("Computing links...");
 		logger.info("Source classes: " + sourceClasses);
@@ -502,7 +497,7 @@ public class ExpressiveSchemaMappingGenerator {
 		for (Entry<NamedClass, Model> entry : sourceClassToModel.entrySet()) {
 			NamedClass sourceClass = entry.getKey();
 			Model sourceClassModel = entry.getValue();
-//			currentClass = sourceClass; 
+			//			currentClass = sourceClass; 
 
 			Cache cache = getCache(sourceClassModel);
 
@@ -530,6 +525,13 @@ public class ExpressiveSchemaMappingGenerator {
 					}
 					mappingResults.get(sourceClass).put(targetClassExpression, result);
 				}
+				
+				//Keep record of the real F-Measures
+				if(result.size > 0){
+					double f = MappingMath.computeFMeasure(result, cache2.size());
+					resultRecorder.setFMeasure(f, iterationNr, sourceClass);
+					resultRecorder.setInstanceMapping(result, iterationNr, sourceClass);
+				}
 
 				for (Entry<String, HashMap<String, Double>> mappingEntry : result.map.entrySet()) {
 					String key = mappingEntry.getKey();
@@ -537,20 +539,9 @@ public class ExpressiveSchemaMappingGenerator {
 					map.put(sourceClass, value.keySet().iterator().next());
 				}
 
-				//compute the instance mapping real F-Measures for current class
-				double f = MappingMath.computeFMeasure(result, cache2.size());
 
-				resultRecorder.setFMeasure(f, iterationNr, sourceClass);
-				resultRecorder.setInstanceMapping(result, iterationNr, sourceClass);
-
-				//store the real F-Measures
-				sourceClass2RealFMeasure.put(sourceClass, f);
-				resultEntry.clear();
-				resultEntry.put("sourceClass2RealFMeasure", sourceClass2RealFMeasure);
-				evaluationResults.put(iterationNr, resultEntry);
 			}
 		}
-
 		return map;
 	}
 
@@ -667,7 +658,7 @@ public class ExpressiveSchemaMappingGenerator {
 			Statement st = iterator.next();
 			if (!st.getObject().isLiteral()
 					|| !(st.getObject().asLiteral().getDatatype() == null || 
-							st.getObject().asLiteral().getDatatypeURI().equals(XSDDatatype.XSDstring.getURI()))){
+					st.getObject().asLiteral().getDatatypeURI().equals(XSDDatatype.XSDstring.getURI()))){
 				statements2Remove.add(st);
 			}
 		}
@@ -718,15 +709,16 @@ public class ExpressiveSchemaMappingGenerator {
 
 		ComplexClassifier cc = bsc.getZoomedHillTop(5, numberOfLinkingIterations, cp);
 		Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
-		
-		resultRecorder.setPFMeasure(cc.fMeasure, iterationNr, sourceClass);
+		//		cc.toString()
+		resultRecorder.setPFMeasure(new ReferencePseudoMeasures().getPseudoFMeasure(source.getAllUris(), target.getAllUris(), map, 1.0),
+				iterationNr, sourceClass);
 
 		//store the pseudo F-Measures 
-		Map<NamedClass, Double> sourceClass2PFMeasure = new HashMap<NamedClass, Double>();
-		sourceClass2PFMeasure.put(sourceClass, cc.fMeasure);
-		resultEntry.clear();
-		resultEntry.put("sourceClass2PseudoFMeasure", sourceClass2PFMeasure);
-		evaluationResults.put(iterationNr, resultEntry);
+		//		Map<NamedClass, Double> sourceClass2PFMeasure = new HashMap<NamedClass, Double>();
+		//		sourceClass2PFMeasure.put(sourceClass, cc.fMeasure);
+		//		resultEntry.clear();
+		//		resultEntry.put("sourceClass2PseudoFMeasure", sourceClass2PFMeasure);
+		//		evaluationResults.put(iterationNr, resultEntry);
 
 		return map;
 	}
@@ -838,9 +830,9 @@ public class ExpressiveSchemaMappingGenerator {
 			//store negativeExamples 
 			Map<NamedClass, SortedSet<Individual>> sourceClass2NegativeExample = new HashMap<NamedClass, SortedSet<Individual>>();
 			sourceClass2NegativeExample.put(currentClass, negativeExamplesSample);
-			resultEntry.clear();
-			resultEntry.put("sourceClass2NegativeExample", sourceClass2NegativeExample);
-			evaluationResults.put(iterationNr, resultEntry);
+			//			resultEntry.clear();
+			//			resultEntry.put("sourceClass2NegativeExample", sourceClass2NegativeExample);
+			//			evaluationResults.put(iterationNr, resultEntry);
 
 			//create fragment for negative examples
 			logger.info("Extracting fragment for negative examples...");
@@ -1105,7 +1097,7 @@ public class ExpressiveSchemaMappingGenerator {
 					//                    System.err.println("REMOVE " + st);
 				} else if (lit.getDatatype().getURI().equals(XSD.gYearMonth.getURI())) {
 					statementsToRemove.add(st);
-//					                    System.err.println("REMOVE " + st);
+					//					                    System.err.println("REMOVE " + st);
 				}
 			}
 			//remove statements like <x a owl:Class>
@@ -1246,7 +1238,7 @@ public class ExpressiveSchemaMappingGenerator {
 			this.mapping = mapping;
 		}
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		Model m = ModelFactory.createDefaultModel();
 		m.read(new FileInputStream(new File("/tmp/inc.owl")), null);

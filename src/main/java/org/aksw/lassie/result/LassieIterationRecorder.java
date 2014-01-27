@@ -177,9 +177,9 @@ public class LassieIterationRecorder {
 	@Override
 	public String toString() {
 		String str = "---------- " + IterationNr + ". Iteration ----------\n" +
+				"Average coverage:         " + getAvgCoverage()   + "\n" +
 				"Average real F-Measure:   " + getAvgFMeasure()   + "\n" +
 				"Average pseudo F-Measure: " + getAvgPFMeasure()  + "\n" +
-				"Average coverage:         " + getAvgCoverage()   + "\n" +
 				"Execution time:           " + getExecutionTime() + "ms.\n" +
 				"CLASSES' RESULTS DETAILS:\n";
 		int i = 1;
