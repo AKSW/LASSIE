@@ -4064,3 +4064,158 @@
 <http://dbpedia.org/resource/Apple>	<http://dbpedia.org/property/unrankedClassis>	<http://dbpedia.org/resource/Eudicots> .
 <http://dbpedia.org/resource/Apple>	<http://www.w3.org/2002/07/owl#sameAs>	<http://qu.dbpedia.org/resource/Mansana> .
 <http://dbpedia.org/resource/Apple>	<http://www.w3.org/2002/07/owl#sameAs>	<http://uk.dbpedia.org/resource/\u042F\u0431\u043B\u0443\u043A\u043E> .
+
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/statusSystem>	"IUCN3.1"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/LivingThing100004258> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://xmlns.com/foaf/0.1/depiction>	<http://upload.wikimedia.org/wikipedia/commons/1/1f/Coracias_abyssinica.jpg> .
+<http://wikidata.dbpedia.org/resource/Q961342>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://hu.dbpedia.org/resource/Fecskefark\u00FA_szalak\u00F3ta> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/binomialAuthority>	"Hermann, 1783"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://eo.dbpedia.org/resource/Abisena_koracio> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/wikiPageRevisionID>	"545791193"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://purl.org/dc/terms/subject>	<http://dbpedia.org/resource/Category:Birds_of_Cameroon> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://rdf.freebase.com/ns/m.02qpdq> .
+<http://hu.dbpedia.org/resource/Fecskefark\u00FA_szalak\u00F3ta>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://war.dbpedia.org/resource/Coracias_abyssinicus> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/Chordate101466257> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://fi.dbpedia.org/resource/Abessiniansinin\u00E4rhi> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/conservationStatusSystem>	"IUCN3.1"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://sl.dbpedia.org/resource/Abesinska_zlatovranka> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Thing> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/phylum>	<http://dbpedia.org/resource/Chordate> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/synonym>	"Coracias abyssinica"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/wikiPageID>	"566205"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://br.dbpedia.org/resource/Korag_Abisinia> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/BirdsOfKenya> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://vi.dbpedia.org/resource/S\u1EA3_r\u1EEBng_Abyssinia> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/ordo>	<http://dbpedia.org/resource/Coraciiformes> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/Bird101503061> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/Whole100003553> .
+<http://dbpedia.org/resource/Coracias_abyssinica>	<http://dbpedia.org/ontology/wikiPageRedirects>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2000/01/rdf-schema#comment>	"Le Rollier d'Abyssinie (Coracias abyssinicus) est une esp\u00E8ce d'oiseaux appartenant \u00E0 la famille des Coraciidae."@fr .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://eu.dbpedia.org/resource/Coracias_abyssinicus> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://sv.dbpedia.org/resource/Savannbl\u00E5kr\u00E5ka> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/PhysicalEntity100001930> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/Object100002684> .
+<http://dbpedia.org/resource/Coracias_abyssinicus>	<http://dbpedia.org/ontology/wikiPageRedirects>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/ontology/Species> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://umbel.org/umbel/rc/Bird> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/conservationStatus>	"LC"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/genus>	<http://dbpedia.org/resource/Coracias> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/class>	<http://dbpedia.org/resource/Bird> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/regnum>	"Animalia"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/Organism100004475> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/status>	"LC"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://ceb.dbpedia.org/resource/Coracias_abyssinicus> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://xmlns.com/foaf/0.1/name>	"Abyssinian Roller"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://xmlns.com/foaf/0.1/isPrimaryTopicOf>	<http://en.wikipedia.org/wiki/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/Animal100015388> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://fr.dbpedia.org/resource/Rollier_d\u0027Abyssinie> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2000/01/rdf-schema#comment>	"The Abyssinian Roller (Coracias abyssinicus) is a member of the roller family of birds which breeds across tropical Africa in a belt south of the Sahara, known as the Sahel. It is resident in the southern part of its range, but northern breeding populations are short-distance migrants, moving further south after the wet season. The Abyssinian Roller is a large bird, nearly the size of a Jackdaw at 28\u201330\u00A0cm. It has a warm brown back, with the rest of the plumage mainly blue."@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/familia>	<http://dbpedia.org/resource/Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://umbel.org/umbel/rc/Animal> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/thumbnail>	<http://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Coracias_abyssinica.jpg/200px-Coracias_abyssinica.jpg> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://purl.org/dc/terms/subject>	<http://dbpedia.org/resource/Category:Birds_of_Kenya> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/BirdsOfAfrica> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2000/01/rdf-schema#label>	"Abyssinian Roller"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://ar.dbpedia.org/resource/\u0634\u0642\u0631\u0627\u0642_\u062D\u0628\u0634\u064A> .
+<http://br.dbpedia.org/resource/Korag_Abisinia>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian>	<http://dbpedia.org/ontology/wikiPageDisambiguates>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2000/01/rdf-schema#label>	"Rollier d'Abyssinie"@fr .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2000/01/rdf-schema#comment>	"Savannbl\u00E5kr\u00E5ka (Coracias abyssinicus) \u00E4r en f\u00E5gel i familjen bl\u00E5kr\u00E5kor inom ordningen praktf\u00E5glar. F\u00E5geln f\u00F6rekommer fr\u00E5n Senegal och Gambia till Etiopien, Somalia och Kenya och p\u00E5 Arabiska halv\u00F6n i Yemen och Saudiarabien. Den \u00E4r delvis en flyttf\u00E5gel men dess flyttningsr\u00F6relser \u00E4r d\u00E5ligt k\u00E4nda. IUCN kategoriserar arten som livskraftig. \t\t \t\t\tFlickr - Rainbirder - Abyssinian Roller (Coracias abyssinica). jpg"@sv .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/phylum>	<http://dbpedia.org/resource/Chordate> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/genus>	"Coracias"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/abstract>	"The Abyssinian Roller (Coracias abyssinicus) is a member of the roller family of birds which breeds across tropical Africa in a belt south of the Sahara, known as the Sahel. It is resident in the southern part of its range, but northern breeding populations are short-distance migrants, moving further south after the wet season. The Abyssinian Roller is a large bird, nearly the size of a Jackdaw at 28\u201330\u00A0cm. It has a warm brown back, with the rest of the plumage mainly blue. Adults have long (12\u00A0cm) tail streamers. Sexes are similar, but the juvenile is a drabber version of the adult. Abyssinian Roller is striking in its strong direct flight, with the brilliant blues of the wings contrasting with the brown back and the long tail streamers trailing behind. This is a common bird of warm open country with some trees, and has adapted to farmland and human habitation. These rollers often perch prominently on trees, posts or overhead wires, like giant shrikes, whilst watching for the large insects and rodents on which they feed. They will dash into the smoke of a forest fire for disturbed invertebrates. They are fearless, and will dive and roll at humans and other intruders. The display of this bird is a lapwing-like display, with the twists and turns that give this group its English name. It nests in a scantily lined hole in a tree or building, and lays 3-6 eggs. The call of Abyssinian Roller is a harsh crow-like gak sound, or a screeched aaaargh."@en .
+<http://eo.dbpedia.org/resource/Abisena_koracio>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://ha.dbpedia.org/resource/Tsanwaka> .
+<http://ceb.dbpedia.org/resource/Coracias_abyssinicus>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/ontology/Bird> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/abstract>	"Savannbl\u00E5kr\u00E5ka (Coracias abyssinicus) \u00E4r en f\u00E5gel i familjen bl\u00E5kr\u00E5kor inom ordningen praktf\u00E5glar. F\u00E5geln f\u00F6rekommer fr\u00E5n Senegal och Gambia till Etiopien, Somalia och Kenya och p\u00E5 Arabiska halv\u00F6n i Yemen och Saudiarabien. Den \u00E4r delvis en flyttf\u00E5gel men dess flyttningsr\u00F6relser \u00E4r d\u00E5ligt k\u00E4nda. IUCN kategoriserar arten som livskraftig. \t\t \t\t\tFlickr - Rainbirder - Abyssinian Roller (Coracias abyssinica). jpg"@sv .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/binomial>	"Coracias abyssinicus"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/classis>	<http://dbpedia.org/resource/Bird> .
+<http://fi.dbpedia.org/resource/Abessiniansinin\u00E4rhi>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/binomialAuthority>	<http://dbpedia.org/resource/Johann_Hermann> .
+<http://sl.dbpedia.org/resource/Abesinska_zlatovranka>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://es.dbpedia.org/resource/Coracias_abyssinicus>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://umbel.org/umbel/rc/EukaryoticCell> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/order>	<http://dbpedia.org/resource/Coraciiformes> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://purl.org/dc/terms/subject>	<http://dbpedia.org/resource/Category:Birds_of_Africa> .
+<http://ar.dbpedia.org/resource/\u0634\u0642\u0631\u0627\u0642_\u062D\u0628\u0634\u064A>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/family>	<http://dbpedia.org/resource/Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://umbel.org/umbel/rc/BiologicalLivingObject> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/ns/prov#wasDerivedFrom>	<http://en.wikipedia.org/wiki/Abyssinian_Roller?oldid=545791193> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/abstract>	"Le Rollier d'Abyssinie (Coracias abyssinicus) est une esp\u00E8ce d'oiseaux appartenant \u00E0 la famille des Coraciidae."@fr .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/ontology/Animal> .
+<http://ca.dbpedia.org/resource/Gaig_blau_abissini>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://eu.dbpedia.org/resource/Coracias_abyssinicus>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://yago-knowledge.org/resource/Abyssinian_Roller> .
+<http://fr.dbpedia.org/resource/Rollier_d\u0027Abyssinie>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/hasPhotoCollection>	<http://wifo5-03.informatik.uni-mannheim.de/flickrwrappr/photos/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/class/yago/Vertebrate101471682> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://purl.org/dc/terms/subject>	<http://dbpedia.org/resource/Category:Coracias> .
+<http://dbpedia.org/resource/Abyssinian_roller>	<http://dbpedia.org/ontology/wikiPageRedirects>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/name>	"Abyssinian Roller"@en .
+<http://ha.dbpedia.org/resource/Tsanwaka>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://www.wikidata.org/entity/Q961342> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2000/01/rdf-schema#label>	"Savannbl\u00E5kr\u00E5ka"@sv .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/synonyms>	"Coracias abyssinica"@en .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://es.dbpedia.org/resource/Coracias_abyssinicus> .
+<http://en.wikipedia.org/wiki/Abyssinian_Roller>	<http://xmlns.com/foaf/0.1/primaryTopic>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://dbpedia.org/ontology/Eukaryote> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://www.w3.org/2002/07/owl#sameAs>	<http://ca.dbpedia.org/resource/Gaig_blau_abissini> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/ontology/kingdom>	<http://dbpedia.org/resource/Animal> .
+<http://dbpedia.org/resource/Abyssinian_Roller>	<http://dbpedia.org/property/species>	"C. abyssinicus"@en .
+<http://vi.dbpedia.org/resource/S\u1EA3_r\u1EEBng_Abyssinia>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://war.dbpedia.org/resource/Coracias_abyssinicus>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://sv.dbpedia.org/resource/Savannbl\u00E5kr\u00E5ka>	<http://www.w3.org/2002/07/owl#sameAs>	<http://dbpedia.org/resource/Abyssinian_Roller> .
+<http://dbpedia.org/ontology/Species>	<http://www.w3.org/2000/01/rdf-schema#label>	"especies"@es .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class> .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#label>	"agent"@fr .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/2000/01/rdf-schema#subClassOf>	<http://dbpedia.org/ontology/Eukaryote> .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u03C0\u03C1\u03AC\u03BA\u03C4\u03BF\u03C1\u03B1\u03C2"@el .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"person"@en .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"personne"@fr .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#label>	"agent"@nl .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"Person"@de .
+<http://dbpedia.org/ontology/Eukaryote>	<http://www.w3.org/2000/01/rdf-schema#label>	"eucaryote"@fr .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/2000/01/rdf-schema#label>	"pianta"@it .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u03C6\u03C5\u03C4\u03CC"@el .
+<http://dbpedia.org/ontology/Species>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class> .
+<http://dbpedia.org/ontology/Species>	<http://www.w3.org/2000/01/rdf-schema#label>	"esp\u00E8ce"@fr .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class> .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#label>	"agente"@it .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u03A0\u03BB\u03B7\u03C1\u03BF\u03C6\u03BF\u03C1\u03AF\u03B5\u03C2 \u03C0\u03C1\u03BF\u03C3\u03CE\u03C0\u03BF\u03C5"@el .
+<http://dbpedia.org/ontology/Species>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u03B5\u03AF\u03B4\u03BF\u03C2"@el .
+<http://dbpedia.org/ontology/Species>	<http://www.w3.org/2000/01/rdf-schema#subClassOf>	<http://www.w3.org/2002/07/owl#Thing> .
+<http://dbpedia.org/ontology/Eukaryote>	<http://www.w3.org/2000/01/rdf-schema#subClassOf>	<http://dbpedia.org/ontology/Species> .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#comment>	"\u0391\u03BD\u03AC\u03BB\u03BF\u03B3\u03B1 \u03BC\u03B5 \u03C4\u03B7\u03BD \u03BA\u03BB\u03AC\u03C3\u03B7 foaf:Agent, \u03AD\u03BD\u03B1\u03C2 \u03C0\u03C1\u03AC\u03BA\u03C4\u03BF\u03C1\u03B1\u03C2 \u03B5\u03AF\u03BD\u03B1\u03B9 \u03BC\u03B9\u03B1 \u03BF\u03BD\u03C4\u03CC\u03C4\u03B7\u03C4\u03B1 \u03C0\u03BF\u03C5 \u03B5\u03BD\u03B5\u03C1\u03B3\u03B5\u03AF. \u0391\u03C5\u03C4\u03CC \u03C0\u03C1\u03BF\u03BF\u03C1\u03AF\u03B6\u03B5\u03C4\u03B1\u03B9 \u03BD\u03B1 \u03B5\u03AF\u03BD\u03B1\u03B9 \u03BC\u03B9\u03B1 \u03C5\u03C0\u03B5\u03C1\u03BA\u03BB\u03AC\u03C3\u03B7 \u03C4\u03B7\u03C2 \u03BA\u03BB\u03AC\u03C3\u03B7\u03C2 \u0386\u03C4\u03CC\u03BC\u03BF \u03BA\u03B1\u03B9 \u039F\u03C1\u03B3\u03B1\u03BD\u03B9\u03C3\u03BC\u03CC\u03C2."@el .
+<http://dbpedia.org/ontology/Eukaryote>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u03B5\u03C5\u03BA\u03B1\u03C1\u03C5\u03C9\u03C4\u03B9\u03BA\u03CC"@el .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/2002/07/owl#disjointWith>	<http://dbpedia.org/ontology/Person> .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#label>	"agente"@es .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"persoon"@nl .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#comment>	"Analogous to a foaf:Agent, an agent is an entity that acts. This is intended to be the super class of Person and Organisation."@en .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"persona"@es .
+<http://dbpedia.org/ontology/Species>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u7A2E_(\u5206\u985E\u5B66)"@ja .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/2000/01/rdf-schema#label>	"pflanze"@de .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class> .
+<http://dbpedia.org/ontology/Eukaryote>	<http://www.w3.org/2000/01/rdf-schema#label>	"eukaryote"@en .
+<http://dbpedia.org/ontology/Eukaryote>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u771F\u6838\u751F\u7269"@ja .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u0634\u062E\u0635"@ar .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/2000/01/rdf-schema#label>	"plant"@nl .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#subClassOf>	<http://www.w3.org/2002/07/owl#Thing> .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#subClassOf>	<http://dbpedia.org/ontology/Agent> .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u690D\u7269"@ja .
+<http://dbpedia.org/ontology/Species>	<http://www.w3.org/2000/01/rdf-schema#label>	"soort"@nl .
+<http://dbpedia.org/ontology/Species>	<http://www.w3.org/2000/01/rdf-schema#label>	"species"@en .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u4EBA_(\u6CD5\u5F8B)"@ja .
+<http://dbpedia.org/ontology/Eukaryote>	<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>	<http://www.w3.org/2002/07/owl#Class> .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"pessoa"@pt .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/2000/01/rdf-schema#label>	"plant"@en .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"Oseba"@sl .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2000/01/rdf-schema#label>	"persona"@it .
+<http://dbpedia.org/ontology/Plant>	<http://www.w3.org/2000/01/rdf-schema#label>	"plante"@fr .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#label>	"\u30A8\u30FC\u30B8\u30A7\u30F3\u30C8"@ja .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2002/07/owl#equivalentClass>	<http://schema.org/Person> .
+<http://dbpedia.org/ontology/Species>	<http://www.w3.org/2000/01/rdf-schema#label>	"Spezie"@de .
+<http://dbpedia.org/ontology/Agent>	<http://www.w3.org/2000/01/rdf-schema#label>	"agent"@en .
+<http://dbpedia.org/ontology/Person>	<http://www.w3.org/2002/07/owl#equivalentClass>	<http://xmlns.com/foaf/0.1/Person> .

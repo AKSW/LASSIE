@@ -44,20 +44,20 @@ public class Experiments {
 	private List<Modifier> instanceModifiers = new ArrayList<Modifier>();
 
 	public Experiments(){
-		classModifiers.add(new ClassRenameModifier());
-		classModifiers.add(new ClassDeleteModifier());
+//		classModifiers.add(new ClassRenameModifier());
+//		classModifiers.add(new ClassDeleteModifier());
 		classModifiers.add(new ClassIdentityModifier());
-		classModifiers.add(new ClassMergeModifier());
-		classModifiers.add(new ClassSplitModifier());
-		classModifiers.add(new ClassTypeDeleteModifier());
+//		classModifiers.add(new ClassMergeModifier());
+//		classModifiers.add(new ClassSplitModifier());
+//		classModifiers.add(new ClassTypeDeleteModifier());
 
-		instanceModifiers.add(new InstanceAbbreviationModifier());
-		instanceModifiers.add(new InstanceAcronymModifier());
+//		instanceModifiers.add(new InstanceAbbreviationModifier());
+//		instanceModifiers.add(new InstanceAcronymModifier());
 		instanceModifiers.add(new InstanceIdentityModifier());
-		instanceModifiers.add(new InstanceMergeModifier());
-		instanceModifiers.add(new InstanceMisspellingModifier());
-		instanceModifiers.add(new InstancePermutationModifier());
-		instanceModifiers.add(new InstanceSplitModifier());
+//		instanceModifiers.add(new InstanceMergeModifier());
+//		instanceModifiers.add(new InstanceMisspellingModifier());
+//		instanceModifiers.add(new InstancePermutationModifier());
+//		instanceModifiers.add(new InstanceSplitModifier());
 	}
 
 	public void runExperiments(

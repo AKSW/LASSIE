@@ -46,6 +46,7 @@ import org.dllearner.core.owl.NamedClass;
 import org.dllearner.kb.OWLAPIOntology;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
+import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.learningproblems.PosNegLPStandard;
 import org.dllearner.learningproblems.PosOnlyLP;
 import org.dllearner.reasoning.FastInstanceChecker;
@@ -133,6 +134,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 	//result recording
 	LassieResultRecorder resultRecorder;
+	private SparqlEndpoint endpoint;
 
 
 	/**
@@ -172,6 +174,19 @@ public class ExpressiveSchemaMappingGenerator {
 		target.getReasoner().prepareSubsumptionHierarchy();
 	}
 
+
+	/**
+	 * @param sourceKB2
+	 * @param targetKB2
+	 * @param endpoint
+	 * @param maxNrOfIterations2
+	 */
+	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, SparqlEndpoint endpoint,
+			int maxNrOfIterations) {
+		this(source, target, OWL.sameAs.getURI());
+		this.endpoint = endpoint;
+		this.maxNrOfIterations = maxNrOfIterations;
+	}
 
 	public LassieResultRecorder run(Set<NamedClass> sourceClasses) {
 		// get all classes D_i in target KB
@@ -720,7 +735,7 @@ public class ExpressiveSchemaMappingGenerator {
 			logger.info("Computing negative examples...");
 			MonitorFactory.getTimeMonitor("negative examples").start();
 
-			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
+			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(endpoint, targetKB.getNamespace());
 			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
 			negativeExamples.removeAll(positiveExamples);
 			MonitorFactory.getTimeMonitor("negative examples").stop();
@@ -738,7 +753,7 @@ public class ExpressiveSchemaMappingGenerator {
 			//create fragment for negative examples
 			logger.info("Extracting fragment for negative examples...");
 			mon.start();
-			Model negativeFragment = getFragment(negativeExamplesSample, targetKB);
+			Model negativeFragment = getFragment(negativeExamplesSample, new RemoteKnowledgeBase(endpoint));//targetKB);
 			mon.stop();
 			logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
 
@@ -968,14 +983,19 @@ public class ExpressiveSchemaMappingGenerator {
 		ConciseBoundedDescriptionGenerator cbdGen;
 		if (kb.isRemote()) {
 			logger.debug("Quering local KB");
-			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint(), ((RemoteKnowledgeBase) kb).getCache().getCacheDirectory());
+			if (((RemoteKnowledgeBase) kb).getCache() != null) {
+				cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint(), 
+						((RemoteKnowledgeBase) kb).getCache().getCacheDirectory());
+			} else {
+				cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint());
+			}
 		} else {
 			logger.debug("Quering remote KB");
 			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((LocalKnowledgeBase) kb).getModel());
 		}
 		Model cbd = ModelFactory.createDefaultModel();
 		try {
-			cbd = cbdGen.getConciseBoundedDescription(ind.getName(), 1);
+			cbd = cbdGen.getConciseBoundedDescription(ind.getName(), 1, true);
 		} catch (Exception e) {
 			logger.error("End Point(" + ((RemoteKnowledgeBase) kb).getEndpoint().toString() + ") Exception: " + e);
 		}

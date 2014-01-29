@@ -71,25 +71,36 @@ public class KnowledgebaseSampleGenerator {
 			if(maxNrOfClasses != -1 && maxNrOfClasses != Integer.MAX_VALUE){
 				List<NamedClass> tmpClasses = new ArrayList<NamedClass>(classes);
 				Collections.shuffle(tmpClasses);
-				classes = new HashSet<NamedClass>(tmpClasses.subList(0, Math.min(tmpClasses.size(), maxNrOfClasses)));
-			}
+//				classes = new HashSet<NamedClass>(tmpClasses.subList(0, Math.min(tmpClasses.size(), maxNrOfClasses)));
 			
-			//get for each class n instances and compute the CBD for each instance
-			for (NamedClass cls : classes) {
-				logger.debug("\t...processing class " + cls + "...");
-				SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass*2);
-				
-				Model cbd;
-				int cnt = 0;
-				for (Individual individual : individuals) {
-					try {
-						cbd = cbdGen.getConciseBoundedDescription(individual.getName(), maxCBDDepth);
-						model.add(cbd);
-						if(cnt++ == maxNrOfInstancesPerClass){
-							break;
+				//get for each class n instances and compute the CBD for each instance
+				int i = 0;
+				for (NamedClass cls : classes) {
+					logger.debug("\t...processing class " + cls + "...");
+					SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass*2);
+					
+					Model classSample = ModelFactory.createDefaultModel();
+					int cnt = 0;
+					Model cbd;
+					for (Individual individual : individuals) {
+						try {
+							cbd = cbdGen.getConciseBoundedDescription(individual.getName(), maxCBDDepth);
+							classSample.add(cbd);
+							if(cnt++ == maxNrOfInstancesPerClass){
+								break;
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-					} catch (Exception e) {
-						e.printStackTrace();
+					}
+					model.add(classSample);
+					if(!classSample.isEmpty()){
+						i++;
+					} else {
+						logger.debug("Skipping empty class " + cls);
+					}
+					if(i == maxNrOfClasses){
+						break;
 					}
 				}
 			}
