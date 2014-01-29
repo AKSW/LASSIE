@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
+import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
@@ -91,7 +92,7 @@ public class TestLimes {
 			testClasses.add(new NamedClass("http://dbpedia.org/ontology/Mammal"));
 			testClasses.add(new NamedClass("http://dbpedia.org/ontology/Plant"));
 			
-			classModifiersAndRates.put(new ClassRenameModifier(), 0.5);
+			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
 			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.5);
 //			classModifiers.add(new ClassRenameModifier());
 //			classModifiers.add(new ClassDeleteModifier());

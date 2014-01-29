@@ -274,10 +274,10 @@ public class Evaluation {
 //	}
 	
 	
-	public LassieResultRecorder runNew(Set<NamedClass> testClasses){
+	public LassieResultRecorder run(Set<NamedClass> testClasses){
 		//create a sample of the knowledge base
-//		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
-		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
+//		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass);
 
 		//we assume that the target is the sample KB itself
 		KnowledgeBase targetKB = sampleKB;
@@ -293,14 +293,7 @@ public class Evaluation {
 		}
 
 		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
-
 		KnowledgeBase sourceKB = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
-		//		try {
-		//			// just 4 test
-		//			modifiedReferenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
-		//		} catch (FileNotFoundException e) {
-		//			e.printStackTrace();
-		//		}
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
@@ -309,6 +302,8 @@ public class Evaluation {
 		}
 		return generator.run(modifiedDbpediaClasses);
 	}
+	
+	
 
 	/** 
 	 * 

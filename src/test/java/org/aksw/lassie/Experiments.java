@@ -4,7 +4,6 @@
 package org.aksw.lassie;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -19,8 +18,10 @@ import org.aksw.lassie.bmGenerator.ClassDeleteModifier;
 import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
 import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
+import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.ClassTypeDeleteModifier;
 import org.aksw.lassie.bmGenerator.InstanceAbbreviationModifier;
+import org.aksw.lassie.bmGenerator.InstanceAcronymModifier;
 import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
 import org.aksw.lassie.bmGenerator.InstanceMergeModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
@@ -43,20 +44,20 @@ public class Experiments {
 	private List<Modifier> instanceModifiers = new ArrayList<Modifier>();
 
 	public Experiments(){
-//		classModifiers.add(new ClassRenameModifier());
-//		classModifiers.add(new ClassDeleteModifier());
+		classModifiers.add(new ClassRenameModifier());
+		classModifiers.add(new ClassDeleteModifier());
 		classModifiers.add(new ClassIdentityModifier());
-//		classModifiers.add(new ClassMergeModifier());
-		//		classModifiers.add(new ClassSplitModifier());
-//		classModifiers.add(new ClassTypeDeleteModifier());
+		classModifiers.add(new ClassMergeModifier());
+		classModifiers.add(new ClassSplitModifier());
+		classModifiers.add(new ClassTypeDeleteModifier());
 
-//		instanceModifiers.add(new InstanceAbbreviationModifier());
-		//		instanceModifiers.add(new InstanceAcronymModifier());
+		instanceModifiers.add(new InstanceAbbreviationModifier());
+		instanceModifiers.add(new InstanceAcronymModifier());
 		instanceModifiers.add(new InstanceIdentityModifier());
-//		instanceModifiers.add(new InstanceMergeModifier());
-//		instanceModifiers.add(new InstanceMisspellingModifier());
-//		instanceModifiers.add(new InstancePermutationModifier());
-//		instanceModifiers.add(new InstanceSplitModifier());
+		instanceModifiers.add(new InstanceMergeModifier());
+		instanceModifiers.add(new InstanceMisspellingModifier());
+		instanceModifiers.add(new InstancePermutationModifier());
+		instanceModifiers.add(new InstanceSplitModifier());
 	}
 
 	public void runExperiments(
@@ -106,7 +107,7 @@ public class Experiments {
 					+ ((nrOfClasses > 0) ? (nrOfClasses ) : "all") + "Classes_" + nrOfInstancesPerClass + "insPerCls.txt";
 			
 			LassieResultRecorder experimentResults;
-			experimentResults = evaluator.runNew(testClasses);
+			experimentResults = evaluator.run(testClasses);
 			
 			experimentResults.setNrOfInstancesPerClass(nrOfInstancesPerClass);
 			experimentResults.setNrOfClassModifiers(nrOfClassModifiers);
