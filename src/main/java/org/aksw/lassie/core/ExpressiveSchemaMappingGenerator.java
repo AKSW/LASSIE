@@ -740,7 +740,7 @@ public class ExpressiveSchemaMappingGenerator {
 			negativeExamples.removeAll(positiveExamples);
 			MonitorFactory.getTimeMonitor("negative examples").stop();
 			logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
-
+			logger.debug("Negative examples: " + negativeExamples);
 			resultRecorder.setNegativeExample(negativeExamples, iterationNr, currentClass);
 
 			//get a sample of the negative examples
@@ -982,7 +982,7 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.trace("Loading fragment for " + ind.getName());
 		ConciseBoundedDescriptionGenerator cbdGen;
 		if (kb.isRemote()) {
-			logger.debug("Quering local KB");
+			logger.debug("Quering remote KB");
 			if (((RemoteKnowledgeBase) kb).getCache() != null) {
 				cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint(), 
 						((RemoteKnowledgeBase) kb).getCache().getCacheDirectory());
@@ -990,7 +990,7 @@ public class ExpressiveSchemaMappingGenerator {
 				cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint());
 			}
 		} else {
-			logger.debug("Quering remote KB");
+			logger.debug("Quering local KB");
 			cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((LocalKnowledgeBase) kb).getModel());
 		}
 		Model cbd = ModelFactory.createDefaultModel();

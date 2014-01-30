@@ -46,8 +46,8 @@ public class InstanceAbbreviationModifier extends Modifier {
 
     private Statement abbreviat(Statement stmt) {
         if (!stmt.getObject().isLiteral()) {
-            System.err.println(stmt.getObject() + " is not a literal object");
-            System.err.println("Unable to abbreviat a non-literal object!!");
+//            System.err.println(stmt.getObject() + " is not a literal object");
+//            System.err.println("Unable to abbreviat a non-literal object!!");
 //			System.exit(1);
             return stmt;
         }

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -277,7 +278,7 @@ public class Evaluation {
 	public LassieResultRecorder run(Set<NamedClass> testClasses){
 		//create a sample of the knowledge base
 //		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
-		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass);
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, testClasses);
 
 		//we assume that the target is the sample KB itself
 		KnowledgeBase targetKB = sampleKB;
@@ -333,7 +334,7 @@ public class Evaluation {
 
 	public LassieResultRecorder runIntensionalEvaluation(){
 		//create a sample of the knowledge base
-		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass);
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, new HashSet<NamedClass>());
 
 		//we assume that the target is the sample KB itself
 		KnowledgeBase target = sampleKB;

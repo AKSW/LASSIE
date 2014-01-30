@@ -45,40 +45,47 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
  *
  */
 public class KnowledgebaseSampleGenerator {
-	
+
 	private static final Logger logger = Logger.getLogger(KnowledgebaseSampleGenerator.class.getName());
-	
+
 	private static String cacheDir = "sparql-cache";
 	private static int maxCBDDepth = 0;
-	
-	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, String namespace, int maxNrOfClasses, int maxNrOfInstancesPerClass){
+
+	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, String namespace, 
+			int maxNrOfClasses, int maxNrOfInstancesPerClass, Set<NamedClass> testClasses){
+
 		Model model = ModelFactory.createDefaultModel();
-		
+
 		//try to load existing sample from file system
 		HashFunction hf = Hashing.md5();
 		HashCode hc = hf.newHasher().putString(endpoint.getURL().toString(), Charsets.UTF_8).hash();
 		String filename = hc.toString() + ("-" + ((maxNrOfClasses == Integer.MAX_VALUE) ? "all" : maxNrOfClasses)) + "-" + maxNrOfInstancesPerClass + ".ttl.bz2";
 		File file = new File(filename);
-		
+
 		if(!file.exists()){//if not exists
 			logger.info("Generating sample...");
 			long startTime = System.currentTimeMillis();
 			SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), cacheDir);
 			ConciseBoundedDescriptionGenerator cbdGen = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cacheDir);
-			
-			//get all OWL classes
-			Set<NamedClass> classes = reasoner.getOWLClasses(namespace);
+
+			Set<NamedClass> classes = new HashSet<NamedClass>();
+			if(testClasses.size() > 0){
+				classes = testClasses;
+			}else{
+				//get all OWL classes
+				classes = reasoner.getOWLClasses(namespace);
+			}
 			if(maxNrOfClasses != -1 && maxNrOfClasses != Integer.MAX_VALUE){
 				List<NamedClass> tmpClasses = new ArrayList<NamedClass>(classes);
 				Collections.shuffle(tmpClasses);
-//				classes = new HashSet<NamedClass>(tmpClasses.subList(0, Math.min(tmpClasses.size(), maxNrOfClasses)));
-			
+				//				classes = new HashSet<NamedClass>(tmpClasses.subList(0, Math.min(tmpClasses.size(), maxNrOfClasses)));
+
 				//get for each class n instances and compute the CBD for each instance
 				int i = 0;
 				for (NamedClass cls : classes) {
 					logger.debug("\t...processing class " + cls + "...");
 					SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass*2);
-					
+
 					Model classSample = ModelFactory.createDefaultModel();
 					int cnt = 0;
 					Model cbd;
@@ -139,24 +146,24 @@ public class KnowledgebaseSampleGenerator {
 			}
 			logger.info("...done in " + (System.currentTimeMillis() - startTime) + "ms");
 		}
-		
+
 		return new LocalKnowledgeBase(model, namespace);
 	}
-	
+
 	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, int maxNrOfClasses, int maxNrOfInstancesPerClass){
-		return createKnowledgebaseSample(endpoint, null, maxNrOfClasses, maxNrOfInstancesPerClass);
+		return createKnowledgebaseSample(endpoint, null, maxNrOfClasses, maxNrOfInstancesPerClass, new HashSet<NamedClass>());
 	}
-	
+
 	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, int maxNrOfInstancesPerClass){
 		return createKnowledgebaseSample(endpoint, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
 	}
-	
+
 	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, String namespace, int maxNrOfInstancesPerClass){
-		return createKnowledgebaseSample(endpoint, null, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
+		return createKnowledgebaseSample(endpoint, null, Integer.MAX_VALUE, maxNrOfInstancesPerClass, new HashSet<NamedClass>());
 	}
 
 	public static void main(String[] args) throws Exception {
 		LocalKnowledgeBase kb = createKnowledgebaseSample(SparqlEndpoint.getEndpointDBpedia(), "http://dbpedia.org/ontology", 100);
-		
+
 	}
 }

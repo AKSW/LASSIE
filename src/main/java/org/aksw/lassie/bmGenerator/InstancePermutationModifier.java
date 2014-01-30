@@ -45,8 +45,8 @@ public class InstancePermutationModifier extends Modifier {
 
     private Statement permutat(Statement stmt) {
         if (!stmt.getObject().isLiteral()) {
-            System.err.println(stmt.getObject() + " is not a literal object");
-            System.err.println("Can NOT permutat a non-literal object!!");
+//            System.err.println(stmt.getObject() + " is not a literal object");
+//            System.err.println("Can NOT permutate a non-literal object!!");
 //			System.exit(1);
             return stmt;
         }
