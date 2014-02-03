@@ -64,7 +64,8 @@ public class Experiments {
 			int nrOfClasses, 				int nrOfInstancesPerClass, 
 			int nrOfClassModifiers, 		int nrOfInstanceModifiers, 
 			double classesDestructionRate, 	double instancesDestructionRate,
-			int nrOfExperimentRepeats, 		int maxNrOfIterations, String outputFolder, Set<NamedClass> testClasses) throws IOException{
+			int nrOfExperimentRepeats, 		int maxNrOfIterations, String outputFolder, 
+			Set<NamedClass> testClasses, 	boolean useRemoteKB) throws IOException{
 
 		//create a folder for the results if not exist
 		File folder = new File(outputFolder).getAbsoluteFile();
@@ -107,7 +108,7 @@ public class Experiments {
 					+ ((nrOfClasses > 0) ? (nrOfClasses ) : "all") + "Classes_" + nrOfInstancesPerClass + "insPerCls.txt";
 			
 			LassieResultRecorder experimentResults;
-			experimentResults = evaluator.run(testClasses);
+			experimentResults = evaluator.run(testClasses, useRemoteKB);
 			
 			experimentResults.setNrOfInstancesPerClass(nrOfInstancesPerClass);
 			experimentResults.setNrOfClassModifiers(nrOfClassModifiers);
@@ -161,7 +162,7 @@ public class Experiments {
 		Experiments experiment = new Experiments();
 		experiment.runExperiments(nrOfClasses, Integer.parseInt(args[1]), Integer.parseInt(args[2]), 
 				Integer.parseInt(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), 
-				Integer.parseInt(args[6]), Integer.parseInt(args[7]), args[8], testClasses);
+				Integer.parseInt(args[6]), Integer.parseInt(args[7]), args[8], testClasses, false);
 	}
 
 }

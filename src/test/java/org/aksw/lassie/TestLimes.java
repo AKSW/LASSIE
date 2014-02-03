@@ -117,7 +117,7 @@ public class TestLimes {
 			ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
 			generator.setTargetDomainNameSpace("http://dbpedia.org/ontology/");
 			
-			LassieResultRecorder experimentResults = generator.run(testClasses);
+			LassieResultRecorder experimentResults = generator.run(testClasses, false);
 			
 			experimentResults.setNrOfInstancesPerClass(nrOfInstancesPerClass);
 			experimentResults.setNrOfClassModifiers(classModifiersAndRates.size());

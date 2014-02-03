@@ -119,7 +119,7 @@ public class OntologyMatchingTest {
 				new NamedClass("http://linkedgeodata.org/ontology/River"),
 				new NamedClass("http://linkedgeodata.org/ontology/Peak")
 				);
-		matcher.run(sourceClasses, targetClasses);
+		matcher.run(sourceClasses, targetClasses, false);
 	}
 
 	@Test
@@ -127,7 +127,7 @@ public class OntologyMatchingTest {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(openCyc, dbpedia);
 		NamedClass nc = new NamedClass("http://sw.opencyc.org/concept/Mx4r4fYeXvbPQdiKtoNafhmOew");
 		try {
-			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);
+			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc, false);
 			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
 			alignment.put(nc, mapping);
 			System.out.println(PrintUtils.toHTMLWithLabels(alignment, openCyc, dbpedia));
@@ -141,7 +141,7 @@ public class OntologyMatchingTest {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(linkedGeoData, dbpedia);
 		NamedClass nc = new NamedClass("http://linkedgeodata.org/ontology/Aerodrome");
 		try {
-			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);
+			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc, false);
 			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
 			alignment.put(nc, mapping);
 			System.out.println(PrintUtils.toHTMLWithLabels(alignment, linkedGeoData, dbpedia));
@@ -155,7 +155,7 @@ public class OntologyMatchingTest {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
 		NamedClass nc = new NamedClass("http://dbpedia.org/ontology/AdministrativeRegion");
 		try {
-			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc);
+			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc, false);
 			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
 			alignment.put(nc, mapping);
 			System.out.println(PrintUtils.toHTMLWithLabels(alignment, dbpedia, linkedGeoData));
@@ -171,7 +171,7 @@ public class OntologyMatchingTest {
 		KnowledgeBase peel_0 = new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel0File, null, "TTL"));
 		KnowledgeBase peel_1= new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel1File, null, "TTL"));
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_1);
-		matcher.run(Collections.singleton(new NamedClass("http://purl.org/ontology/mo/MusicArtist")));
+		matcher.run(Collections.singleton(new NamedClass("http://purl.org/ontology/mo/MusicArtist")), false);
 
 		System.in.read();
 	}
@@ -198,7 +198,7 @@ public class OntologyMatchingTest {
 			Model peelKModel = benchmarker.bmPeel(inModel, inClassUri, dRatio); 
 			KnowledgeBase peel_k = new LocalKnowledgeBase(peelKModel);
 			ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_k);
-			matcher.run(Collections.singleton(new NamedClass("http://purl.org/ontology/mo/MusicArtist")));
+			matcher.run(Collections.singleton(new NamedClass("http://purl.org/ontology/mo/MusicArtist")), false);
 			System.out.println("\nPrevious results was for destruction ratio = "+dRatio*100+"%\n");
 			System.err.println("Press enter to run the next iteration ...");
 			System.in.read();

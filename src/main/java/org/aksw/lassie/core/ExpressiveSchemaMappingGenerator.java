@@ -188,15 +188,15 @@ public class ExpressiveSchemaMappingGenerator {
 		this.maxNrOfIterations = maxNrOfIterations;
 	}
 
-	public LassieResultRecorder run(Set<NamedClass> sourceClasses) {
+	public LassieResultRecorder run(Set<NamedClass> sourceClasses, boolean useRemoteKB) {
 		// get all classes D_i in target KB
 		Set<NamedClass> targetClasses = getClasses(targetKB);
 		logger.debug("targetClasses: " + targetClasses);
-		return run(sourceClasses, targetClasses);
+		return run(sourceClasses, targetClasses, useRemoteKB);
 	}
 
 
-	public LassieResultRecorder run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses) {
+	public LassieResultRecorder run(Set<NamedClass> sourceClasses, Set<NamedClass> targetClasses, boolean useRemoteKB) {
 
 		resultRecorder = new LassieResultRecorder(maxNrOfIterations, sourceClasses);
 
@@ -226,7 +226,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 					resultRecorder.setPositiveExample(targetInstances, iterationNr, sourceClass);
 
-					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
+					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances, useRemoteKB);
 					resultRecorder.setMapping(mappingList, iterationNr, sourceClass);
 
 					iterationResultConceptDescription.put(sourceClass, mappingList.get(0).getDescription());
@@ -287,7 +287,7 @@ public class ExpressiveSchemaMappingGenerator {
 			currentClass = sourceClass;
 			try {
 				SortedSet<Individual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
-				List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances);
+				List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances, false);
 				mappingTop10.put(sourceClass, mappingList);
 
 				for (Modifier modifier : modifiers) {
@@ -363,7 +363,7 @@ public class ExpressiveSchemaMappingGenerator {
 	double computeDiceSimilarity(Set<Individual> sourceInstances, Set<Individual> targetInstances) {
 		SetView<Individual> intersection = Sets.intersection(sourceInstances, targetInstances);
 		SetView<Individual> union = Sets.union(sourceInstances, targetInstances);
-		
+
 		/* Other approaches to compute coverage:
 		 * double jaccard = (double) intersection.size() / (double) targetInstances.size();
 		 * double overlap = (double) intersection.size() / (double) Math.min(sourceInstances.size(), targetInstances.size());
@@ -453,7 +453,7 @@ public class ExpressiveSchemaMappingGenerator {
 					}
 					mappingResults.get(sourceClass).put(targetClassExpression, result);
 				}
-				
+
 				//Keep record of the real F-Measures
 				if(result.size > 0){
 					double f = MappingMath.computeFMeasure(result, cache2.size());
@@ -701,16 +701,16 @@ public class ExpressiveSchemaMappingGenerator {
 		return c;
 	}
 
-	public EvaluatedDescription computeMapping(SortedSet<Individual> positiveExamples) throws NonExistingLinksException {
-		return computeMappings(positiveExamples).get(0);
+	public EvaluatedDescription computeMapping(SortedSet<Individual> positiveExamples, boolean useRemoteKB) throws NonExistingLinksException {
+		return computeMappings(positiveExamples, useRemoteKB).get(0);
 	}
 
-	public List<? extends EvaluatedDescription> computeMappings(Description targetClassExpression) throws NonExistingLinksException {
+	public List<? extends EvaluatedDescription> computeMappings(Description targetClassExpression, boolean useRemoteKB) throws NonExistingLinksException {
 		SortedSet<Individual> targetInstances = getTargetInstances(targetClassExpression);
-		return computeMappings(targetInstances);
+		return computeMappings(targetInstances, useRemoteKB);
 	}
 
-	public List<? extends EvaluatedDescription> computeMappings(SortedSet<Individual> positiveExamples) throws NonExistingLinksException {
+	public List<? extends EvaluatedDescription> computeMappings(SortedSet<Individual> positiveExamples, boolean useRemoteKB) throws NonExistingLinksException {
 		logger.info("positiveExamples: " + positiveExamples);
 		//if there are no links to the target KB, then we can skip learning
 		if (positiveExamples.isEmpty()) {
@@ -735,7 +735,12 @@ public class ExpressiveSchemaMappingGenerator {
 			logger.info("Computing negative examples...");
 			MonitorFactory.getTimeMonitor("negative examples").start();
 
-			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(endpoint, targetKB.getNamespace());
+			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder;
+			if(useRemoteKB){
+				negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(endpoint, targetKB.getNamespace());
+			}else{
+				negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
+			}
 			SortedSet<Individual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
 			negativeExamples.removeAll(positiveExamples);
 			MonitorFactory.getTimeMonitor("negative examples").stop();
@@ -753,7 +758,12 @@ public class ExpressiveSchemaMappingGenerator {
 			//create fragment for negative examples
 			logger.info("Extracting fragment for negative examples...");
 			mon.start();
-			Model negativeFragment = getFragment(negativeExamplesSample, new RemoteKnowledgeBase(endpoint));//targetKB);
+			Model negativeFragment;
+			if(useRemoteKB){
+				negativeFragment = getFragment(negativeExamplesSample, new RemoteKnowledgeBase(endpoint));
+			}else{
+				negativeFragment = getFragment(negativeExamplesSample, targetKB);
+			}
 			mon.stop();
 			logger.info("...got " + negativeFragment.size() + " triples in " + mon.getLastValue() + "ms.");
 

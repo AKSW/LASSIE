@@ -129,7 +129,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		try {
 			currentClass = sourceClass;
 			
-			EvaluatedDescription singleMapping = computeMapping(targetInstances);
+			EvaluatedDescription singleMapping = computeMapping(targetInstances, false);
 			System.out.println("\n---------- EvaluatedDescription ----------");
 			System.out.println(singleMapping);
 		} catch (NonExistingLinksException e) {

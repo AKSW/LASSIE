@@ -89,6 +89,9 @@ public class Evaluation {
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
 	protected static int maxNrOfIterations;
 	
+//	public NamedClass subTreeRootClass = new NamedClass("http://dbpedia.org/ontology/ChemicalSubstance");
+	public NamedClass subTreeRootClass = new NamedClass("http://dbpedia.org/ontology/Food");
+	
 	//constructors
 	public Evaluation(){
 		super();
@@ -241,48 +244,13 @@ public class Evaluation {
 	}
 
 
-//	public LassieResultRecorder runNew(){
-//		//create a sample of the knowledge base
-//		//LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfInstancesPerClass);
-//		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
-//
-//		//we assume that the target is the sample KB itself
-//		KnowledgeBase targetKB = sampleKB;
-//
-//
-//		//we create the source KB by modifying the data of the sample KB  
-//		Model sampleKBModel = sampleKB.getModel();
-//		logger.info("sampleKBModel.size(): " + sampleKBModel.size());
-//
-//		if(instanceModifiersAndRates.isEmpty() && classModifiersAndRates.isEmpty()){
-//			logger.error("No modifiers specified, EXIT");
-//			System.exit(1);
-//		}
-//
-//		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
-//
-//		KnowledgeBase sourceKB = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
-//		//		try {
-//		//			// just 4 test
-//		//			modifiedReferenceDataset.write(new FileOutputStream(new File("test.nt")),"TTL");
-//		//		} catch (FileNotFoundException e) {
-//		//			e.printStackTrace();
-//		//		}
-//
-//		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
-//		generator.setTargetDomainNameSpace(dbpediaNamespace);
-//		return generator.runNew(modifiedDbpediaClasses);
-//	}
-	
-	
-	public LassieResultRecorder run(Set<NamedClass> testClasses){
+	public LassieResultRecorder run(Set<NamedClass> testClasses, boolean useRemoteKB){
 		//create a sample of the knowledge base
 //		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
-		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, testClasses);
-
+//		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, testClasses);
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSubTreeSample(endpoint, dbpediaNamespace, subTreeRootClass, maxNrOfInstancesPerClass);
 		//we assume that the target is the sample KB itself
 		KnowledgeBase targetKB = sampleKB;
-
 
 		//we create the source KB by modifying the data of the sample KB  
 		Model sampleKBModel = sampleKB.getModel();
@@ -299,9 +267,9 @@ public class Evaluation {
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, endpoint, maxNrOfIterations);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 		if(testClasses.size()>0){
-			return generator.run(testClasses);
+			return generator.run(testClasses, useRemoteKB);
 		}
-		return generator.run(modifiedDbpediaClasses);
+		return generator.run(modifiedDbpediaClasses, useRemoteKB);
 	}
 	
 	
@@ -332,7 +300,7 @@ public class Evaluation {
 
 
 
-	public LassieResultRecorder runIntensionalEvaluation(){
+	public LassieResultRecorder runIntensionalEvaluation(boolean useRemoteKB){
 		//create a sample of the knowledge base
 		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, new HashSet<NamedClass>());
 
@@ -366,7 +334,7 @@ public class Evaluation {
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 
 		//		return generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
-		return generator.run(modifiedDbpediaClasses);
+		return generator.run(modifiedDbpediaClasses, useRemoteKB);
 
 	}
 
