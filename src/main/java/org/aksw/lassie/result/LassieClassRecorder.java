@@ -15,6 +15,8 @@ import org.dllearner.core.owl.NamedClass;
 
 
 import de.uni_leipzig.simba.data.Mapping;
+import de.uni_leipzig.simba.selfconfig.ComplexClassifier;
+import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 
 
 /**
@@ -31,8 +33,25 @@ public class LassieClassRecorder {
 	public SortedSet<Individual> posExamples = new TreeSet<Individual>();
 	public SortedSet<Individual> negExamples = new TreeSet<Individual>();
 	public Mapping instanceMapping = new Mapping();
+	public List<SimpleClassifier> classifiers =new ArrayList<SimpleClassifier>();
 	
 	
+	/**
+	 * @return the classifiers
+	 */
+	public List<SimpleClassifier> getClassifiers() {
+		return classifiers;
+	}
+
+
+	/**
+	 * @param classifiers the classifiers to set
+	 */
+	public void setClassifiers(List<SimpleClassifier> classifiers) {
+		this.classifiers = classifiers;
+	}
+
+
 	/**
 	 * @return the instanceMapping
 	 */
@@ -210,6 +229,12 @@ public class LassieClassRecorder {
 		i =1;
 		for(Individual in: negExamples){
 			 str += "\t\t(" + i++ + ") " + in.getName() +"\n"; 
+		}
+		
+		str += "\tClassifier:\n ";
+		i =1;
+		for(SimpleClassifier cl: classifiers){
+			 str += "\t\t(" + i++ + ") " + cl +"\n"; 
 		}
 		
 		str += "\tINSTANCE MAPPINGS(LIMES RESULTS):\n ";

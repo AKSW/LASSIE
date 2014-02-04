@@ -466,8 +466,6 @@ public class ExpressiveSchemaMappingGenerator {
 					HashMap<String, Double> value = mappingEntry.getValue();
 					map.put(sourceClass, value.keySet().iterator().next());
 				}
-
-
 			}
 		}
 		return map;
@@ -635,7 +633,9 @@ public class ExpressiveSchemaMappingGenerator {
 
 		ComplexClassifier cc = bsc.getZoomedHillTop(5, numberOfLinkingIterations, cp);
 		Mapping map = Mapping.getBestOneToOneMappings(cc.mapping);
-		//		cc.toString()
+		List<SimpleClassifier> x = cc.classifiers;
+		logger.debug("Classifier: " + cc.classifiers);
+		resultRecorder.setClassifier(cc.classifiers, iterationNr, sourceClass);
 		resultRecorder.setPFMeasure(new ReferencePseudoMeasures().getPseudoFMeasure(source.getAllUris(), target.getAllUris(), map, 1.0),
 				iterationNr, sourceClass);
 

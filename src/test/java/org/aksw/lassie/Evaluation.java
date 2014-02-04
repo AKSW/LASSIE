@@ -90,8 +90,8 @@ public class Evaluation {
 	protected static int maxNrOfIterations;
 	
 //	public NamedClass subTreeRootClass = new NamedClass("http://dbpedia.org/ontology/ChemicalSubstance");
-	public NamedClass subTreeRootClass = new NamedClass("http://dbpedia.org/ontology/Food");
-	
+//	public NamedClass subTreeRootClass = new NamedClass("http://dbpedia.org/ontology/Food");
+	public NamedClass subTreeRootClass = new NamedClass("http://dbpedia.org/ontology/Agent");
 	//constructors
 	public Evaluation(){
 		super();

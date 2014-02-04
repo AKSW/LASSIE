@@ -22,6 +22,7 @@ import org.dllearner.core.owl.Individual;
 import org.dllearner.core.owl.NamedClass;
 
 import de.uni_leipzig.simba.data.Mapping;
+import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 
 
 /**
@@ -238,6 +239,15 @@ public class LassieResultRecorder {
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setInstanceMapping(instanceMapping);
+				return;
+			}
+		}
+	}
+	
+	public void setClassifier(List<SimpleClassifier> classifiers, int iterationNr, NamedClass nc){
+		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
+			if(cr.namedClass.equals(nc) ){
+				cr.setClassifiers(classifiers);
 				return;
 			}
 		}
