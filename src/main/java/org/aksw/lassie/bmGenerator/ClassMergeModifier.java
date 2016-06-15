@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.dllearner.core.owl.Description;
-import org.dllearner.core.owl.NamedClass;
+import org.dllearner.core.owl.OWLClass;
 import org.dllearner.core.owl.Union;
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -88,10 +88,10 @@ public class ClassMergeModifier extends Modifier{
 				//generate optimal solution
 				List<Description> children = new ArrayList<Description>();
 				for (String uri : mergeSourceClassUris) {
-					children.add(new NamedClass(uri));
+					children.add(new OWLClass(uri));
 				}
 				Union optimalSolution = new Union(children);
-				optimalSolutions.put(new NamedClass(mergeTargetClassUri), optimalSolution);
+				optimalSolutions.put(new OWLClass(mergeTargetClassUri), optimalSolution);
 				
 			}
 		}

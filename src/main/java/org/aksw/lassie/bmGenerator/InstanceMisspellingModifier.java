@@ -177,8 +177,8 @@ public class InstanceMisspellingModifier extends Modifier {
 
 	private Statement misspelling(Statement stmt){
 		if(!stmt.getObject().isLiteral()){
-			System.err.println(stmt.getObject() + " is not a literal object");
-			System.err.println("Can NOT misspelling a non-literal object!!");
+//			System.err.println(stmt.getObject() + " is not a literal object");
+//			System.err.println("Can NOT misspelling a non-literal object!!");
 			//			System.exit(1);
 			return stmt;
 		}

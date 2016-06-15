@@ -10,9 +10,8 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
-import org.dllearner.core.owl.Individual;
-import org.dllearner.core.owl.NamedClass;
-
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLIndividual;
 
 import de.uni_leipzig.simba.data.Mapping;
 import de.uni_leipzig.simba.selfconfig.ComplexClassifier;
@@ -25,13 +24,13 @@ import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
  */
 public class LassieClassRecorder {
 	private static final Logger logger = Logger.getLogger(LassieClassRecorder.class.getName());
-	public NamedClass namedClass;
+	public OWLClass namedClass;
 	public double coverage;
 	public double FMeasure;
 	public double PFMesure;
 	public List<? extends EvaluatedDescription> mapping = new ArrayList<EvaluatedDescription>();
-	public SortedSet<Individual> posExamples = new TreeSet<Individual>();
-	public SortedSet<Individual> negExamples = new TreeSet<Individual>();
+	public SortedSet<OWLIndividual> posExamples = new TreeSet<>();
+	public SortedSet<OWLIndividual> negExamples = new TreeSet<>();
 	public Mapping instanceMapping = new Mapping();
 	public List<SimpleClassifier> classifiers =new ArrayList<SimpleClassifier>();
 	
@@ -85,7 +84,7 @@ public class LassieClassRecorder {
 	 * @param namedClass
 	 *@author sherif
 	 */
-	public LassieClassRecorder(NamedClass namedClass) {
+	public LassieClassRecorder(OWLClass namedClass) {
 		super();
 		this.namedClass = namedClass;
 	}
@@ -94,7 +93,7 @@ public class LassieClassRecorder {
 	/**
 	 * @return the namedClass
 	 */
-	public NamedClass getNamedClass() {
+	public OWLClass getOWLClass() {
 		return namedClass;
 	}
 
@@ -102,7 +101,7 @@ public class LassieClassRecorder {
 	/**
 	 * @param namedClass the namedClass to set
 	 */
-	public void setNamedClass(NamedClass namedClass) {
+	public void setOWLClass(OWLClass namedClass) {
 		this.namedClass = namedClass;
 	}
 
@@ -174,7 +173,7 @@ public class LassieClassRecorder {
 	/**
 	 * @return the posExamples
 	 */
-	public SortedSet<Individual> getPosExamples() {
+	public SortedSet<OWLIndividual> getPosExamples() {
 		return posExamples;
 	}
 
@@ -182,7 +181,7 @@ public class LassieClassRecorder {
 	/**
 	 * @param posExamples the posExamples to set
 	 */
-	public void setPosExamples(SortedSet<Individual> posExamples) {
+	public void setPosExamples(SortedSet<OWLIndividual> posExamples) {
 		this.posExamples = posExamples;
 	}
 
@@ -190,7 +189,7 @@ public class LassieClassRecorder {
 	/**
 	 * @return the negExamples
 	 */
-	public SortedSet<Individual> getNegExamples() {
+	public SortedSet<OWLIndividual> getNegExamples() {
 		return negExamples;
 	}
 
@@ -198,7 +197,7 @@ public class LassieClassRecorder {
 	/**
 	 * @param negExamples the negExamples to set
 	 */
-	public void setNegExamples(SortedSet<Individual> negExamples) {
+	public void setNegExamples(SortedSet<OWLIndividual> negExamples) {
 		this.negExamples = negExamples;
 	}
 
@@ -209,7 +208,7 @@ public class LassieClassRecorder {
 	@Override
 	public String toString() {
 		String str = 
-			" Class name:  " + namedClass.getName() + "\n" +
+			" Class name:  " + namedClass.getClass().getName() + "\n" +
 			"\tCoverage:    " + coverage + "\n" +
 			"\tF-Measure:   " + FMeasure + "\n" +
 			"\tP-F-Measure: "	+ PFMesure + "\n" +
@@ -221,13 +220,13 @@ public class LassieClassRecorder {
 
 		str +=	"\tPositive examples:\n";
 		i =1;
-		for(Individual in: posExamples){
-			 str += "\t\t(" + i++ + ") " + in.getName() + "\n";
+		for(OWLIndividual in: posExamples){
+			 str += "\t\t(" + i++ + ") " + in.get.getName() + "\n";
 		}
 		
 		str += "\tNegative examples:\n ";
 		i =1;
-		for(Individual in: negExamples){
+		for(OWLIndividual in: negExamples){
 			 str += "\t\t(" + i++ + ") " + in.getName() +"\n"; 
 		}
 		

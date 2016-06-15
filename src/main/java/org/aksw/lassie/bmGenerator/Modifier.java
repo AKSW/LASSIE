@@ -11,8 +11,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.dllearner.core.owl.Description;
-import org.dllearner.core.owl.NamedClass;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -28,6 +30,8 @@ import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.util.FileManager;
+
+import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 /**
  * @author Sherif
@@ -51,9 +55,11 @@ public abstract class Modifier {
 	static protected List<String> modifiedClasses = new ArrayList<String>();
 	protected boolean isClassModifier = false;
 	
-	Map<NamedClass, Description> optimalSolutions = new HashMap<NamedClass, Description>();
+	OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
 	
-	Map<NamedClass, NamedClass> alteredClasses = new HashMap<NamedClass, NamedClass>();
+	Map<OWLClass, OWLClassExpression> optimalSolutions = new HashMap<OWLClass, OWLClassExpression>();
+	
+	Map<OWLClass, OWLClass> alteredClasses = new HashMap<OWLClass, OWLClass>();
 	
 	public String getName(){
 		return this.getClass().getCanonicalName();
@@ -77,7 +83,7 @@ public abstract class Modifier {
 	/**
 	 * @return the optimalSolutions
 	 */
-	public Description getOptimalSolution(NamedClass cls) {
+	public OWLClassExpression getOptimalSolution(OWLClass cls) {
 		return optimalSolutions.get(cls);
 	}
 
@@ -88,9 +94,9 @@ public abstract class Modifier {
 		Modifier.baseClasses = baseClasses;
 	}
 
-	public void setBaseClasses(Set<NamedClass> namedClasses) {
-		for (NamedClass namedClass : namedClasses) {
-			baseClasses.add(namedClass.getName());
+	public void setBaseClasses(Set<OWLClass> namedClasses) {
+		for (OWLClass namedClass : namedClasses) {
+			baseClasses.add(owlDataFactory.getOWLClass(IRI.create(namedClass.getName())));
 		}
 	}
 	
@@ -102,10 +108,10 @@ public abstract class Modifier {
 		return modifiedClasses;
 	}
 	
-	public Set<NamedClass> getModifiedNamedClasses() {
-		Set<NamedClass> namedClasses = new TreeSet<NamedClass>();
+	public Set<OWLClass> getModifiedOWLClasses() {
+		Set<OWLClass> namedClasses = new TreeSet<OWLClass>();
 		for (String mc : modifiedClasses) {
-			namedClasses.add(new NamedClass(mc));
+			namedClasses.add(owlDataFactory.getOWLClass(IRI.create(mc)));
 		}
 		return namedClasses;
 	}

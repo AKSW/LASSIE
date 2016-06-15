@@ -21,7 +21,7 @@ import org.apache.commons.compress.compressors.CompressorOutputStream;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.log4j.Logger;
 import org.dllearner.core.owl.Individual;
-import org.dllearner.core.owl.NamedClass;
+import org.dllearner.core.owl.OWLClass;
 import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
@@ -48,7 +48,7 @@ public class KnowledgebaseSampleGenerator {
 	private static int maxCBDDepth = 0;
 
 	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, String namespace, 
-			int maxNrOfClasses, int maxNrOfInstancesPerClass, Set<NamedClass> testClasses){
+			int maxNrOfClasses, int maxNrOfInstancesPerClass, Set<OWLClass> testClasses){
 
 		Model model = ModelFactory.createDefaultModel();
 
@@ -64,7 +64,7 @@ public class KnowledgebaseSampleGenerator {
 			SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), cacheDir);
 			ConciseBoundedDescriptionGenerator cbdGen = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cacheDir);
 
-			Set<NamedClass> classes = new HashSet<NamedClass>();
+			Set<OWLClass> classes = new HashSet<OWLClass>();
 			if(testClasses.size() > 0){
 				classes = testClasses;
 			}else{
@@ -72,10 +72,10 @@ public class KnowledgebaseSampleGenerator {
 				classes = reasoner.getOWLClasses(namespace);
 			}
 			if(maxNrOfClasses != -1 && maxNrOfClasses != Integer.MAX_VALUE){
-				List<NamedClass> tmpClasses = new ArrayList<NamedClass>(classes);
+				List<OWLClass> tmpClasses = new ArrayList<OWLClass>(classes);
 				Collections.shuffle(tmpClasses);
 				//get for each class n instances and compute the CBD for each instance
-				getClassesInstances(maxNrOfClasses, maxNrOfInstancesPerClass,model, reasoner, cbdGen, new HashSet<NamedClass>(tmpClasses));
+				getClassesInstances(maxNrOfClasses, maxNrOfInstancesPerClass,model, reasoner, cbdGen, new HashSet<OWLClass>(tmpClasses));
 			}else{
 				//get for all classes n instances and compute the CBD for each instance
 				maxNrOfClasses = classes.size();
@@ -132,9 +132,9 @@ public class KnowledgebaseSampleGenerator {
 	 */
 	private static void getClassesInstances(int maxNrOfClasses,
 			int maxNrOfInstancesPerClass, Model model, SPARQLReasoner reasoner,
-			ConciseBoundedDescriptionGenerator cbdGen, Set<NamedClass> classes) {
+			ConciseBoundedDescriptionGenerator cbdGen, Set<OWLClass> classes) {
 		int i = 0;
-		for (NamedClass cls : classes) {
+		for (OWLClass cls : classes) {
 			logger.debug("\t...processing class " + cls + "...");
 			SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass*2);
 
@@ -165,7 +165,7 @@ public class KnowledgebaseSampleGenerator {
 	}
 
 	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, int maxNrOfClasses, int maxNrOfInstancesPerClass){
-		return createKnowledgebaseSample(endpoint, null, maxNrOfClasses, maxNrOfInstancesPerClass, new HashSet<NamedClass>());
+		return createKnowledgebaseSample(endpoint, null, maxNrOfClasses, maxNrOfInstancesPerClass, new HashSet<OWLClass>());
 	}
 
 	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, int maxNrOfInstancesPerClass){
@@ -173,7 +173,7 @@ public class KnowledgebaseSampleGenerator {
 	}
 
 	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, String namespace, int maxNrOfInstancesPerClass){
-		return createKnowledgebaseSample(endpoint, null, Integer.MAX_VALUE, maxNrOfInstancesPerClass, new HashSet<NamedClass>());
+		return createKnowledgebaseSample(endpoint, null, Integer.MAX_VALUE, maxNrOfInstancesPerClass, new HashSet<OWLClass>());
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -182,7 +182,7 @@ public class KnowledgebaseSampleGenerator {
 	}
 
 	public static LocalKnowledgeBase createKnowledgebaseSubTreeSample(SparqlEndpoint endpoint, String namespace, 
-			NamedClass subTreeRootClass, int maxNrOfInstancesPerClass){
+			OWLClass subTreeRootClass, int maxNrOfInstancesPerClass){
 
 		Model model = ModelFactory.createDefaultModel();
 
@@ -201,7 +201,7 @@ public class KnowledgebaseSampleGenerator {
 
 			//get all OWL classes
 			Set<Description> subclasses = reasoner.getSubClasses(subTreeRootClass, false);
-			Set<NamedClass> nextLevelClasses = reasoner.getOWLClasses(namespace);
+			Set<OWLClass> nextLevelClasses = reasoner.getOWLClasses(namespace);
 			//get for each sub-class of subTreeRootClass n instances and compute the CBD for each instance
 
 			for (Description cls : subclasses) {

@@ -26,11 +26,15 @@ import org.aksw.lassie.kb.KnowledgebaseSampleGenerator;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.log4j.Logger;
-import org.dllearner.core.owl.NamedClass;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.util.FileManager;
+
+import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 /**
  * @author sherif
@@ -50,7 +54,7 @@ public class TestLimes {
 //	static String toyDatasetFile = "datasets/toydataset/toydataset_scientist.nt";
 //	static String toyDatasetFile = "datasets/toydataset/toydataset_mammal.nt";
 	static String outputFile = "limesTestResult.txt";
-	static Set<NamedClass> testClasses = new HashSet<NamedClass>();
+	static Set<OWLClass> testClasses = new HashSet<OWLClass>();
 	
 	public static Model readModel(String fileNameOrUri)
 	{
@@ -87,10 +91,10 @@ public class TestLimes {
 			System.setOut(new PrintStream("/dev/null"));
 			long startTime = System.currentTimeMillis();
 //			Evaluation evaluator = new Evaluation(maxNrOfIterations, nrOfClasses, nrOfInstancesPerClass, classModifiersAndRates, instanceModifiersAndRates);
-
-			testClasses.add(new NamedClass("http://dbpedia.org/ontology/Scientist"));
-			testClasses.add(new NamedClass("http://dbpedia.org/ontology/Mammal"));
-			testClasses.add(new NamedClass("http://dbpedia.org/ontology/Plant"));
+			OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
+			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Scientist")));
+			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Mammal")));
+			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Plant")));
 			
 			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
 			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.5);

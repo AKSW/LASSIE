@@ -6,7 +6,7 @@ package org.aksw.lassie.bmGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.dllearner.core.owl.NamedClass;
+import org.dllearner.core.owl.OWLClass;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -68,7 +68,7 @@ public class ClassTypeDeleteModifier extends Modifier{
 			sourceClassModel.removeAll(null, RDF.type, null);
 			result.add(sourceClassModel);
 			modifiedClasses.add(className);
-			NamedClass cls = new NamedClass(className);
+			OWLClass cls = new OWLClass(className);
 			optimalSolutions.put(cls, cls);
 			}
 		return result;

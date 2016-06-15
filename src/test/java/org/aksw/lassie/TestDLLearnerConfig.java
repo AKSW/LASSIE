@@ -31,8 +31,6 @@ import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
-import org.dllearner.core.owl.Individual;
-import org.dllearner.core.owl.NamedClass;
 import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
@@ -65,7 +63,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
 	private int maxNrOfClasses = 5;//20;//-1 all classes
 	private int maxNrOfInstancesPerClass = 20;
-	private Set<NamedClass> dbpediaClasses = new TreeSet<NamedClass>();
+	private Set<OWLClass> dbpediaClasses = new TreeSet<OWLClass>();
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
 	private OWLOntology dbpediaOntology;
 	private String dbpediaNamespace = "http://dbpedia.org/ontology/";
@@ -98,17 +96,17 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		Map<String, Object> result = new HashMap<String, Object>();
 
 		//1. read class and instances
-		NamedClass sourceClass = new NamedClass(sourceClassUri);
+		OWLClass sourceClass = new OWLClass(sourceClassUri);
 		// get perfect positive examples as some instance of the source class directly without using LIMES
 		SortedSet<Individual> targetInstances = sourceKB.getReasoner().getIndividuals(sourceClass,maxNrOfInstancesPerClass);
 		
 		
-//		NamedClass sourceClass = null;
+//		OWLClass sourceClass = null;
 //		SortedSet<Individual> targetInstances = null ;
 //		ObjectInputStream in;
 //		try {
 //			in = new ObjectInputStream(new FileInputStream("sourceClass1.ser"));
-//			sourceClass = (NamedClass) in.readObject();
+//			sourceClass = (OWLClass) in.readObject();
 //			System.out.println("\n---------- sourceClass.ser ----------");
 //			System.out.println(sourceClass);
 //
@@ -168,12 +166,12 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 			//extract DBpedia classes
 			for (OWLClass cls : dbpediaOntology.getClassesInSignature()) {
 				if(!cls.toStringID().startsWith(dbpediaNamespace)) continue;
-				dbpediaClasses.add(new NamedClass(cls.toStringID()));
+				dbpediaClasses.add(new OWLClass(cls.toStringID()));
 			}
 			if(maxNrOfClasses > 0){
-				List<NamedClass> tmp = new ArrayList<NamedClass>(dbpediaClasses);
+				List<OWLClass> tmp = new ArrayList<OWLClass>(dbpediaClasses);
 				Collections.shuffle(tmp, new Random(123));
-				dbpediaClasses = new TreeSet<NamedClass>(tmp.subList(0, maxNrOfClasses));
+				dbpediaClasses = new TreeSet<OWLClass>(tmp.subList(0, maxNrOfClasses));
 			}
 
 			Model model = ModelFactory.createDefaultModel();
@@ -193,7 +191,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 			model.read(is, "RDF/XML");
 
 			//for each class c_i get n random instances + their CBD
-			for (NamedClass cls : dbpediaClasses) {
+			for (OWLClass cls : dbpediaClasses) {
 				logger.info("Generating sample for " + cls + "...");
 				SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass);
 				for (Individual individual : individuals) {

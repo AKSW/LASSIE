@@ -18,8 +18,8 @@ import java.util.SortedSet;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
-import org.dllearner.core.owl.Individual;
-import org.dllearner.core.owl.NamedClass;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLIndividual;
 
 import de.uni_leipzig.simba.data.Mapping;
 import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
@@ -72,12 +72,12 @@ public class LassieResultRecorder {
 	 * @param sourceClasses
 	 *@author sherif
 	 */
-	public LassieResultRecorder(int iterationCount, Set<NamedClass> inputClasses) {
+	public LassieResultRecorder(int iterationCount, Set<OWLClass> inputClasses) {
 		NrOfIterations = iterationCount;
 		nrOfClasses = inputClasses.size();
 		for(int i=1 ; i <= iterationCount ; i++){
 			LassieIterationRecorder ir = new LassieIterationRecorder(i);
-			for(NamedClass nc : inputClasses){
+			for(OWLClass nc : inputClasses){
 				ir.addClassRecord(new LassieClassRecorder(nc));
 			}
 			this.addIterationRecord(ir);
@@ -125,7 +125,7 @@ public class LassieResultRecorder {
 	 * @param nc
 	 * @author sherif
 	 */
-	public void setPositiveExample(SortedSet<Individual> positiveExamples, int iterationNr, NamedClass nc){
+	public void setPositiveExample(SortedSet<OWLIndividual> positiveExamples, int iterationNr, OWLClass nc){
 		if(positiveExamples.size() == 0){
 			logger.warn("No positive example to set");
 			return;
@@ -146,7 +146,7 @@ public class LassieResultRecorder {
 	 * @param nc
 	 * @author sherif
 	 */
-	public void setNegativeExample(SortedSet<Individual> negativeExamples, int iterationNr, NamedClass nc){
+	public void setNegativeExample(SortedSet<OWLIndividual> negativeExamples, int iterationNr, OWLClass nc){
 		if(negativeExamples.size() == 0){
 			logger.warn("No negative example to set");
 			return;
@@ -167,7 +167,7 @@ public class LassieResultRecorder {
 	 * @param nc
 	 * @author sherif
 	 */
-	public void setCoverage(double coverage, int iterationNr, NamedClass nc){
+	public void setCoverage(double coverage, int iterationNr, OWLClass nc){
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setCoverage(coverage);
@@ -184,7 +184,7 @@ public class LassieResultRecorder {
 	 * @param nc
 	 * @author sherif
 	 */
-	public void setFMeasure(double fMeasure, int iterationNr, NamedClass nc){
+	public void setFMeasure(double fMeasure, int iterationNr, OWLClass nc){
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setFMeasure(fMeasure);
@@ -201,7 +201,7 @@ public class LassieResultRecorder {
 	 * @param nc
 	 * @author sherif
 	 */
-	public void setMapping(List<? extends EvaluatedDescription> mapping, int iterationNr, NamedClass nc){
+	public void setMapping(List<? extends EvaluatedDescription> mapping, int iterationNr, OWLClass nc){
 
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
@@ -218,7 +218,7 @@ public class LassieResultRecorder {
 	 * @param nc
 	 * @author sherif
 	 */
-	public void setPFMeasure(double pFMesure, int iterationNr, NamedClass nc){
+	public void setPFMeasure(double pFMesure, int iterationNr, OWLClass nc){
 		for(int itr = iterationNr ; itr <= NrOfIterations; itr++){
 			for(LassieClassRecorder cr : getIterationRecord(itr).classesRecords){
 				if(cr.namedClass.equals(nc) ){
@@ -235,7 +235,7 @@ public class LassieResultRecorder {
 	 * @param nc
 	 * @author sherif
 	 */
-	public void setInstanceMapping(Mapping instanceMapping, int iterationNr, NamedClass nc){
+	public void setInstanceMapping(Mapping instanceMapping, int iterationNr, OWLClass nc){
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setInstanceMapping(instanceMapping);
@@ -244,7 +244,7 @@ public class LassieResultRecorder {
 		}
 	}
 	
-	public void setClassifier(List<SimpleClassifier> classifiers, int iterationNr, NamedClass nc){
+	public void setClassifier(List<SimpleClassifier> classifiers, int iterationNr, OWLClass nc){
 		for(LassieClassRecorder cr : getIterationRecord(iterationNr).classesRecords){
 			if(cr.namedClass.equals(nc) ){
 				cr.setClassifiers(classifiers);
@@ -471,11 +471,11 @@ public class LassieResultRecorder {
 
 
 	public static void main(String[] args) throws IOException{
-		Set<NamedClass> inputClasses = new HashSet<NamedClass>();
-		inputClasses.add(new NamedClass("a"));
-		inputClasses.add(new NamedClass("b"));
-		inputClasses.add(new NamedClass("c"));
-		inputClasses.add(new NamedClass("d"));
+		Set<OWLClass> inputClasses = new HashSet<OWLClass>();
+		inputClasses.add(new OWLClass("a"));
+		inputClasses.add(new OWLClass("b"));
+		inputClasses.add(new OWLClass("c"));
+		inputClasses.add(new OWLClass("d"));
 		LassieResultRecorder rr = new LassieResultRecorder(3, inputClasses);
 		rr.saveToFile("test.txt");
 

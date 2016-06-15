@@ -4,7 +4,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.aksw.lassie.kb.KnowledgeBase;
-import org.dllearner.core.owl.Individual;
+import org.semanticweb.owlapi.model.OWLIndividual;
 
 public class NegativeExamplesGenerator {
 
@@ -14,8 +14,8 @@ public class NegativeExamplesGenerator {
 		this.kb = kb;
 	}
 	
-	public SortedSet<Individual> generateNegativeExamples(SortedSet<Individual> positiveExamples){
-		SortedSet<Individual> negativeExamples = new TreeSet<Individual>();
+	public SortedSet<OWLIndividual> generateNegativeExamples(SortedSet<OWLIndividual> positiveExamples){
+		SortedSet<OWLIndividual> negativeExamples = new TreeSet<>();
 		
 		
 		

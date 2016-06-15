@@ -30,7 +30,11 @@ import org.aksw.lassie.bmGenerator.InstanceSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.log4j.Logger;
-import org.dllearner.core.owl.NamedClass;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLDataFactory;
+
+import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 
 /**
@@ -42,6 +46,8 @@ public class Experiments {
 
 	private List<Modifier> classModifiers = new ArrayList<Modifier>();
 	private List<Modifier> instanceModifiers = new ArrayList<Modifier>();
+	
+
 
 	public Experiments(){
 //		classModifiers.add(new ClassRenameModifier());
@@ -65,7 +71,7 @@ public class Experiments {
 			int nrOfClassModifiers, 		int nrOfInstanceModifiers, 
 			double classesDestructionRate, 	double instancesDestructionRate,
 			int nrOfExperimentRepeats, 		int maxNrOfIterations, String outputFolder, 
-			Set<NamedClass> testClasses, 	boolean useRemoteKB) throws IOException{
+			Set<OWLClass> testClasses, 	boolean useRemoteKB) throws IOException{
 
 		//create a folder for the results if not exist
 		File folder = new File(outputFolder).getAbsoluteFile();
@@ -148,17 +154,17 @@ public class Experiments {
 					"OPTIONAL: args[9...n] = specific test classes, NOTE: number of test classes must equal number of classes in args[0]");
 			System.exit(1);
 		}
-		
-		Set<NamedClass> testClasses = new HashSet<NamedClass>();
+		OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
+		Set<OWLClass> testClasses = new HashSet<OWLClass>();
 		for(int i=9 ; i<args.length ; i++){
-			testClasses.add(new NamedClass(args[i]));
+			testClasses.add(owlDataFactory.getOWLClass(IRI.create(args[i])));
 		}
 		int nrOfClasses = Integer.parseInt(args[0]);
 		if(testClasses.size() > 0 && nrOfClasses > testClasses.size()){
 			logger.error("Number of test class(es) is " + nrOfClasses + " while only " + testClasses.size() +" class(es) specified. EXIT LASSIE!!");
 			System.exit(1);
 		}
-		
+		nrOfClasses = (nrOfClasses == -1) ? Integer.MAX_VALUE : nrOfClasses;
 		Experiments experiment = new Experiments();
 		experiment.runExperiments(nrOfClasses, Integer.parseInt(args[1]), Integer.parseInt(args[2]), 
 				Integer.parseInt(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), 

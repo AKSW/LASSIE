@@ -6,7 +6,6 @@ package org.aksw.lassie.bmGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.dllearner.core.owl.NamedClass;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -45,7 +44,7 @@ public class ClassRenameModifier extends Modifier {
 			String renamedClassName = className+"_RENAME";
 			subModel = renameClass(subModel, className,  renamedClassName);
 			modifiedClasses.add(renamedClassName);
-			optimalSolutions.put(new NamedClass(renamedClassName), new NamedClass(className));
+			optimalSolutions.put(new OWLClass(renamedClassName), new OWLClass(className));
 		}
 		return subModel;
 	}

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
@@ -38,8 +39,6 @@ import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
-import org.dllearner.core.owl.Individual;
-import org.dllearner.core.owl.NamedClass;
 import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
@@ -75,8 +74,8 @@ public class Evaluation {
 	private String dbpediaNamespace = "http://dbpedia.org/ontology/";
 	private OWLOntology dbpediaOntology;
 
-	private Set<NamedClass> modifiedDbpediaClasses = new TreeSet<NamedClass>();
-	private Set<NamedClass> classesToLearn 			= new TreeSet<NamedClass>();
+	private Set<OWLClass> modifiedDbpediaClasses = new TreeSet<OWLClass>();
+	private Set<OWLClass> classesToLearn 			= new TreeSet<OWLClass>();
 
 	private static Map<Modifier, Double> classModifiersAndRates    = new HashMap<Modifier, Double>();
 	private static Map<Modifier, Double> instanceModifiersAndRates = new HashMap<Modifier, Double>();
@@ -89,9 +88,10 @@ public class Evaluation {
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
 	protected static int maxNrOfIterations;
 	
-//	public NamedClass subTreeRootClass = new NamedClass("http://dbpedia.org/ontology/ChemicalSubstance");
-//	public NamedClass subTreeRootClass = new NamedClass("http://dbpedia.org/ontology/Food");
-	public NamedClass subTreeRootClass = new NamedClass("http://dbpedia.org/ontology/Agent");
+//	public OWLClass subTreeRootClass = new OWLClass("http://dbpedia.org/ontology/ChemicalSubstance");
+//	public OWLClass subTreeRootClass = new OWLClass("http://dbpedia.org/ontology/Food");
+//	public OWLClass subTreeRootClass = new OWLClass("http://dbpedia.org/ontology/Agent");
+	public OWLClass subTreeRootClass = new OWLClass("http://dbpedia.org/ontology/Event");
 	//constructors
 	public Evaluation(){
 		super();
@@ -127,12 +127,12 @@ public class Evaluation {
 			//extract DBpedia classes
 			for (OWLClass cls : dbpediaOntology.getClassesInSignature()) {
 				if(!cls.toStringID().startsWith(dbpediaNamespace)) continue;
-				classesToLearn.add(new NamedClass(cls.toStringID()));
+				classesToLearn.add(new OWLClass(cls.toStringID()));
 			}
 			if(maxNrOfClasses > 0){
-				List<NamedClass> tmp = new ArrayList<NamedClass>(classesToLearn);
+				List<OWLClass> tmp = new ArrayList<OWLClass>(classesToLearn);
 				Collections.shuffle(tmp, new Random(123));
-				classesToLearn = new TreeSet<NamedClass>(tmp.subList(0, maxNrOfClasses));
+				classesToLearn = new TreeSet<OWLClass>(tmp.subList(0, maxNrOfClasses));
 			}
 
 			Model model = ModelFactory.createDefaultModel();
@@ -147,7 +147,7 @@ public class Evaluation {
 			model.read(is, "RDF/XML");
 
 			//for each class c_i get n random instances + their CBD
-			for (NamedClass cls : classesToLearn) {
+			for (OWLClass cls : classesToLearn) {
 				logger.info("Generating sample for " + cls + "...");
 				SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass);
 				for (Individual individual : individuals) {
@@ -193,7 +193,7 @@ public class Evaluation {
 		}
 
 		testDataset.add(differenceModel);
-		modifiedDbpediaClasses = benchmarker.getModifiedNamedClasses();
+		modifiedDbpediaClasses = benchmarker.getModifiedOWLClasses();
 		return testDataset;
 	}
 
@@ -216,11 +216,11 @@ public class Evaluation {
 		QueryFactory.create(sparqlQueryString);
 		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, referenceDataset);
 		ResultSet selectResult = qexec.execSelect();
-		List<NamedClass> classesWithEnoughInstances = new ArrayList<NamedClass>();
+		List<OWLClass> classesWithEnoughInstances = new ArrayList<OWLClass>();
 		while ( selectResult.hasNext())	{
 			QuerySolution soln = selectResult.nextSolution() ;
 			RDFNode cls = soln.get("type");
-			classesWithEnoughInstances.add(new NamedClass(cls.toString()));
+			classesWithEnoughInstances.add(new OWLClass(cls.toString()));
 
 			//shuffle and select first n classes
 			Collections.shuffle(classesWithEnoughInstances, new Random(123));
@@ -230,7 +230,7 @@ public class Evaluation {
 		classesToLearn = Sets.newHashSet(classesWithEnoughInstances);
 
 		//add instances for each class
-		for(NamedClass cls : classesWithEnoughInstances){
+		for(OWLClass cls : classesWithEnoughInstances){
 			Model m = ModelFactory.createDefaultModel();
 			sparqlQueryString = "CONSTRUCT {?s ?p ?o} WHERE {?s a <" + cls.getName() + ">. ?s ?p ?o}";
 			QueryFactory.create(sparqlQueryString);
@@ -244,7 +244,7 @@ public class Evaluation {
 	}
 
 
-	public LassieResultRecorder run(Set<NamedClass> testClasses, boolean useRemoteKB){
+	public LassieResultRecorder run(Set<OWLClass> testClasses, boolean useRemoteKB){
 		//create a sample of the knowledge base
 //		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
 //		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, testClasses);
@@ -262,6 +262,13 @@ public class Evaluation {
 		}
 
 		Model modifiedReferenceDataset = createTestDataset(sampleKBModel, instanceModifiersAndRates, classModifiersAndRates, maxNrOfClasses, maxNrOfInstancesPerClass);
+//		//TODO TEST
+//		try {
+//			modifiedReferenceDataset.write(new FileWriter("modifiedReferenceDataset.ttl"), "TTL");
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		System.exit(0);
 		KnowledgeBase sourceKB = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, endpoint, maxNrOfIterations);
@@ -302,7 +309,7 @@ public class Evaluation {
 
 	public LassieResultRecorder runIntensionalEvaluation(boolean useRemoteKB){
 		//create a sample of the knowledge base
-		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, new HashSet<NamedClass>());
+		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, new HashSet<OWLClass>());
 
 		//we assume that the target is the sample KB itself
 		KnowledgeBase target = sampleKB;
@@ -333,7 +340,7 @@ public class Evaluation {
 		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 
-		//		return generator.run(modifiedDbpediaClasses, Sets.newHashSet(new NamedClass("http://dbpedia.org/ontology/Person")));
+		//		return generator.run(modifiedDbpediaClasses, Sets.newHashSet(new OWLClass("http://dbpedia.org/ontology/Person")));
 		return generator.run(modifiedDbpediaClasses, useRemoteKB);
 
 	}
@@ -364,16 +371,16 @@ public class Evaluation {
 
 			//compute avgRealFMeasure
 			double avgRealFMeasure = 0d;
-			Map<NamedClass, Double> mapF = (Map<NamedClass, Double>) result.get(iterationNr).iterator().next().get("sourceClass2RealFMeasure");
-			for(NamedClass nC: mapF.keySet()){
+			Map<OWLClass, Double> mapF = (Map<OWLClass, Double>) result.get(iterationNr).iterator().next().get("sourceClass2RealFMeasure");
+			for(OWLClass nC: mapF.keySet()){
 				avgRealFMeasure += mapF.get(nC);
 			}
 			avgRealFMeasure /= (double) mapF.size();
 
 			//compute avgPseudoFMeasure
 			double avgPseudoFMeasure = 0d;
-			Map<NamedClass, Double> mapPF = (Map<NamedClass, Double>) result.get(iterationNr).iterator().next().get("sourceClass2PseudoFMeasure");
-			for(NamedClass nC: mapPF.keySet()){
+			Map<OWLClass, Double> mapPF = (Map<OWLClass, Double>) result.get(iterationNr).iterator().next().get("sourceClass2PseudoFMeasure");
+			for(OWLClass nC: mapPF.keySet()){
 				avgRealFMeasure += mapPF.get(nC);
 			}
 			avgRealFMeasure /= (double) mapPF.size();
@@ -401,16 +408,16 @@ public class Evaluation {
 
 					if(key.equals("sourceClass2RealFMeasure")){
 						System.out.println("\nSourceClass\tRealFMeasure:");
-						Map<NamedClass, Double> map = (Map<NamedClass, Double>) resultEntry.get(key);
-						for(NamedClass nC: map.keySet()){
+						Map<OWLClass, Double> map = (Map<OWLClass, Double>) resultEntry.get(key);
+						for(OWLClass nC: map.keySet()){
 							System.out.println(nC + "\t" + map.get(nC));
 						}
 					}
 
 					if(key.equals("sourceClass2PseudoFMeasure")){
 						System.out.println("\nSourceClass\tPseudoFMeasure:");
-						Map<NamedClass, Double> map = (Map<NamedClass, Double>) resultEntry.get(key);
-						for(NamedClass nC: map.keySet()){
+						Map<OWLClass, Double> map = (Map<OWLClass, Double>) resultEntry.get(key);
+						for(OWLClass nC: map.keySet()){
 							System.out.println(nC + "\t" + map.get(nC));
 						}
 					}
@@ -418,8 +425,8 @@ public class Evaluation {
 					if(key.equals("Top10Mapping")){
 						System.out.println("\nTOP 10 MAPPINGS:");
 
-						Map<NamedClass, List<? extends EvaluatedDescription>> map = (Map<NamedClass, List<? extends EvaluatedDescription>>) resultEntry.get(key);
-						for(NamedClass nC: map.keySet()){
+						Map<OWLClass, List<? extends EvaluatedDescription>> map = (Map<OWLClass, List<? extends EvaluatedDescription>>) resultEntry.get(key);
+						for(OWLClass nC: map.keySet()){
 							System.out.println("\n"+ nC);
 							List<? extends EvaluatedDescription> mapList = map.get(nC);
 							int i=1;
@@ -434,8 +441,8 @@ public class Evaluation {
 
 					if(key.equals("sourceClass2PosExamples")){
 						System.out.println("\nPOSITIVE EXAMPLES:");
-						Multimap<NamedClass, String> map = (Multimap<NamedClass, String>) resultEntry.get(key);
-						for(NamedClass nC: map.keySet()){
+						Multimap<OWLClass, String> map = (Multimap<OWLClass, String>) resultEntry.get(key);
+						for(OWLClass nC: map.keySet()){
 							System.out.println("\n"+ nC);
 							Collection<String> mapList = map.get(nC);
 							int i=1;
@@ -447,8 +454,8 @@ public class Evaluation {
 
 					if(key.equals("sourceClass2NegativeExample")){
 						System.out.println("\nNEGATIVE EXAMPLES:");
-						Map<NamedClass, SortedSet<Individual>> map = (Map<NamedClass, SortedSet<Individual>>) resultEntry.get(key);
-						for(NamedClass nC: map.keySet()){
+						Map<OWLClass, SortedSet<Individual>> map = (Map<OWLClass, SortedSet<Individual>>) resultEntry.get(key);
+						for(OWLClass nC: map.keySet()){
 							System.out.println("\n"+ nC);
 							SortedSet<Individual> sortedSet = (SortedSet<Individual>) map.get(nC);
 							int i=1;

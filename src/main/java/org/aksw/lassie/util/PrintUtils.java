@@ -9,15 +9,14 @@ import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.dllearner.core.EvaluatedDescription;
-import org.dllearner.core.owl.Description;
 import org.dllearner.utilities.LabelShortFormProvider;
-import org.dllearner.utilities.owl.OWLAPIDescriptionConvertVisitor;
+import org.semanticweb.owlapi.model.OWLClassExpression;
 
 import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
 
 public class PrintUtils {
 
-	public static String toHTMLWithLabels(Map<Description, List<? extends EvaluatedDescription>> mapping, KnowledgeBase source, KnowledgeBase target){
+	public static String toHTMLWithLabels(Map<OWLClassExpression, List<? extends EvaluatedDescription>> mapping, KnowledgeBase source, KnowledgeBase target){
 		ManchesterOWLSyntaxOWLObjectRendererImpl sourceRenderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
 		LabelShortFormProvider sfp;
 		if(source.isRemote()){
@@ -42,8 +41,8 @@ public class PrintUtils {
 		sb.append("<tbody>\n");
 		
 		
-		for (Entry<Description, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
-			Description key = entry.getKey();
+		for (Entry<OWLClassExpression, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
+			OWLClassExpression key = entry.getKey();
 			String renderedKey = sourceRenderer.render(OWLAPIDescriptionConvertVisitor.getOWLClassExpression(key));
 			List<? extends org.dllearner.core.EvaluatedDescription> value = entry.getValue();
 			if(value == null){
@@ -103,8 +102,8 @@ public class PrintUtils {
 	public static void printMappingPretty(Map<Description, List<? extends EvaluatedDescription>> mapping){
 		DecimalFormat dfPercent = new DecimalFormat("0.00%");
 		System.out.println("Source Class -> Target Class Expression");
-		for (Entry<Description, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
-			Description key = entry.getKey();
+		for (Entry<OWLClassExpression, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
+		    OWLClassExpression key = entry.getKey();
 			int length = OWLAPIDescriptionConvertVisitor.getOWLClassExpression(key).toString().length();
 			String indention = "";
 			for(int i = 0; i < length; i++){
@@ -125,10 +124,10 @@ public class PrintUtils {
 		}
 	}
 	
-	public static void printMapping(Map<Description, List<? extends EvaluatedDescription>> mapping){
+	public static void printMapping(Map<OWLClassExpression, List<? extends EvaluatedDescription>> mapping){
 		System.out.println("Source Class -> Target Class Expression");
-		for (Entry<Description, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
-			Description key = entry.getKey();
+		for (Entry<Description, List<? extends org.dllearner.core.EvaluatedOWLClassExpression>> entry : mapping.entrySet()) {
+			OWLClassExpression key = entry.getKey();
 			int length = key.toString().length();
 			String indention = "";
 			for(int i = 0; i < length; i++){
@@ -142,7 +141,7 @@ public class PrintUtils {
 		}
 	}
 	
-	public static String prettyPrint(Description desc){
+	public static String prettyPrint(OWLClassExpression desc){
 		return OWLAPIDescriptionConvertVisitor.getOWLClassExpression(desc).toString();
 	}
 
