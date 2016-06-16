@@ -4,8 +4,9 @@
  */
 package org.aksw.lassie.core;
 
-import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 import java.util.Comparator;
+
+import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 
 /**
  *

@@ -96,7 +96,7 @@ public abstract class Modifier {
 
 	public void setBaseClasses(Set<OWLClass> namedClasses) {
 		for (OWLClass namedClass : namedClasses) {
-			baseClasses.add(owlDataFactory.getOWLClass(IRI.create(namedClass.getName())));
+			baseClasses.add(namedClass.toStringID());
 		}
 	}
 	

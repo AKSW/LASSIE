@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
@@ -24,12 +23,7 @@ import java.util.TreeSet;
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
 import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
-import org.aksw.lassie.bmGenerator.InstanceAbbreviationModifier;
-import org.aksw.lassie.bmGenerator.InstanceAcronymModifier;
-import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
-import org.aksw.lassie.bmGenerator.InstanceMergeModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
-import org.aksw.lassie.bmGenerator.InstanceSplitModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -38,6 +32,7 @@ import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.log4j.Logger;
+import org.dllearner.core.ComponentInitException;
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
@@ -45,7 +40,10 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -61,13 +59,15 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
+import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
+
 public class Evaluation {
 
 	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
 
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 //	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
-	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), "cache");
+	private SPARQLReasoner reasoner ;
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, "cache");
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
 
@@ -88,18 +88,34 @@ public class Evaluation {
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
 	protected static int maxNrOfIterations;
 	
-//	public OWLClass subTreeRootClass = new OWLClass("http://dbpedia.org/ontology/ChemicalSubstance");
-//	public OWLClass subTreeRootClass = new OWLClass("http://dbpedia.org/ontology/Food");
-//	public OWLClass subTreeRootClass = new OWLClass("http://dbpedia.org/ontology/Agent");
-	public OWLClass subTreeRootClass = new OWLClass("http://dbpedia.org/ontology/Event");
+	OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
+	
+//	public OWLClass subTreeRootClass = owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/ChemicalSubstance"));
+//	public OWLClass subTreeRootClass = owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Food"));
+//	public OWLClass subTreeRootClass = owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Agent"));
+	public OWLClass subTreeRootClass =  owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Event"));
 	//constructors
 	public Evaluation(){
 		super();
+		SparqlEndpointKS sparqlEndpointKS = new SparqlEndpointKS(endpoint);
+		try {
+            sparqlEndpointKS.init();
+        } catch (ComponentInitException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+		reasoner.setSources(sparqlEndpointKS);
+		try {
+            reasoner.init();
+        } catch (ComponentInitException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 	}
 
 	public Evaluation(int maxNrOfClasses,int maxNrOfInstancesPerClass, 
 			Map<Modifier, Double> classModifiers2Rates, Map<Modifier, Double> instanceModifiers2Rates) {
-		super();
+		this();
 		this.maxNrOfClasses = maxNrOfClasses;
 		this.maxNrOfInstancesPerClass = maxNrOfInstancesPerClass;
 		classModifiersAndRates = classModifiers2Rates;
@@ -127,7 +143,7 @@ public class Evaluation {
 			//extract DBpedia classes
 			for (OWLClass cls : dbpediaOntology.getClassesInSignature()) {
 				if(!cls.toStringID().startsWith(dbpediaNamespace)) continue;
-				classesToLearn.add(new OWLClass(cls.toStringID()));
+				classesToLearn.add(cls);
 			}
 			if(maxNrOfClasses > 0){
 				List<OWLClass> tmp = new ArrayList<OWLClass>(classesToLearn);
@@ -149,9 +165,9 @@ public class Evaluation {
 			//for each class c_i get n random instances + their CBD
 			for (OWLClass cls : classesToLearn) {
 				logger.info("Generating sample for " + cls + "...");
-				SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass);
-				for (Individual individual : individuals) {
-					Model cbd = cbdGenerator.getConciseBoundedDescription(individual.getName(), maxCBDDepth);
+				SortedSet<OWLIndividual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass);
+				for (OWLIndividual individual : individuals) {
+					Model cbd = cbdGenerator.getConciseBoundedDescription(individual.toStringID(), maxCBDDepth);
 					model.add(cbd);
 					try {
 						Thread.sleep(500);
@@ -220,7 +236,7 @@ public class Evaluation {
 		while ( selectResult.hasNext())	{
 			QuerySolution soln = selectResult.nextSolution() ;
 			RDFNode cls = soln.get("type");
-			classesWithEnoughInstances.add(new OWLClass(cls.toString()));
+			classesWithEnoughInstances.add(owlDataFactory.getOWLClass(IRI.create(cls.toString())));
 
 			//shuffle and select first n classes
 			Collections.shuffle(classesWithEnoughInstances, new Random(123));
@@ -232,7 +248,7 @@ public class Evaluation {
 		//add instances for each class
 		for(OWLClass cls : classesWithEnoughInstances){
 			Model m = ModelFactory.createDefaultModel();
-			sparqlQueryString = "CONSTRUCT {?s ?p ?o} WHERE {?s a <" + cls.getName() + ">. ?s ?p ?o}";
+			sparqlQueryString = "CONSTRUCT {?s ?p ?o} WHERE {?s a <" + cls.toStringID() + ">. ?s ?p ?o}";
 			QueryFactory.create(sparqlQueryString);
 			qexec = QueryExecutionFactory.create(sparqlQueryString, referenceDataset);
 			m = qexec.execConstruct();
@@ -454,12 +470,12 @@ public class Evaluation {
 
 					if(key.equals("sourceClass2NegativeExample")){
 						System.out.println("\nNEGATIVE EXAMPLES:");
-						Map<OWLClass, SortedSet<Individual>> map = (Map<OWLClass, SortedSet<Individual>>) resultEntry.get(key);
+						Map<OWLClass, SortedSet<OWLIndividual>> map = (Map<OWLClass, SortedSet<OWLIndividual>>) resultEntry.get(key);
 						for(OWLClass nC: map.keySet()){
 							System.out.println("\n"+ nC);
-							SortedSet<Individual> sortedSet = (SortedSet<Individual>) map.get(nC);
+							SortedSet<OWLIndividual> sortedSet = (SortedSet<OWLIndividual>) map.get(nC);
 							int i=1;
-							for (Individual ind : sortedSet) {
+							for (OWLIndividual ind : sortedSet) {
 								System.out.println("\t" + i++ + ". " + ind);
 							}
 						}

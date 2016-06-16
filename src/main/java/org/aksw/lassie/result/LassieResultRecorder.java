@@ -18,11 +18,14 @@ import java.util.SortedSet;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
 import de.uni_leipzig.simba.data.Mapping;
 import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
+import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 
 /**
@@ -472,10 +475,11 @@ public class LassieResultRecorder {
 
 	public static void main(String[] args) throws IOException{
 		Set<OWLClass> inputClasses = new HashSet<OWLClass>();
-		inputClasses.add(new OWLClass("a"));
-		inputClasses.add(new OWLClass("b"));
-		inputClasses.add(new OWLClass("c"));
-		inputClasses.add(new OWLClass("d"));
+		OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
+		inputClasses.add(owlDataFactory.getOWLClass(IRI.create("a")));
+		inputClasses.add(owlDataFactory.getOWLClass(IRI.create("b")));
+		inputClasses.add(owlDataFactory.getOWLClass(IRI.create("c")));
+		inputClasses.add(owlDataFactory.getOWLClass(IRI.create("d")));
 		LassieResultRecorder rr = new LassieResultRecorder(3, inputClasses);
 		rr.saveToFile("test.txt");
 

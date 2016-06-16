@@ -3,26 +3,18 @@
  */
 package org.aksw.lassie;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
-import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
-import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
 import org.aksw.lassie.kb.KnowledgeBase;
-import org.aksw.lassie.kb.KnowledgebaseSampleGenerator;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.log4j.Logger;

@@ -6,7 +6,6 @@ package org.aksw.lassie.bmGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;

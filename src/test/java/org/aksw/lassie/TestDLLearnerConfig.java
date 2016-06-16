@@ -38,7 +38,9 @@ import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -70,7 +72,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	private String referenceModelFile = "dbpedia-sample" + ((maxNrOfClasses > 0) ? ("_" + maxNrOfClasses + "_" + maxNrOfInstancesPerClass) : "") + ".ttl";
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
 
-	
+
 	/**
 	 * @param source
 	 * @param target
@@ -96,9 +98,9 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 		Map<String, Object> result = new HashMap<String, Object>();
 
 		//1. read class and instances
-		OWLClass sourceClass = new OWLClass(sourceClassUri);
+		OWLClass sourceClass = owlDataFactory.getOWLClass(IRI.create(sourceClassUri));
 		// get perfect positive examples as some instance of the source class directly without using LIMES
-		SortedSet<Individual> targetInstances = sourceKB.getReasoner().getIndividuals(sourceClass,maxNrOfInstancesPerClass);
+		SortedSet<OWLIndividual> targetInstances = sourceKB.getReasoner().getIndividuals(sourceClass,maxNrOfInstancesPerClass);
 		
 		
 //		OWLClass sourceClass = null;
@@ -166,7 +168,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 			//extract DBpedia classes
 			for (OWLClass cls : dbpediaOntology.getClassesInSignature()) {
 				if(!cls.toStringID().startsWith(dbpediaNamespace)) continue;
-				dbpediaClasses.add(new OWLClass(cls.toStringID()));
+				dbpediaClasses.add(cls);
 			}
 			if(maxNrOfClasses > 0){
 				List<OWLClass> tmp = new ArrayList<OWLClass>(dbpediaClasses);
@@ -193,9 +195,9 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 			//for each class c_i get n random instances + their CBD
 			for (OWLClass cls : dbpediaClasses) {
 				logger.info("Generating sample for " + cls + "...");
-				SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass);
-				for (Individual individual : individuals) {
-					Model cbd = cbdGenerator.getConciseBoundedDescription(individual.getName(), maxCBDDepth+2);
+				SortedSet<OWLIndividual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass);
+				for (OWLIndividual individual : individuals) {
+					Model cbd = cbdGenerator.getConciseBoundedDescription(individual.toStringID(), maxCBDDepth+2);
 					model.add(cbd);
 					try {
 						Thread.sleep(500);

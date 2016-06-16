@@ -6,15 +6,14 @@ package org.aksw.lassie.bmGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
-import org.dllearner.core.owl.Description;
-import org.dllearner.core.owl.OWLClass;
-import org.dllearner.core.owl.Union;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.vocabulary.RDF;
 
 /**
  * @author sherif
@@ -86,12 +85,12 @@ public class ClassMergeModifier extends Modifier{
 				result.add(sourceClassModel);
 
 				//generate optimal solution
-				List<Description> children = new ArrayList<Description>();
+				List<OWLClassExpression> children = new ArrayList<>();
 				for (String uri : mergeSourceClassUris) {
-					children.add(new OWLClass(uri));
+					children.add(owlDataFactory.getOWLClass(IRI.create(uri)));
 				}
-				Union optimalSolution = new Union(children);
-				optimalSolutions.put(new OWLClass(mergeTargetClassUri), optimalSolution);
+				OWLObjectUnionOf optimalSolution = owlDataFactory.getOWLObjectUnionOf(new TreeSet<> (children));
+				optimalSolutions.put(owlDataFactory.getOWLClass(IRI.create(mergeTargetClassUri)), optimalSolution);
 				
 			}
 		}

@@ -29,10 +29,16 @@ import org.dllearner.kb.sparql.SparqlKnowledgeSource;
 import org.junit.Before;
 import org.junit.Test;
 import org.semanticweb.owlapi.io.ToStringRenderer;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 
 import com.google.common.collect.Sets;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+
+import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
 
 public class OntologyMatchingTest {
@@ -43,6 +49,8 @@ public class OntologyMatchingTest {
 	private KnowledgeBase linkedGeoData;
 
 	private final int fragmentDepth = 3;
+	
+	protected OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
 
 	@Before
 	public void setUp() throws Exception {
@@ -106,16 +114,17 @@ public class OntologyMatchingTest {
 	@Test
 	public void testDBpediaLinkedGeoData2() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
+		
 		Set<OWLClass> sourceClasses = Sets.newHashSet(
-				new OWLClass("http://dbpedia.org/ontology/City"),
-				new OWLClass("http://dbpedia.org/ontology/Mountain"),
-				new OWLClass("http://dbpedia.org/ontology/River")
+		        owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/City")),
+		        owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Mountain")),
+		                owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/River"))
 				);
 		Set<OWLClass> targetClasses = Sets.newHashSet(
-				new OWLClass("http://linkedgeodata.org/ontology/Village"),
-				new OWLClass("http://linkedgeodata.org/ontology/City"),
-				new OWLClass("http://linkedgeodata.org/ontology/River"),
-				new OWLClass("http://linkedgeodata.org/ontology/Peak")
+		        owlDataFactory.getOWLClass(IRI.create("http://linkedgeodata.org/ontology/Village")),
+		        owlDataFactory.getOWLClass(IRI.create("http://linkedgeodata.org/ontology/City")),
+		        owlDataFactory.getOWLClass(IRI.create("http://linkedgeodata.org/ontology/River")),
+		        owlDataFactory.getOWLClass(IRI.create("http://linkedgeodata.org/ontology/Peak"))
 				);
 		matcher.run(sourceClasses, targetClasses, false);
 	}
@@ -123,10 +132,10 @@ public class OntologyMatchingTest {
 	@Test
 	public void testSingleClassOpenCycToDBpedia() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(openCyc, dbpedia);
-		OWLClass nc = new OWLClass("http://sw.opencyc.org/concept/Mx4r4fYeXvbPQdiKtoNafhmOew");
+		OWLClass nc = owlDataFactory.getOWLClass(IRI.create("http://sw.opencyc.org/concept/Mx4r4fYeXvbPQdiKtoNafhmOew"));
 		try {
 			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc, false);
-			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
+			Map<OWLClassExpression, List<? extends EvaluatedDescription>> alignment = new HashMap<OWLClassExpression, List<? extends EvaluatedDescription>>();
 			alignment.put(nc, mapping);
 			System.out.println(PrintUtils.toHTMLWithLabels(alignment, openCyc, dbpedia));
 		} catch (NonExistingLinksException e) {
@@ -137,10 +146,10 @@ public class OntologyMatchingTest {
 	@Test
 	public void testSingleClassLinkedGeoDataToDBpedia() {System.out.println("Start");
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(linkedGeoData, dbpedia);
-		OWLClass nc = new OWLClass("http://linkedgeodata.org/ontology/Aerodrome");
+		OWLClass nc = owlDataFactory.getOWLClass(IRI.create("http://linkedgeodata.org/ontology/Aerodrome"));
 		try {System.out.println("000");
 			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc, false);
-			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
+			Map<OWLClassExpression, List<? extends EvaluatedDescription>> alignment = new HashMap<>();
 			alignment.put(nc, mapping);
 			System.out.println(PrintUtils.toHTMLWithLabels(alignment, linkedGeoData, dbpedia));
 		} catch (NonExistingLinksException e) {
@@ -151,10 +160,10 @@ public class OntologyMatchingTest {
 	@Test
 	public void testSingleClassDBpediaToLinkedGeoData() {
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
-		OWLClass nc = new OWLClass("http://dbpedia.org/ontology/AdministrativeRegion");
+		OWLClass nc = owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/AdministrativeRegion"));
 		try {
 			List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc, false);
-			Map<Description, List<? extends EvaluatedDescription>> alignment = new HashMap<Description, List<? extends EvaluatedDescription>>();
+			Map<OWLClassExpression, List<? extends EvaluatedDescription>> alignment = new HashMap<>();
 			alignment.put(nc, mapping);
 			System.out.println(PrintUtils.toHTMLWithLabels(alignment, dbpedia, linkedGeoData));
 		} catch (NonExistingLinksException e) {
@@ -169,7 +178,7 @@ public class OntologyMatchingTest {
 		KnowledgeBase peel_0 = new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel0File, null, "TTL"));
 		KnowledgeBase peel_1= new LocalKnowledgeBase(ModelFactory.createDefaultModel().read(peel1File, null, "TTL"));
 		ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_1);
-		matcher.run(Collections.singleton(new OWLClass("http://purl.org/ontology/mo/MusicArtist")), false);
+		matcher.run(Collections.singleton(owlDataFactory.getOWLClass(IRI.create("http://purl.org/ontology/mo/MusicArtist"))), false);
 
 		System.in.read();
 	}
@@ -196,7 +205,7 @@ public class OntologyMatchingTest {
 			Model peelKModel = benchmarker.bmPeel(inModel, inClassUri, dRatio); 
 			KnowledgeBase peel_k = new LocalKnowledgeBase(peelKModel);
 			ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_k);
-			matcher.run(Collections.singleton(new OWLClass("http://purl.org/ontology/mo/MusicArtist")), false);
+			matcher.run(Collections.singleton(owlDataFactory.getOWLClass(IRI.create("http://purl.org/ontology/mo/MusicArtist"))), false);
 			System.out.println("\nPrevious results was for destruction ratio = "+dRatio*100+"%\n");
 			System.err.println("Press enter to run the next iteration ...");
 			System.in.read();
@@ -205,7 +214,7 @@ public class OntologyMatchingTest {
 		
 	}
 
-	private void save(String filename, Map<Description, List<? extends EvaluatedDescription>> mapping, KnowledgeBase source, KnowledgeBase target){
+	private void save(String filename, Map<OWLClassExpression, List<? extends EvaluatedDescription>> mapping, KnowledgeBase source, KnowledgeBase target){
 		BufferedWriter out = null;
 		try {
 			out = new BufferedWriter(new FileWriter(filename));
@@ -223,7 +232,7 @@ public class OntologyMatchingTest {
 		}
 	}
 
-	private void save(Map<Description, List<? extends EvaluatedDescription>> mapping, String filename){
+	private void save(Map<OWLClassExpression, List<? extends EvaluatedDescription>> mapping, String filename){
 		BufferedWriter out = null;
 		try {
 			out = new BufferedWriter(new FileWriter(filename));

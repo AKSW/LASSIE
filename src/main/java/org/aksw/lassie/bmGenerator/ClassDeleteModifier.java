@@ -6,7 +6,8 @@ package org.aksw.lassie.bmGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.dllearner.core.owl.OWLClass;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClass;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -50,7 +51,7 @@ public class ClassDeleteModifier extends Modifier {
 //			System.exit(1);
 			baseModel.remove(sourceClassModel);
 			modifiedClasses.add(className);
-			OWLClass cls = new OWLClass(className);
+			OWLClass cls = owlDataFactory.getOWLClass(IRI.create(className));
 			optimalSolutions.put(cls, cls);
 		}
 		

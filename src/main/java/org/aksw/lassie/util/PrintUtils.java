@@ -43,7 +43,7 @@ public class PrintUtils {
 		
 		for (Entry<OWLClassExpression, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
 			OWLClassExpression key = entry.getKey();
-			String renderedKey = sourceRenderer.render(OWLAPIDescriptionConvertVisitor.getOWLClassExpression(key));
+			String renderedKey = sourceRenderer.render(key);
 			List<? extends org.dllearner.core.EvaluatedDescription> value = entry.getValue();
 			if(value == null){
 				sb.append("<tr><th>" + renderedKey + "</th>\n");
@@ -67,7 +67,7 @@ public class PrintUtils {
 		return sb.toString();
 	}
 	
-	public static String toHTML(Map<Description, List<? extends EvaluatedDescription>> mapping){
+	public static String toHTML(Map<OWLClassExpression, List<? extends EvaluatedDescription>> mapping){
 		StringBuilder sb = new StringBuilder();
 		DecimalFormat dfPercent = new DecimalFormat("0.00%");
 		sb.append("<html>\n");
@@ -76,8 +76,8 @@ public class PrintUtils {
 		sb.append("<tbody>\n");
 		
 		
-		for (Entry<Description, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
-			Description key = entry.getKey();
+		for (Entry<OWLClassExpression, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
+		    OWLClassExpression key = entry.getKey();
 			List<? extends org.dllearner.core.EvaluatedDescription> value = entry.getValue();
 			if(value == null){
 				sb.append("<tr><th>" + OWLAPIDescriptionConvertVisitor.getOWLClassExpression(key) + "</th>\n");
@@ -99,7 +99,7 @@ public class PrintUtils {
 		return sb.toString();
 	}
 	
-	public static void printMappingPretty(Map<Description, List<? extends EvaluatedDescription>> mapping){
+	public static void printMappingPretty(Map<OWLClassExpression, List<? extends EvaluatedDescription>> mapping){
 		DecimalFormat dfPercent = new DecimalFormat("0.00%");
 		System.out.println("Source Class -> Target Class Expression");
 		for (Entry<OWLClassExpression, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {

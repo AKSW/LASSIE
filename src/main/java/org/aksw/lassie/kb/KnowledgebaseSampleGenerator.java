@@ -20,14 +20,15 @@ import org.apache.commons.compress.compressors.CompressorInputStream;
 import org.apache.commons.compress.compressors.CompressorOutputStream;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.log4j.Logger;
-import org.dllearner.core.owl.Individual;
-import org.dllearner.core.owl.OWLClass;
+import org.dllearner.core.ComponentInitException;
 import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.reasoning.SPARQLReasoner;
-import org.dllearner.core.owl.Description;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLIndividual;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
@@ -61,7 +62,22 @@ public class KnowledgebaseSampleGenerator {
 		if(!file.exists()){//if not exists
 			logger.info("Generating sample...");
 			long startTime = System.currentTimeMillis();
-			SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), cacheDir);
+			SPARQLReasoner reasoner = new SPARQLReasoner();
+			SparqlEndpointKS sparqlEndpointKS = new SparqlEndpointKS(endpoint);
+			sparqlEndpointKS.setCacheDir(cacheDir);
+			try {
+                sparqlEndpointKS.init();
+            } catch (ComponentInitException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+            reasoner.setSources(sparqlEndpointKS);
+            try {
+                reasoner.init();
+            } catch (ComponentInitException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
 			ConciseBoundedDescriptionGenerator cbdGen = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cacheDir);
 
 			Set<OWLClass> classes = new HashSet<OWLClass>();
@@ -136,14 +152,14 @@ public class KnowledgebaseSampleGenerator {
 		int i = 0;
 		for (OWLClass cls : classes) {
 			logger.debug("\t...processing class " + cls + "...");
-			SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass*2);
+			SortedSet<OWLIndividual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass*2);
 
 			Model classSample = ModelFactory.createDefaultModel();
 			int cnt = 0;
 			Model cbd;
-			for (Individual individual : individuals) {
+			for (OWLIndividual individual : individuals) {
 				try {
-					cbd = cbdGen.getConciseBoundedDescription(individual.getName(), maxCBDDepth);
+					cbd = cbdGen.getConciseBoundedDescription(individual.toStringID(), maxCBDDepth);
 					classSample.add(cbd);
 					if(cnt++ == maxNrOfInstancesPerClass){
 						break;
@@ -189,31 +205,45 @@ public class KnowledgebaseSampleGenerator {
 		//try to load existing sample from file system
 		HashFunction hf = Hashing.md5();
 		HashCode hc = hf.newHasher().putString(endpoint.getURL().toString(), Charsets.UTF_8).hash();
-		String filename = hc.toString() + ("-" + subTreeRootClass.getName().substring(subTreeRootClass.getName().lastIndexOf("/")+1) + 
+		String filename = hc.toString() + ("-" + subTreeRootClass.toStringID().substring(subTreeRootClass.toStringID().lastIndexOf("/")+1) + 
 				(( maxNrOfInstancesPerClass == Integer.MAX_VALUE) ? "-all" : maxNrOfInstancesPerClass)) + ".ttl.bz2";
 		File file = new File(filename);
 
 		if(!file.exists()){//if not exists
-			logger.info("Generating sample sub-tree from root " + subTreeRootClass.getName() + " ...");
+			logger.info("Generating sample sub-tree from root " + subTreeRootClass.toStringID() + " ...");
 			long startTime = System.currentTimeMillis();
-			SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint), cacheDir);
+			SparqlEndpointKS endPoint = new SparqlEndpointKS(endpoint);
+			endPoint.setCacheDir(cacheDir);
+			try {
+                endPoint.init();
+            } catch (ComponentInitException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+			SPARQLReasoner reasoner = new SPARQLReasoner(endPoint);
+			try {
+                reasoner.init();
+            } catch (ComponentInitException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
 			ConciseBoundedDescriptionGenerator cbdGen = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cacheDir);
 
 			//get all OWL classes
-			Set<Description> subclasses = reasoner.getSubClasses(subTreeRootClass, false);
+			Set<OWLClassExpression> subclasses = reasoner.getSubClasses(subTreeRootClass, false);
 			Set<OWLClass> nextLevelClasses = reasoner.getOWLClasses(namespace);
 			//get for each sub-class of subTreeRootClass n instances and compute the CBD for each instance
 
-			for (Description cls : subclasses) {
+			for (OWLClassExpression cls : subclasses) {
 				logger.debug("\t...processing class " + cls + "...");
-				SortedSet<Individual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass*2);
+				SortedSet<OWLIndividual> individuals = reasoner.getIndividuals(cls, maxNrOfInstancesPerClass*2);
 
 				Model classSample = ModelFactory.createDefaultModel();
 				int cnt = 0;
 				Model cbd;
-				for (Individual individual : individuals) {
+				for (OWLIndividual individual : individuals) {
 					try {
-						cbd = cbdGen.getConciseBoundedDescription(individual.getName(), maxCBDDepth);
+						cbd = cbdGen.getConciseBoundedDescription(individual.toStringID(), maxCBDDepth);
 						classSample.add(cbd);
 						if(cnt++ == maxNrOfInstancesPerClass){
 							break;

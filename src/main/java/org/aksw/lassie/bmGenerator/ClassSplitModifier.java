@@ -5,10 +5,11 @@ package org.aksw.lassie.bmGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
-import org.dllearner.core.owl.Description;
-import org.dllearner.core.owl.OWLClass;
-import org.dllearner.core.owl.Union;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -88,12 +89,12 @@ public class ClassSplitModifier extends Modifier {
 				modifiedClasses.add(splitUri);
 			}
 			//generate optimal solution
-			List<Description> children = new ArrayList<Description>();
+			List<OWLClassExpression> children = new ArrayList<>();
 			for (String uri : splitTargetClassUri) {
-				children.add(new OWLClass(uri));
+				children.add(owlDataFactory.getOWLClass(IRI.create(uri)));
 			}
-			Union optimalSolution = new Union(children);
-			optimalSolutions.put(new OWLClass(className), optimalSolution);
+			OWLObjectUnionOf optimalSolution = owlDataFactory.getOWLObjectUnionOf(new TreeSet<> (children));
+			optimalSolutions.put(owlDataFactory.getOWLClass(IRI.create(className)), optimalSolution);
 //			System.out.println("********************** optimalSolutions: "+optimalSolutions);
 
 			//perform splitting

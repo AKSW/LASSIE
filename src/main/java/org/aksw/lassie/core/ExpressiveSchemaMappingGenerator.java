@@ -9,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,13 +47,14 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.learningproblems.PosNegLPStandard;
 import org.dllearner.learningproblems.PosOnlyLP;
+import org.dllearner.reasoning.ClosedWorldReasoner;
+import org.dllearner.utilities.Helper;
 import org.dllearner.utilities.datastructures.SetManipulation;
 import org.dllearner.utilities.examples.AutomaticNegativeExampleFinderSPARQL2;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
-import org.semanticweb.owlapi.io.RDFXMLOntologyFormat;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
@@ -136,7 +136,7 @@ public class ExpressiveSchemaMappingGenerator {
 	protected Map<OWLClass, Map<OWLClassExpression, Mapping>> mappingResults = new HashMap<OWLClass, Map<OWLClassExpression, Mapping>>();
 
 	
-	OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
+	protected OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
 	
 	//result recording
 	LassieResultRecorder resultRecorder;
@@ -211,7 +211,7 @@ public class ExpressiveSchemaMappingGenerator {
 		targetClassExpressions.addAll(targetClasses);
 
 		//perform the iterative schema matching
-		Map<OWLClass, OWLClassExpression> iterationResultConceptDescription = new HashMap<OWLClass, OWLClassExpression>();
+		Map<OWLClass, OWLClassExpression> iterationResultConceptDescription = new HashMap<>();
 
 		double totalCoverage = 0;
 		do {
@@ -228,14 +228,15 @@ public class ExpressiveSchemaMappingGenerator {
 				logger.info("+++++++++++++++++++++" + sourceClass + "+++++++++++++++++++++");
 				currentClass = sourceClass;
 				try {
-					SortedSet<OWLIndividual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
+					SortedSet<OWLIndividual> targetInstances = Helper.getIndividualSet(new TreeSet<>(links.get(sourceClass)));
 
 					resultRecorder.setPositiveExample(targetInstances, iterationNr, sourceClass);
 
 					List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances, useRemoteKB);
 					resultRecorder.setMapping(mappingList, iterationNr, sourceClass);
 
-					iterationResultConceptDescription.put(sourceClass, mappingList.get(0).getDescription());
+					OWLClassExpression oce = (OWLClassExpression) mappingList.get(0).getDescription();
+                    iterationResultConceptDescription.put(sourceClass, oce);
 				} catch (NonExistingLinksException e) {
 					logger.warn(e.getMessage() + " Skipped learning.");
 				} catch (Exception e) {
@@ -292,7 +293,7 @@ public class ExpressiveSchemaMappingGenerator {
 			logger.info("Source class: " + sourceClass);
 			currentClass = sourceClass;
 			try {
-				SortedSet<OWLIndividual> targetInstances = SetManipulation.stringToInd(links.get(sourceClass));
+				SortedSet<OWLIndividual> targetInstances = Helper.getIndividualSet(new TreeSet(links.get(sourceClass)));
 				List<? extends EvaluatedDescription> mappingList = computeMappings(targetInstances, false);
 				mappingTop10.put(sourceClass, mappingList);
 
@@ -434,7 +435,7 @@ public class ExpressiveSchemaMappingGenerator {
 			
 			//TODO TEST
 			try {
-				sourceClassModel.write(new FileWriter("/home/sherif/JavaProjects/LASSIE/tmp/" + sourceClass.getName().substring(sourceClass.getName().lastIndexOf("/")+1) + ".ttl"), "TTL");
+				sourceClassModel.write(new FileWriter("/home/sherif/JavaProjects/LASSIE/tmp/" + sourceClass.toStringID().substring(sourceClass.toStringID().lastIndexOf("/")+1) + ".ttl"), "TTL");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -816,7 +817,7 @@ public class ExpressiveSchemaMappingGenerator {
 
 			//initialize the reasoner
 			logger.info("Initializing reasoner...");
-			AbstractReasonerComponent rc = new FastInstanceChecker(ks);
+			AbstractReasonerComponent rc = new ClosedWorldReasoner(ks);
 			rc.init();
 			//            rc.setSubsumptionHierarchy(targetKB.getReasoner().getClassHierarchy());
 			logger.info("Done.");
@@ -834,7 +835,9 @@ public class ExpressiveSchemaMappingGenerator {
 
 			//initialize the learning algorithm
 			logger.info("Initializing learning algorithm...");
-			CELOE la = new CELOE(lp, rc);
+			CELOE la = new CELOE();
+			la.setReasoner(rc);
+			la.setLearningProblem(lp);
 			la.setMaxExecutionTimeInSeconds(10);
 			la.setNoisePercentage(25);
 			la.init();
@@ -868,7 +871,7 @@ public class ExpressiveSchemaMappingGenerator {
 	private String print(Collection<OWLIndividual> individuals, int n) {
 		StringBuilder sb = new StringBuilder();
 		for (OWLIndividual individual : individuals) {
-			sb.append(individual.getName() + ",");
+			sb.append(individual.toStringID() + ",");
 		}
 		sb.append("...");
 		return sb.toString();
@@ -884,7 +887,7 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.debug("Retrieving instances of class " + cls + "...");
 		mon.start();
 		SortedSet<OWLIndividual> instances = new TreeSet<>();
-		String query = String.format("SELECT DISTINCT ?s WHERE {?s a <%s>}", cls.getName());
+		String query = String.format("SELECT DISTINCT ?s WHERE {?s a <%s>}", cls.toStringID());
 		ResultSet rs = sourceKB.executeSelect(query);
 		QuerySolution qs;
 		while (rs.hasNext()) {
@@ -938,7 +941,7 @@ public class ExpressiveSchemaMappingGenerator {
 		logger.trace("Retrieving instances to which instances of class " + cls + " are linked to via property " + linkingProperty + "...");
 		mon.start();
 		SortedSet<OWLIndividual> instances = new TreeSet<>();
-		String query = String.format("SELECT DISTINCT ?o WHERE {?s a <%s>. ?s <%s> ?o. FILTER(REGEX(?o,'^%s'))}", cls.getName(), linkingProperty, targetKB.getNamespace());
+		String query = String.format("SELECT DISTINCT ?o WHERE {?s a <%s>. ?s <%s> ?o. FILTER(REGEX(?o,'^%s'))}", cls.toStringID(), linkingProperty, targetKB.getNamespace());
 		ResultSet rs = sourceKB.executeSelect(query);
 		QuerySolution qs;
 		while (rs.hasNext()) {
@@ -1015,13 +1018,14 @@ public class ExpressiveSchemaMappingGenerator {
 	 * @param ind
 	 */
 	private Model getFragment(OWLIndividual ind, KnowledgeBase kb, int recursionDepth) {
-		logger.trace("Loading fragment for " + ind.getName());
+		logger.trace("Loading fragment for " + ind.toStringID());
 		ConciseBoundedDescriptionGenerator cbdGen;
 		if (kb.isRemote()) {
 			logger.debug("Quering remote KB");
 			if (((RemoteKnowledgeBase) kb).getCache() != null) {
-				cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint(), 
-						((RemoteKnowledgeBase) kb).getCache().getCacheDirectory());
+			    String cacheDir = ((RemoteKnowledgeBase) kb).getCache().getCacheDirectory();
+			    SparqlEndpoint endPoint = ((RemoteKnowledgeBase) kb).getEndpoint();
+				cbdGen = new ConciseBoundedDescriptionGeneratorImpl(endPoint , cacheDir);
 			} else {
 				cbdGen = new ConciseBoundedDescriptionGeneratorImpl(((RemoteKnowledgeBase) kb).getEndpoint());
 			}
@@ -1031,7 +1035,7 @@ public class ExpressiveSchemaMappingGenerator {
 		}
 		Model cbd = ModelFactory.createDefaultModel();
 		try {
-			cbd = cbdGen.getConciseBoundedDescription(ind.getName(), 1, true);
+			cbd = cbdGen.getConciseBoundedDescription(ind.toStringID(), 1, true);
 		} catch (Exception e) {
 			logger.error("End Point(" + ((RemoteKnowledgeBase) kb).getEndpoint().toString() + ") Exception: " + e);
 		}

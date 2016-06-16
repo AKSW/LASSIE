@@ -14,7 +14,6 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
 import de.uni_leipzig.simba.data.Mapping;
-import de.uni_leipzig.simba.selfconfig.ComplexClassifier;
 import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 
 
@@ -221,13 +220,13 @@ public class LassieClassRecorder {
 		str +=	"\tPositive examples:\n";
 		i =1;
 		for(OWLIndividual in: posExamples){
-			 str += "\t\t(" + i++ + ") " + in.get.getName() + "\n";
+			 str += "\t\t(" + i++ + ") " + in.toStringID() + "\n";
 		}
 		
 		str += "\tNegative examples:\n ";
 		i =1;
 		for(OWLIndividual in: negExamples){
-			 str += "\t\t(" + i++ + ") " + in.getName() +"\n"; 
+			 str += "\t\t(" + i++ + ") " + in.toStringID() +"\n"; 
 		}
 		
 		str += "\tClassifier:\n ";

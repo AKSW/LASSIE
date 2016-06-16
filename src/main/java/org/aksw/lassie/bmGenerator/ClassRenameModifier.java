@@ -6,6 +6,7 @@ package org.aksw.lassie.bmGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.semanticweb.owlapi.model.IRI;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -44,7 +45,7 @@ public class ClassRenameModifier extends Modifier {
 			String renamedClassName = className+"_RENAME";
 			subModel = renameClass(subModel, className,  renamedClassName);
 			modifiedClasses.add(renamedClassName);
-			optimalSolutions.put(new OWLClass(renamedClassName), new OWLClass(className));
+			optimalSolutions.put(owlDataFactory.getOWLClass(IRI.create(renamedClassName)), owlDataFactory.getOWLClass(IRI.create(className)));
 		}
 		return subModel;
 	}
