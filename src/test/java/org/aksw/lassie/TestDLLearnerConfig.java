@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.aksw.jena_sparql_api.cache.extra.CacheBackend;
+import org.aksw.jena_sparql_api.cache.extra.CacheFrontendImpl;
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
@@ -61,8 +63,9 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 	private ExtractionDBCache cache = new ExtractionDBCache("cache");
 	private String cacheDirectory = "cache";
-	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cacheDirectory), cacheDirectory);
-	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cache);
+	private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cacheDirectory));
+
+	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cacheDirectory);
 	private int maxNrOfClasses = 5;//20;//-1 all classes
 	private int maxNrOfInstancesPerClass = 20;
 	private Set<OWLClass> dbpediaClasses = new TreeSet<OWLClass>();

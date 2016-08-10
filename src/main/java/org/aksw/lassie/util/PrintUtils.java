@@ -8,7 +8,9 @@ import java.util.Map.Entry;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
+import org.dllearner.core.ComponentInitException;
 import org.dllearner.core.EvaluatedDescription;
+import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.utilities.LabelShortFormProvider;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 
@@ -20,16 +22,33 @@ public class PrintUtils {
 		ManchesterOWLSyntaxOWLObjectRendererImpl sourceRenderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
 		LabelShortFormProvider sfp;
 		if(source.isRemote()){
-			sfp = new LabelShortFormProvider(((RemoteKnowledgeBase)source).getEndpoint());
+            SparqlEndpointKS seks = new SparqlEndpointKS(((RemoteKnowledgeBase)source).getEndpoint());
+            if (!seks.isInitialized()) {
+                try {
+                    seks.init();
+                } catch (ComponentInitException e) {
+                    e.printStackTrace();
+                }
+            }
+			sfp = new LabelShortFormProvider(seks.getQueryExecutionFactory());
 		} else {
-			sfp = new LabelShortFormProvider(((LocalKnowledgeBase)source).getModel());
+			sfp = null;
+// new LabelShortFormProvider(((LocalKnowledgeBase)source).getModel());
 		}
 		sourceRenderer.setShortFormProvider(sfp);
 		ManchesterOWLSyntaxOWLObjectRendererImpl targetRenderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
 		if(source.isRemote()){
-			sfp = new LabelShortFormProvider(((RemoteKnowledgeBase)target).getEndpoint());
+            SparqlEndpointKS seks = new SparqlEndpointKS(((RemoteKnowledgeBase)target).getEndpoint());
+            if (!seks.isInitialized()) {
+                try {
+                    seks.init();
+                } catch (ComponentInitException e) {
+                    e.printStackTrace();
+                }
+            }
 		} else {
-			sfp = new LabelShortFormProvider(((LocalKnowledgeBase)target).getModel());
+			sfp = null;
+// new LabelShortFormProvider(((LocalKnowledgeBase)target).getModel());
 		}
 		targetRenderer.setShortFormProvider(sfp);
 		
