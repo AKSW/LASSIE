@@ -51,8 +51,8 @@ public class PrintUtils {
 			} else {
 				sb.append("<tr><th rowspan=\"" + (value.size()+1) + "\">" + renderedKey + "</th>\n");
 			    for (EvaluatedDescription evaluatedDescription : value) {
-			    	sb.append("<tr>"); 
-			    	String renderedDesc = targetRenderer.render(OWLAPIDescriptionConvertVisitor.getOWLClassExpression(evaluatedDescription.getDescription()));
+			    	sb.append("<tr>");
+			    	String renderedDesc = targetRenderer.render(evaluatedDescription.getDescription());
 			     	sb.append("<td>" + renderedDesc + "</td>");
 			     	sb.append("<td>" + dfPercent.format(evaluatedDescription.getAccuracy()) + "</td>");
 			     	sb.append("</tr>\n");
@@ -80,13 +80,13 @@ public class PrintUtils {
 		    OWLClassExpression key = entry.getKey();
 			List<? extends org.dllearner.core.EvaluatedDescription> value = entry.getValue();
 			if(value == null){
-				sb.append("<tr><th>" + OWLAPIDescriptionConvertVisitor.getOWLClassExpression(key) + "</th>\n");
+				sb.append("<tr><th>" + key + "</th>\n");
 				sb.append("<tr><td>ERROR</td></tr>\n");
 			} else {
-				sb.append("<tr><th rowspan=\"" + value.size()+1 + "\">" + OWLAPIDescriptionConvertVisitor.getOWLClassExpression(key) + "</th>\n");
+				sb.append("<tr><th rowspan=\"" + value.size()+1 + "\">" + key + "</th>\n");
 			    for (EvaluatedDescription evaluatedDescription : value) {
 			    	sb.append("<tr><td>" + 
-			    OWLAPIDescriptionConvertVisitor.getOWLClassExpression(evaluatedDescription.getDescription()) + 	"(" + dfPercent.format(evaluatedDescription.getAccuracy()) + ")" 
+			    evaluatedDescription.getDescription() + "(" + dfPercent.format(evaluatedDescription.getAccuracy()) + ")"
 			    			+ "</td></tr>\n");
 				}
 			}
@@ -104,19 +104,19 @@ public class PrintUtils {
 		System.out.println("Source Class -> Target Class Expression");
 		for (Entry<OWLClassExpression, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
 		    OWLClassExpression key = entry.getKey();
-			int length = OWLAPIDescriptionConvertVisitor.getOWLClassExpression(key).toString().length();
+			int length = key.toString().length();
 			String indention = "";
 			for(int i = 0; i < length; i++){
 				indention += " ";
 			}
 			List<? extends org.dllearner.core.EvaluatedDescription> value = entry.getValue();
-			System.out.println(OWLAPIDescriptionConvertVisitor.getOWLClassExpression(key));
+			System.out.println(key);
 			if(value == null){
 				System.out.println(indention + "\t->\t ERROR"); 
 			} else {
 				for (EvaluatedDescription evaluatedDescription : value) {
-					System.out.println(indention + "\t->\t" + 
-				OWLAPIDescriptionConvertVisitor.getOWLClassExpression(evaluatedDescription.getDescription()) + 
+					System.out.println(indention + "\t->\t" +
+                            evaluatedDescription.getDescription() +
 				"(" + dfPercent.format(evaluatedDescription.getAccuracy()) + ")");
 				}
 			}
@@ -126,7 +126,7 @@ public class PrintUtils {
 	
 	public static void printMapping(Map<OWLClassExpression, List<? extends EvaluatedDescription>> mapping){
 		System.out.println("Source Class -> Target Class Expression");
-		for (Entry<Description, List<? extends org.dllearner.core.EvaluatedOWLClassExpression>> entry : mapping.entrySet()) {
+		for (Entry<OWLClassExpression, List<? extends org.dllearner.core.EvaluatedDescription>> entry : mapping.entrySet()) {
 			OWLClassExpression key = entry.getKey();
 			int length = key.toString().length();
 			String indention = "";
@@ -142,7 +142,7 @@ public class PrintUtils {
 	}
 	
 	public static String prettyPrint(OWLClassExpression desc){
-		return OWLAPIDescriptionConvertVisitor.getOWLClassExpression(desc).toString();
+		return desc.toString();
 	}
 
 }

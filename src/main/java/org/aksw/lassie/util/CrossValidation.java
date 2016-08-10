@@ -38,6 +38,7 @@ import org.dllearner.learningproblems.PosNegLP;
 import org.dllearner.learningproblems.PosOnlyLP;
 import org.dllearner.utilities.Files;
 import org.dllearner.utilities.Helper;
+import org.dllearner.utilities.owl.OWLClassExpressionUtils;
 import org.dllearner.utilities.statistics.Stat;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLIndividual;
@@ -148,8 +149,8 @@ public class CrossValidation {
 		// run the algorithm
 		for(int currFold=0; currFold<folds; currFold++) {
 
-			Set<String> pos = Datastructures.individualSetToStringSet(trainingSetsPos.get(currFold));
-			Set<String> neg = Datastructures.individualSetToStringSet(trainingSetsNeg.get(currFold));
+			Set<String> pos = Helper.getStringSet(trainingSetsPos.get(currFold));
+			Set<String> neg = Helper.getStringSet(trainingSetsNeg.get(currFold));
 			if(lp instanceof PosNegLP){
 				((PosNegLP)lp).setPositiveExamples(trainingSetsPos.get(currFold));
 				((PosNegLP)lp).setNegativeExamples(trainingSetsNeg.get(currFold));
@@ -206,7 +207,7 @@ public class CrossValidation {
 //			System.out.println(precision);System.out.println(recall);
 			fMeasure.addNumber(100*Heuristics.getFScore(recall, precision));			
 			
-			length.addNumber(concept.getLength());
+			length.addNumber(OWLClassExpressionUtils.getLength(concept));
 			
 			outputWriter("fold " + currFold + ":");
 			outputWriter("  training: " + pos.size() + " positive and " + neg.size() + " negative examples");
@@ -214,7 +215,7 @@ public class CrossValidation {
 					+ correctNegClassified + "/" + testSetsNeg.get(currFold).size() + " correct negatives");
 			outputWriter("  concept: " + concept);
 			outputWriter("  accuracy: " + df.format(currAccuracy) + "% (" + df.format(trainingAccuracy) + "% on training set)");
-			outputWriter("  length: " + df.format(concept.getLength()));
+			outputWriter("  length: " + df.format(OWLClassExpressionUtils.getLength(concept)));
 			outputWriter("  runtime: " + df.format(algorithmDuration/(double)1000000000) + "s");
 					
 		}
@@ -257,7 +258,7 @@ public class CrossValidation {
 	}
 	
 	public static Set<OWLIndividual> getTrainingSet(Set<OWLIndividual> examples, Set<OWLIndividual> testingSet) {
-		return Helper.difference(examples, testingSet);
+		return new TreeSet<>(Sets.difference(examples, testingSet));
 	}
 	
 	// takes nr. of examples and the nr. of folds for this examples;
