@@ -31,7 +31,9 @@ import org.aksw.lassie.kb.KnowledgebaseSampleGenerator;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.dllearner.core.ComponentInitException;
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.kb.SparqlEndpointKS;
@@ -58,6 +60,7 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.jamonapi.log4j.Log4jBufferListener;
 
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
@@ -67,7 +70,7 @@ public class Evaluation {
 
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 //	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
-	private SPARQLReasoner reasoner ;
+	private SPARQLReasoner reasoner = new SPARQLReasoner() ;
 	private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, "cache");
 	private String ontologyURL = "http://downloads.dbpedia.org/3.8/dbpedia_3.8.owl.bz2";
 
@@ -487,7 +490,10 @@ public class Evaluation {
 
 
 	public static void main(String[] args) throws Exception {
-
+		PropertyConfigurator.configure("src/main/resources/log4j.properties");
+		Evaluation e = new Evaluation();
+		e.runIntensionalEvaluation(true);
+		
 	}
 
 }

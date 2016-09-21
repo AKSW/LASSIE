@@ -3,6 +3,7 @@ package org.aksw.lassie;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,12 +23,14 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.dllearner.core.EvaluatedDescription;
+import org.dllearner.core.StringRenderer;
 import org.dllearner.kb.extraction.ExtractionAlgorithm;
 import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.kb.sparql.SparqlKnowledgeSource;
 import org.junit.Before;
 import org.junit.Test;
+import org.semanticweb.owlapi.io.OWLObjectRenderer;
 import org.semanticweb.owlapi.io.ToStringRenderer;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
@@ -39,7 +42,6 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
-import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
 
 public class OntologyMatchingTest {
 
@@ -55,7 +57,8 @@ public class OntologyMatchingTest {
 	@Before
 	public void setUp() throws Exception {
 		// render output
-		ToStringRenderer.getInstance().setRenderer(new ManchesterOWLSyntaxOWLObjectRendererImpl());
+		StringRenderer.setRenderer(StringRenderer.Rendering.MANCHESTER_SYNTAX.getRenderer());
+
 		// set logging properties
 		Logger.getLogger(SparqlKnowledgeSource.class).setLevel(Level.WARN);
 		Logger.getLogger(ExtractionAlgorithm.class).setLevel(Level.WARN);
