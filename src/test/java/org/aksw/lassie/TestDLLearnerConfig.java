@@ -12,8 +12,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -83,8 +86,8 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
      * @param target
      *@author sherif
      */
-    public  TestDLLearnerConfig(KnowledgeBase source, KnowledgeBase target) throws ComponentInitException {
-        super(source, target);
+    public  TestDLLearnerConfig(KnowledgeBase source, KnowledgeBase target, Set<OWLClass> sourceClasses) throws ComponentInitException {
+        super(source, target, sourceClasses);
         SparqlEndpointKS sparqlEndpointKS = new SparqlEndpointKS(endpoint, cacheDirectory);
         sparqlEndpointKS.init();
         reasoner = new SPARQLReasoner(sparqlEndpointKS);
@@ -99,7 +102,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
     }
 
     @SuppressWarnings("unchecked")
-    public Map<String, Object> test() {
+    public Map<String, Object> test() throws ComponentInitException {
 
         String sourceClassUri="http://dbpedia.org/ontology/Ambassador";
         //		String sourceClassUri="http://dbpedia.org/ontology/Town";
@@ -141,7 +144,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
         try {
             currentClass = sourceClass;
 
-            EvaluatedDescription singleMapping = computeMapping(targetInstances, false);
+            EvaluatedDescription<?> singleMapping = computeMapping(targetInstances, false);
             System.out.println("\n---------- EvaluatedDescription ----------");
             System.out.println(singleMapping);
         } catch (NonExistingLinksException e) {
@@ -280,7 +283,7 @@ public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
 
         //		KnowledgeBase target = new LocalKnowledgeBase(testDataset);
 
-        TestDLLearnerConfig tester = new TestDLLearnerConfig(source,target);
+        TestDLLearnerConfig tester = new TestDLLearnerConfig(source,target, new HashSet<OWLClass>());
         tester.test();
 
 

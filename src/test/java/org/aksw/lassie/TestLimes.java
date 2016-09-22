@@ -18,6 +18,7 @@ import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.log4j.Logger;
+import org.dllearner.core.ComponentInitException;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
@@ -74,7 +75,7 @@ public class TestLimes {
 		return model;
 	}
 	
-	public  static void test() throws IOException{
+	public  static void test() throws IOException, ComponentInitException{
 		
 		Model toyDatasetModel = readModel(toyDatasetFile); 
 		
@@ -110,7 +111,7 @@ public class TestLimes {
 			Model targetKBModel = (new Evaluation()).createTestDataset(sourceKB.getModel(), instanceModifiersAndRates, classModifiersAndRates, testClasses.size(), 5);
 			KnowledgeBase targetKB = new LocalKnowledgeBase(targetKBModel, "http://dbpedia.org/ontology/");
 			
-			ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations);
+			ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations, testClasses);
 			generator.setTargetDomainNameSpace("http://dbpedia.org/ontology/");
 			
 			LassieResultRecorder experimentResults = generator.run(testClasses, false);
@@ -130,7 +131,7 @@ public class TestLimes {
 		}
 	}
 	
-	public static void main(String args[]) throws IOException{
+	public static void main(String args[]) throws IOException, ComponentInitException{
 		test();
 	}
 }

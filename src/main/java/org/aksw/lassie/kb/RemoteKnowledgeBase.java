@@ -3,6 +3,7 @@ package org.aksw.lassie.kb;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 
+import org.dllearner.core.ComponentInitException;
 import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.kb.sparql.ExtractionDBCache;
 import org.dllearner.kb.sparql.SparqlEndpoint;
@@ -18,11 +19,11 @@ public class RemoteKnowledgeBase extends AbstractKnowledgeBase {
 	private SparqlEndpoint endpoint;
 	private ExtractionDBCache cache;
 
-	public RemoteKnowledgeBase(SparqlEndpoint endpoint) {
+	public RemoteKnowledgeBase(SparqlEndpoint endpoint) throws ComponentInitException {
 		this(endpoint, null, null);
 	}
 	
-	public RemoteKnowledgeBase(SparqlEndpoint endpoint, ExtractionDBCache cache) {
+	public RemoteKnowledgeBase(SparqlEndpoint endpoint, ExtractionDBCache cache) throws ComponentInitException {
 		this(endpoint, cache, null);
 	}
 	
@@ -33,12 +34,15 @@ public class RemoteKnowledgeBase extends AbstractKnowledgeBase {
 		reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint));
 	}
 	
-	public RemoteKnowledgeBase(SparqlEndpoint endpoint, ExtractionDBCache cache, String namespace) {
+	public RemoteKnowledgeBase(SparqlEndpoint endpoint, ExtractionDBCache cache, String namespace) throws ComponentInitException {
 		this.endpoint = endpoint;
 		this.cache = cache;
 		this.namespace = namespace;
 
-		reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint));
+		SparqlEndpointKS ks = new SparqlEndpointKS(endpoint);
+		ks.init();
+        reasoner = new SPARQLReasoner(ks);
+		reasoner.init();
 	}
 
 	public SparqlEndpoint getEndpoint() {

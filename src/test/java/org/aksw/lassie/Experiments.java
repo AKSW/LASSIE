@@ -19,6 +19,7 @@ import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.log4j.Logger;
+import org.dllearner.core.ComponentInitException;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
@@ -60,7 +61,7 @@ public class Experiments {
 			int nrOfClassModifiers, 		int nrOfInstanceModifiers, 
 			double classesDestructionRate, 	double instancesDestructionRate,
 			int nrOfExperimentRepeats, 		int maxNrOfIterations, String outputFolder, 
-			Set<OWLClass> testClasses, 	boolean useRemoteKB) throws IOException{
+			Set<OWLClass> testClasses, 	boolean useRemoteKB) throws IOException, ComponentInitException{
 
 		//create a folder for the results if not exist
 		File folder = new File(outputFolder).getAbsoluteFile();
@@ -127,8 +128,9 @@ public class Experiments {
 	 * @author sherif
 	 * @throws IOException 
 	 * @throws NumberFormatException 
+	 * @throws ComponentInitException 
 	 */
-	public static void main(String[] args) throws NumberFormatException, IOException {
+	public static void main(String[] args) throws NumberFormatException, IOException, ComponentInitException {
 		if(args.length < 9 || args[0].equals("-?")){
 			logger.error("Wrong parameters number\nParameters:\n\t" +
 					"args[0] = number of classes\n\t" +

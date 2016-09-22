@@ -65,10 +65,6 @@ public class LassieResultRecorder {
 	}
 
 
-	//Contractors
-	public LassieResultRecorder(){
-	}
-
 	/**
 	 * Initialize all iterations and all classes 
 	 * @param iterationCount

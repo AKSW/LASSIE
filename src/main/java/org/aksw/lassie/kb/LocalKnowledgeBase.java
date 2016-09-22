@@ -1,6 +1,8 @@
 package org.aksw.lassie.kb;
 
+import org.dllearner.core.ComponentInitException;
 import org.dllearner.kb.LocalModelBasedSparqlEndpointKS;
+import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.reasoning.SPARQLReasoner;
 
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -11,15 +13,18 @@ public class LocalKnowledgeBase extends AbstractKnowledgeBase {
 
 	private Model model;
 
-	public LocalKnowledgeBase(Model model) {
+	public LocalKnowledgeBase(Model model) throws ComponentInitException {
 		this(model, null);
 	}
 	
-	public LocalKnowledgeBase(Model model, String namespace) {
+	public LocalKnowledgeBase(Model model, String namespace) throws ComponentInitException {
 		this.model = model;
 		this.namespace = namespace;
 
-		reasoner = new SPARQLReasoner(new LocalModelBasedSparqlEndpointKS(model));
+        LocalModelBasedSparqlEndpointKS localModelBasedSparqlEndpointKS = new LocalModelBasedSparqlEndpointKS(model);
+        localModelBasedSparqlEndpointKS.init();
+		reasoner = new SPARQLReasoner(localModelBasedSparqlEndpointKS);
+		reasoner.init();
 	}
 
 	public Model getModel() {

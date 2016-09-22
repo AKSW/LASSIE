@@ -263,7 +263,7 @@ public class Evaluation {
 	}
 
 
-	public LassieResultRecorder run(Set<OWLClass> testClasses, boolean useRemoteKB){
+	public LassieResultRecorder run(Set<OWLClass> testClasses, boolean useRemoteKB) throws ComponentInitException{
 		//create a sample of the knowledge base
 //		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
 //		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, testClasses);
@@ -290,7 +290,7 @@ public class Evaluation {
 //		System.exit(0);
 		KnowledgeBase sourceKB = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
-		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, endpoint, maxNrOfIterations);
+		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, endpoint, maxNrOfIterations, testClasses);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 		if(testClasses.size()>0){
 			return generator.run(testClasses, useRemoteKB);
@@ -326,7 +326,7 @@ public class Evaluation {
 
 
 
-	public LassieResultRecorder runIntensionalEvaluation(boolean useRemoteKB){
+	public LassieResultRecorder runIntensionalEvaluation(boolean useRemoteKB) throws ComponentInitException{
 		//create a sample of the knowledge base
 		LocalKnowledgeBase sampleKB = KnowledgebaseSampleGenerator.createKnowledgebaseSample(endpoint, dbpediaNamespace, maxNrOfClasses, maxNrOfInstancesPerClass, new HashSet<OWLClass>());
 
@@ -356,7 +356,7 @@ public class Evaluation {
 
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
-		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target);
+		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target, modifiedDbpediaClasses);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 
 		//		return generator.run(modifiedDbpediaClasses, Sets.newHashSet(new OWLClass("http://dbpedia.org/ontology/Person")));

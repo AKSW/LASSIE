@@ -160,24 +160,26 @@ public class ExpressiveSchemaMappingGenerator {
 	public ExpressiveSchemaMappingGenerator() {
 	}
 
-	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, int nrOfIterations) {
-		this(source, target, OWL.sameAs.getURI());
+	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, int nrOfIterations, Set<OWLClass> sourceClasses) {
+		this(source, target, OWL.sameAs.getURI(), sourceClasses);
 		maxNrOfIterations = nrOfIterations;
 	}
 
-	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target) {
-		this(source, target, OWL.sameAs.getURI());
+	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, Set<OWLClass> sourceClasses) {
+		this(source, target, OWL.sameAs.getURI(), sourceClasses);
 	}
 
-	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, String linkingProperty) {
+	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, String linkingProperty, Set<OWLClass> sourceClasses) {
 		this.sourceKB = source;
 		this.targetKB = target;
 		this.linkingProperty = linkingProperty;
-
+		
 		mon = MonitorFactory.getTimeMonitor("time");
 
 		source.getReasoner().prepareSubsumptionHierarchy();
 		target.getReasoner().prepareSubsumptionHierarchy();
+		
+        resultRecorder = new LassieResultRecorder(maxNrOfIterations, sourceClasses);
 	}
 
 
@@ -188,10 +190,11 @@ public class ExpressiveSchemaMappingGenerator {
 	 * @param maxNrOfIterations2
 	 */
 	public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, SparqlEndpoint endpoint,
-			int maxNrOfIterations) {
-		this(source, target, OWL.sameAs.getURI());
+			int maxNrOfIterations, Set<OWLClass> sourceClasses) {
+		this(source, target, OWL.sameAs.getURI(), sourceClasses);
 		this.endpoint = endpoint;
 		this.maxNrOfIterations = maxNrOfIterations;
+		
 	}
 
 	public LassieResultRecorder run(Set<OWLClass> sourceClasses, boolean useRemoteKB) {
@@ -727,16 +730,16 @@ public class ExpressiveSchemaMappingGenerator {
 		return c;
 	}
 
-	public EvaluatedDescription computeMapping(SortedSet<OWLIndividual> positiveExamples, boolean useRemoteKB) throws NonExistingLinksException {
+	public EvaluatedDescription computeMapping(SortedSet<OWLIndividual> positiveExamples, boolean useRemoteKB) throws NonExistingLinksException, ComponentInitException {
 		return computeMappings(positiveExamples, useRemoteKB).get(0);
 	}
 
-	public List<? extends EvaluatedDescription> computeMappings(OWLClassExpression targetClassExpression, boolean useRemoteKB) throws NonExistingLinksException {
+	public List<? extends EvaluatedDescription> computeMappings(OWLClassExpression targetClassExpression, boolean useRemoteKB) throws NonExistingLinksException, ComponentInitException {
 		SortedSet<OWLIndividual> targetInstances = getTargetInstances(targetClassExpression);
 		return computeMappings(targetInstances, useRemoteKB);
 	}
 
-	public List<? extends EvaluatedDescription> computeMappings(SortedSet<OWLIndividual> positiveExamples, boolean useRemoteKB) throws NonExistingLinksException {
+	public List<? extends EvaluatedDescription> computeMappings(SortedSet<OWLIndividual> positiveExamples, boolean useRemoteKB) throws NonExistingLinksException, ComponentInitException {
 		logger.info("positiveExamples: " + positiveExamples);
 		//if there are no links to the target KB, then we can skip learning
 		if (positiveExamples.isEmpty()) {
@@ -762,11 +765,11 @@ public class ExpressiveSchemaMappingGenerator {
 			MonitorFactory.getTimeMonitor("negative examples").start();
 
 			AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder;
-			if(useRemoteKB){
-				negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(endpoint, targetKB.getNamespace());
-			}else{
+//			if(useRemoteKB){
 				negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
-			}
+//			}else{
+//				negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
+//			}
 			SortedSet<OWLIndividual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
 			negativeExamples.removeAll(positiveExamples);
 			MonitorFactory.getTimeMonitor("negative examples").stop();

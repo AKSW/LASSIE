@@ -11,6 +11,7 @@ import java.util.SortedSet;
 
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
+import org.dllearner.core.ComponentInitException;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
@@ -84,8 +85,9 @@ public class KnowledgeBaseSampler {
 	 * @param args
 	 * @author sherif
 	 * @throws MalformedURLException 
+	 * @throws ComponentInitException 
 	 */
-	public static void main(String[] args) throws MalformedURLException {
+	public static void main(String[] args) throws MalformedURLException, ComponentInitException {
 		KnowledgeBaseSampler kbSampler = new KnowledgeBaseSampler(new RemoteKnowledgeBase(new SparqlEndpoint(new URL("http://dbpedia.org/sparql"))), 0.1d);
 		Set<OWLClass> leafClasses = kbSampler.getLeafClasses();
 	

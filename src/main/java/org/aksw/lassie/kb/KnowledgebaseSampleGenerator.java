@@ -49,7 +49,7 @@ public class KnowledgebaseSampleGenerator {
 	private static int maxCBDDepth = 0;
 
 	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, String namespace, 
-			int maxNrOfClasses, int maxNrOfInstancesPerClass, Set<OWLClass> testClasses){
+			int maxNrOfClasses, int maxNrOfInstancesPerClass, Set<OWLClass> testClasses) throws ComponentInitException{
 
 		Model model = ModelFactory.createDefaultModel();
 
@@ -180,15 +180,15 @@ public class KnowledgebaseSampleGenerator {
 		}
 	}
 
-	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, int maxNrOfClasses, int maxNrOfInstancesPerClass){
+	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, int maxNrOfClasses, int maxNrOfInstancesPerClass) throws ComponentInitException{
 		return createKnowledgebaseSample(endpoint, null, maxNrOfClasses, maxNrOfInstancesPerClass, new HashSet<OWLClass>());
 	}
 
-	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, int maxNrOfInstancesPerClass){
+	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, int maxNrOfInstancesPerClass) throws ComponentInitException{
 		return createKnowledgebaseSample(endpoint, Integer.MAX_VALUE, maxNrOfInstancesPerClass);
 	}
 
-	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, String namespace, int maxNrOfInstancesPerClass){
+	public static LocalKnowledgeBase createKnowledgebaseSample(SparqlEndpoint endpoint, String namespace, int maxNrOfInstancesPerClass) throws ComponentInitException{
 		return createKnowledgebaseSample(endpoint, null, Integer.MAX_VALUE, maxNrOfInstancesPerClass, new HashSet<OWLClass>());
 	}
 
@@ -198,7 +198,7 @@ public class KnowledgebaseSampleGenerator {
 	}
 
 	public static LocalKnowledgeBase createKnowledgebaseSubTreeSample(SparqlEndpoint endpoint, String namespace, 
-			OWLClass subTreeRootClass, int maxNrOfInstancesPerClass){
+			OWLClass subTreeRootClass, int maxNrOfInstancesPerClass) throws ComponentInitException{
 
 		Model model = ModelFactory.createDefaultModel();
 
