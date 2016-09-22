@@ -29,7 +29,7 @@ import org.aksw.jena_sparql_api.cache.extra.CacheFrontendImpl;
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
-import org.aksw.lassie.core.NonExistingLinksException;
+import org.aksw.lassie.core.exceptions.NonExistingLinksException;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
@@ -64,7 +64,8 @@ import com.hp.hpl.jena.vocabulary.RDF;
  */
 
 public class TestDLLearnerConfig extends ExpressiveSchemaMappingGenerator {
-    private static final Logger logger = Logger.getLogger(TestDLLearnerConfig.class.getName());
+    private static final Logger logger = Logger.getLogger(TestDLLearnerConfig.class);
+    
     private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
     private ExtractionDBCache cache = new ExtractionDBCache("cache");
     private String cacheDirectory = "cache";

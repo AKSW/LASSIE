@@ -33,7 +33,8 @@ import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
  *
  */
 public class LassieResultRecorder {
-	private static final Logger logger = Logger.getLogger(LassieResultRecorder.class.getName());
+	private static final Logger logger = Logger.getLogger(LassieResultRecorder.class);
+	
 	public int nrOfClasses;
 	public int nrOfInstancesPerClass;
 	public int nrOfClassModifiers;
@@ -43,6 +44,7 @@ public class LassieResultRecorder {
 	public int NrOfIterations;
 	public List<LassieIterationRecorder> iterationsRecords = new ArrayList<LassieIterationRecorder>(); 
 	public long totalExecutionTime;
+	public double totalCoverage;
 	public double avgIterationExecutionTime;
 
 
@@ -229,7 +231,7 @@ public class LassieResultRecorder {
 
 	/**
 	 * Set instance mapping for a given named class in a given iteration 
-	 * @param coverage
+	 * @param COVERAGE
 	 * @param iterationNr
 	 * @param nc
 	 * @author sherif

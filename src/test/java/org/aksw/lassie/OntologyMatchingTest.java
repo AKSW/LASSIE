@@ -15,7 +15,7 @@ import java.util.Set;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
 import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
-import org.aksw.lassie.core.NonExistingLinksException;
+import org.aksw.lassie.core.exceptions.NonExistingLinksException;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;

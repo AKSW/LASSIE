@@ -1,4 +1,4 @@
-package org.aksw.lassie.core;
+package org.aksw.lassie.core.exceptions;
 
 public class NonExistingLinksException extends Exception{
 	
