@@ -15,13 +15,15 @@ import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
+
 import com.jamonapi.Monitor;
+import com.jamonapi.MonitorFactory;
 
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 public abstract class AbstractKnowledgeBase implements KnowledgeBase {
     protected static final Logger logger = Logger.getLogger(AbstractKnowledgeBase.class);
-    protected Monitor mon;
+    protected Monitor mon = MonitorFactory.getTimeMonitor("time");
     protected OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
 	protected SPARQLReasoner reasoner;
 	protected String namespace;

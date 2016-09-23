@@ -25,7 +25,7 @@ import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
-import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
+import org.aksw.lassie.core.LASSIEController;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.KnowledgebaseSampleGenerator;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
@@ -290,7 +290,7 @@ public class Evaluation {
 //		System.exit(0);
 		KnowledgeBase sourceKB = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
-		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, endpoint, maxNrOfIterations, testClasses);
+		LASSIEController generator = new LASSIEController(sourceKB, targetKB, endpoint, maxNrOfIterations, testClasses);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 		if(testClasses.size()>0){
 			return generator.run(testClasses, useRemoteKB);
@@ -356,7 +356,7 @@ public class Evaluation {
 
 		KnowledgeBase source = new LocalKnowledgeBase(modifiedReferenceDataset, sampleKB.getNamespace());
 
-		ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(source, target, modifiedDbpediaClasses);
+		LASSIEController generator = new LASSIEController(source, target, modifiedDbpediaClasses);
 		generator.setTargetDomainNameSpace(dbpediaNamespace);
 
 		//		return generator.run(modifiedDbpediaClasses, Sets.newHashSet(new OWLClass("http://dbpedia.org/ontology/Person")));

@@ -13,7 +13,7 @@ import java.util.Set;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
-import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
+import org.aksw.lassie.core.LASSIEController;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
@@ -111,7 +111,7 @@ public class TestLimes {
 			Model targetKBModel = (new Evaluation()).createTestDataset(sourceKB.getModel(), instanceModifiersAndRates, classModifiersAndRates, testClasses.size(), 5);
 			KnowledgeBase targetKB = new LocalKnowledgeBase(targetKBModel, "http://dbpedia.org/ontology/");
 			
-			ExpressiveSchemaMappingGenerator generator = new ExpressiveSchemaMappingGenerator(sourceKB, targetKB, maxNrOfIterations, testClasses);
+			LASSIEController generator = new LASSIEController(sourceKB, targetKB, maxNrOfIterations, testClasses);
 			generator.setTargetDomainNameSpace("http://dbpedia.org/ontology/");
 			
 			LassieResultRecorder experimentResults = generator.run(testClasses, false);

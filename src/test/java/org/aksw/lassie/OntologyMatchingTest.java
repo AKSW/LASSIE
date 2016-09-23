@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.aksw.lassie.bmGenerator.BenchmarkGenerator;
-import org.aksw.lassie.core.ExpressiveSchemaMappingGenerator;
+import org.aksw.lassie.core.LASSIEController;
 import org.aksw.lassie.core.exceptions.NonExistingLinksException;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
@@ -103,19 +103,19 @@ public class OntologyMatchingTest {
 
     @Test
     public void testDBpediaWorldFactbook() {
-//        ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, worldFactBook);
+//        LASSIEController matcher = new LASSIEController(dbpedia, worldFactBook);
         //		matcher.run();
     }
 
     @Test
     public void testDBpediaOpenCyc() {
-//        ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, openCyc);
+//        LASSIEController matcher = new LASSIEController(dbpedia, openCyc);
         //		matcher.run();
     }
 
     @Test
     public void testDBpediaLinkedGeoData() {
-//        ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData);
+//        LASSIEController matcher = new LASSIEController(dbpedia, linkedGeoData);
         //		matcher.run();
     }
 
@@ -132,7 +132,7 @@ public class OntologyMatchingTest {
                 owlDataFactory.getOWLClass(IRI.create("http://linkedgeodata.org/ontology/River")),
                 owlDataFactory.getOWLClass(IRI.create("http://linkedgeodata.org/ontology/Peak"))
                 );
-        ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData, sourceClasses);
+        LASSIEController matcher = new LASSIEController(dbpedia, linkedGeoData, sourceClasses);
         matcher.run(sourceClasses, targetClasses, false);
     }
 
@@ -140,7 +140,7 @@ public class OntologyMatchingTest {
     public void testSingleClassOpenCycToDBpedia() throws ComponentInitException {
         OWLClass nc = owlDataFactory.getOWLClass(IRI.create("http://sw.opencyc.org/concept/Mx4r4fYeXvbPQdiKtoNafhmOew"));
         Set<OWLClass> sourceClasses = new HashSet<>(Arrays.asList(nc));
-        ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(openCyc, dbpedia, sourceClasses);
+        LASSIEController matcher = new LASSIEController(openCyc, dbpedia, sourceClasses);
         try {
             List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc, false);
             Map<OWLClassExpression, List<? extends EvaluatedDescription>> alignment = new HashMap<OWLClassExpression, List<? extends EvaluatedDescription>>();
@@ -155,7 +155,7 @@ public class OntologyMatchingTest {
     public void testSingleClassLinkedGeoDataToDBpedia() throws ComponentInitException {
         OWLClass nc = owlDataFactory.getOWLClass(IRI.create("http://linkedgeodata.org/ontology/Aerodrome"));
         Set<OWLClass> sourceClasses = new HashSet<>(Arrays.asList(nc));
-        ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(linkedGeoData, dbpedia, sourceClasses);
+        LASSIEController matcher = new LASSIEController(linkedGeoData, dbpedia, sourceClasses);
         try{
             List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc, false);
             Map<OWLClassExpression, List<? extends EvaluatedDescription>> alignment = new HashMap<>();
@@ -170,7 +170,7 @@ public class OntologyMatchingTest {
     public void testSingleClassDBpediaToLinkedGeoData() throws ComponentInitException {
         OWLClass nc = owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/AdministrativeRegion"));
         Set<OWLClass> sourceClasses = new HashSet<>(Arrays.asList(nc));
-        ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(dbpedia, linkedGeoData, sourceClasses);
+        LASSIEController matcher = new LASSIEController(dbpedia, linkedGeoData, sourceClasses);
         try {
             List<? extends EvaluatedDescription> mapping = matcher.computeMappings(nc, false);
             Map<OWLClassExpression, List<? extends EvaluatedDescription>> alignment = new HashMap<>();
@@ -191,7 +191,7 @@ public class OntologyMatchingTest {
         Set<OWLClass> sourceClasses = new HashSet<>(Arrays.asList(nc));
         
         Set<OWLClass> singOwlClass = Collections.singleton(owlDataFactory.getOWLClass(IRI.create("http://purl.org/ontology/mo/MusicArtist")));
-        ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_1, singOwlClass);
+        LASSIEController matcher = new LASSIEController(peel_0, peel_1, singOwlClass);
         LassieResultRecorder run = matcher.run(singOwlClass, false);
 
         System.in.read();
@@ -220,7 +220,7 @@ public class OntologyMatchingTest {
             Model peelKModel = benchmarker.bmPeel(inModel, inClassUri, dRatio); 
             KnowledgeBase peel_k = new LocalKnowledgeBase(peelKModel);
             Set<OWLClass> singOwlClass = Collections.singleton(owlDataFactory.getOWLClass(IRI.create("http://purl.org/ontology/mo/MusicArtist")));
-            ExpressiveSchemaMappingGenerator matcher = new ExpressiveSchemaMappingGenerator(peel_0, peel_k, singOwlClass);
+            LASSIEController matcher = new LASSIEController(peel_0, peel_k, singOwlClass);
             LassieResultRecorder run = matcher.run(singOwlClass, false);
             System.out.println("\nPrevious results was for destruction ratio = "+dRatio*100+"%\n");
             System.err.println("Press enter to run the next iteration ...");
