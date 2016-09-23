@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -73,25 +71,30 @@ import com.hp.hpl.jena.vocabulary.XSD;
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
 
-import de.uni_leipzig.simba.cache.Cache;
-import de.uni_leipzig.simba.data.Instance;
-import de.uni_leipzig.simba.data.Mapping;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
-public class ExpressiveSchemaMappingGenerator {
+public class LASSIEController {
 
     //current status trackers
-    protected static final Logger logger = Logger.getLogger(ExpressiveSchemaMappingGenerator.class.getName());
+    protected static final Logger logger = Logger.getLogger(LASSIEController.class.getName());
+
     protected Monitor mon;
+
     protected OWLClass currentClass;
+
     private int iterationNr = 1;
 
     //LASSIE configurations
     protected boolean posNegLearning = true;
+
     protected final boolean performCrossValidation = true;
+
     protected static int maxNrOfIterations = 10;
+
     protected static final int coverageThreshold = 0;
+
     private String targetDomainNameSpace = "";
+
     protected List<Modifier> modifiers = new ArrayList<Modifier>();
 
     //DL-Learner configurations
@@ -99,10 +102,12 @@ public class ExpressiveSchemaMappingGenerator {
     protected int maxNrOfPositiveExamples = 100;// 20;
     /** The maximum number of negative examples, used for the SPARQL extraction and learning algorithm */
     protected int maxNrOfNegativeExamples = 100;//20;
-    protected KnowledgeBase sourceKB;
-    protected KnowledgeBase targetKB;
-    protected int MAX_RECURSION_DEPTH = 2;
 
+    protected KnowledgeBase sourceKB;
+
+    protected KnowledgeBase targetKB;
+
+    protected int MAX_RECURSION_DEPTH = 2;
 
     protected OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
 
@@ -111,7 +116,6 @@ public class ExpressiveSchemaMappingGenerator {
     //result recording
     LassieResultRecorder resultRecorder;
     private SparqlEndpoint endpoint;
-
 
     /**
      * @param modifiers the modifiers to set
@@ -127,19 +131,16 @@ public class ExpressiveSchemaMappingGenerator {
         this.targetDomainNameSpace = uri;
     }
 
-    public ExpressiveSchemaMappingGenerator() {
-    }
-
-    public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, int nrOfIterations, Set<OWLClass> sourceClasses) {
+    public LASSIEController(KnowledgeBase source, KnowledgeBase target, int nrOfIterations, Set<OWLClass> sourceClasses) {
         this(source, target, OWL.sameAs.getURI(), sourceClasses);
         maxNrOfIterations = nrOfIterations;
     }
 
-    public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, Set<OWLClass> sourceClasses) {
+    public LASSIEController(KnowledgeBase source, KnowledgeBase target, Set<OWLClass> sourceClasses) {
         this(source, target, OWL.sameAs.getURI(), sourceClasses);
     }
 
-    public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, String linkingProperty, Set<OWLClass> sourceClasses) {
+    public LASSIEController(KnowledgeBase source, KnowledgeBase target, String linkingProperty, Set<OWLClass> sourceClasses) {
         this.sourceKB = source;
         this.targetKB = target;
 
@@ -153,18 +154,17 @@ public class ExpressiveSchemaMappingGenerator {
         resultRecorder = new LassieResultRecorder(maxNrOfIterations, sourceClasses);
     }
 
-
     /**
      * @param sourceKB2
      * @param targetKB2
      * @param endpoint
      * @param maxNrOfIterations2
      */
-    public ExpressiveSchemaMappingGenerator(KnowledgeBase source, KnowledgeBase target, SparqlEndpoint endpoint,
-            int maxNrOfIterations, Set<OWLClass> sourceClasses) {
+    public LASSIEController(KnowledgeBase source, KnowledgeBase target, SparqlEndpoint endpoint,
+                            int maxNrOfIterations, Set<OWLClass> sourceClasses) {
         this(source, target, OWL.sameAs.getURI(), sourceClasses);
         this.endpoint = endpoint;
-        ExpressiveSchemaMappingGenerator.maxNrOfIterations = maxNrOfIterations;
+        LASSIEController.maxNrOfIterations = maxNrOfIterations;
 
     }
 
@@ -174,7 +174,6 @@ public class ExpressiveSchemaMappingGenerator {
         logger.debug("targetClasses: " + targetClasses);
         return run(sourceClasses, targetClasses, useRemoteKB);
     }
-
 
     public LassieResultRecorder run(Set<OWLClass> sourceClasses, Set<OWLClass> targetClasses, boolean useRemoteKB) {
 
@@ -237,92 +236,6 @@ public class ExpressiveSchemaMappingGenerator {
         return resultRecorder;
     }
 
-
-    public Map<String, Object> runIntentionalEvaluation(Set<OWLClass> sourceClasses,
-            Set<OWLClass> targetClasses, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates) {
-        for (Entry<Modifier, Double> clsMod2Rat : classModefiersAndRates.entrySet()) {
-            System.out.println("Modifer Name: " + clsMod2Rat.getKey());
-            System.out.println("Optimal solution: " + clsMod2Rat.getKey().getOptimalSolution(sourceClasses.iterator().next()));
-        }
-        System.exit(1);
-
-        int pos = 0;
-        Map<String, Object> result = new HashMap<String, Object>();
-        Map<Modifier, Integer> modifier2pos = new HashMap<Modifier, Integer>();
-
-        Map<Modifier, OWLClassExpression> modifier2optimalSolution = new HashMap<Modifier, OWLClassExpression>();
-        //initially, the class expressions E_i in the target KB are the named classes D_i
-        Collection<OWLClassExpression> targetClassExpressions = new TreeSet<OWLClassExpression>();
-        targetClassExpressions.addAll(targetClasses);
-
-        //perform the iterative schema matching
-        Map<OWLClass, List<? extends EvaluatedDescription<?>>> mappingTop10 = new HashMap<OWLClass, List<? extends EvaluatedDescription<?>>>();
-        int i = 0;
-        //		do {
-        //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
-        //a map from C_i to a set of instances in the target KB
-        EuclidLinker linker = new EuclidLinker(sourceKB, targetKB, linkingProperty, resultRecorder);
-        Multimap<OWLClass, String> links = linker.link(sourceClasses, targetClassExpressions);
-        result.put("posExamples", links);
-        //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
-        for (OWLClass sourceClass : sourceClasses) {
-
-            logger.info("Source class: " + sourceClass);
-            currentClass = sourceClass;
-            try {
-                SortedSet<OWLIndividual> targetInstances = Helper.getIndividualSet(new TreeSet<>(links.get(sourceClass)));
-                List<? extends EvaluatedDescription<?>> mappingList = computeMappings(targetInstances, false);
-                mappingTop10.put(sourceClass, mappingList);
-
-                for (Modifier modifier : modifiers) {
-                    if (modifier.isClassModifier()) {
-                        pos = intentionalEvaluation(mappingList, modifier, sourceClass);
-                        modifier2pos.put(modifier, pos);
-                        modifier2optimalSolution.put(modifier, modifier.getOptimalSolution(sourceClass));
-                    }
-                }
-
-            } catch (NonExistingLinksException e) {
-                logger.warn(e.getMessage() + "Skipped learning.");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        //			if(pos<0)result
-        //				break;
-        //		} while (i++ <= maxNrOfIterations);
-        result.put("Modifier2pos", modifier2pos);
-        result.put("mappingTop10", mappingTop10);
-        result.put("modifier2optimalSolution", modifier2optimalSolution);
-        return result;
-    }
-
-    public int intentionalEvaluation(List<? extends EvaluatedDescription<?>> descriptions, Modifier modifier, OWLClass cls) {
-        OWLClassExpression targetDescription = modifier.getOptimalSolution(cls);
-        int pos = descriptions.indexOf(targetDescription);
-        return pos;
-    }
-
-    /**
-     * @param j
-     * @param sourceClass
-     * @param targetInstances
-     * @throws IOException
-     * @throws FileNotFoundException
-     * @author sherif
-     */
-    public void serializeCurrentObjects(int j, OWLClass sourceClass,
-            SortedSet<OWLIndividual> targetInstances) throws IOException,
-    FileNotFoundException {
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass" + j + ".ser"));
-        out.writeObject(sourceClass);
-        out.close();
-        out = new ObjectOutputStream(new FileOutputStream("targetInstances" + j + ".ser"));
-        out.writeObject(targetInstances);
-        j++;
-        out.close();
-    }
-
     double computeCoverage(Map<OWLClass, OWLClassExpression> mapping) {
 
         double totalCoverage = 0;
@@ -360,34 +273,6 @@ public class ExpressiveSchemaMappingGenerator {
         return dice;
     }
 
-
-
-    public Set<String> getAllProperties(Cache c) {
-        //    	logger.info("Get all properties...");
-        if (c.size() > 0) {
-            HashSet<String> props = new HashSet<String>();
-            for (Instance i : c.getAllInstances()) {
-                props.addAll(i.getAllProperties());
-            }
-            return props;
-        } else {
-            return new HashSet<String>();
-        }
-    }
-
-
-
-    /**
-     * Computes initial mappings
-     *
-     */
-    public Mapping getNonDeterministicUnsupervisedMappings(Cache source, Cache target) {
-        logger.info("Source size = " + source.getAllUris().size());
-        logger.info("Target size = " + target.getAllUris().size());
-        //TODO @Axel: Add genetic algorithm variant
-        return null;
-    }
-
     private Set<OWLClass> getClasses(KnowledgeBase kb) {
         Set<OWLClass> classes = new HashSet<OWLClass>();
 
@@ -423,8 +308,6 @@ public class ExpressiveSchemaMappingGenerator {
         }
         return classes;
     }
-
-
 
     public EvaluatedDescription<?> computeMapping(SortedSet<OWLIndividual> positiveExamples, boolean useRemoteKB) throws NonExistingLinksException, ComponentInitException {
         return computeMappings(positiveExamples, useRemoteKB).get(0);
@@ -574,8 +457,6 @@ public class ExpressiveSchemaMappingGenerator {
         return sb.toString();
     }
 
-
-
     private KnowledgeSource convert(Model model) {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -594,8 +475,6 @@ public class ExpressiveSchemaMappingGenerator {
         }
         return null;
     }
-
-
 
     /**
      * Filter triples which are not relevant based on the given knowledge base
@@ -623,33 +502,6 @@ public class ExpressiveSchemaMappingGenerator {
         }
         model.remove(statementsToRemove);
     }
-
-    private SortedSet<OWLIndividual> getRelatedIndividualsNamespaceAware(KnowledgeBase kb, OWLClass nc, String targetNamespace) {
-        SortedSet<OWLIndividual> relatedIndividuals = new TreeSet<>();
-        //get all individuals o which are connected to individuals s belonging to class nc
-        //		String query = String.format("SELECT ?o WHERE {?s a <%s>. ?s <http://www.w3.org/2002/07/owl#sameAs> ?o. FILTER(REGEX(STR(?o),'%s'))}", nc.getName(), targetNamespace);
-        //		ResultSet rs = executeSelect(kb, query);
-        //		QuerySolution qs;
-        //		while(rs.hasNext()){
-        //			qs = rs.next();
-        //			RDFNode object = qs.get("o");
-        //			if(object.isURIResource()){
-        //				
-        //				String uri = object.asResource().getURI();
-        //				//workaround for World Factbook - should be removed later
-        //				uri = uri.replace("http://www4.wiwiss.fu-berlin.de/factbook/resource/", "http://wifo5-03.informatik.uni-mannheim.de/factbook/resource/");
-        //				//workaround for OpenCyc - should be removed later
-        //				uri = uri.replace("http://sw.cyc.com", "http://sw.opencyc.org");
-        //				
-        //				relatedIndividuals.add(new OWLIndividual(uri));
-        //			}
-        //		}
-        return relatedIndividuals;
-    }
-
-
-
-
 
     private static void cleanUpModel(Model model) {
         // filter out triples with String literals, as therein often occur
