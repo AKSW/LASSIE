@@ -1,7 +1,5 @@
 package org.aksw.lassie.core.linking;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,21 +21,15 @@ import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.log4j.Logger;
 import org.dllearner.utilities.datastructures.SetManipulation;
-import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.vocabulary.OWL;
-import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
 
 import de.uni_leipzig.simba.cache.Cache;
@@ -53,26 +44,20 @@ import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 public class EuclidLinker extends AbstractUnsupervisedLinker{
     protected static final Logger logger = Logger.getLogger(EuclidLinker.class);
 
-    protected Monitor mon;
-
     // Euclid Configurations
     protected static final int numberOfDimensions = 7;
     static double coverage_LIMES = 0.8;
     static double beta_LIMES = 1d;
     static String fmeasure_LIMES = "own";
     protected final int linkingMaxNrOfExamples_LIMES = 100;
-    protected final int linkingMaxRecursionDepth_LIMES = 0;
+    
     private int numberOfLinkingIterations = 5;
-    protected String linkingProperty = OWL.sameAs.getURI();
-    protected Map<OWLClass, Map<OWLClassExpression, Mapping>> mappingResults = new HashMap<OWLClass, Map<OWLClassExpression, Mapping>>();
-
-    protected KnowledgeBase sourceKB;
-    protected KnowledgeBase targetKB;
+    
+    protected Map<OWLClass, Map<OWLClassExpression, Mapping>> mappingResults = new HashMap<>();
 
     private int iterationNr = 0;
 
-    //result recording
-    LassieResultRecorder resultRecorder;
+
 
     public EuclidLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder){
         this.sourceKB = sourceKB;
@@ -96,11 +81,10 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
         for (OWLClass sourceClass : sourceClasses) {
             //get all instances of C_i
             SortedSet<OWLIndividual> sourceInstances = getSourceInstances(sourceClass);
-            //            sourceInstances = SetManipulation.stableShrinkInd(sourceInstances, linkingMaxNrOfExamples_LIMES);
 
             //get the fragment describing the instances of C_i
             logger.debug("Computing fragment...");
-            Model sourceFragment = sourceKB.getFragment(sourceInstances, linkingMaxRecursionDepth_LIMES);
+            Model sourceFragment = sourceKB.getFragment(sourceInstances, FRAGMENT_DEPTH);
             removeNonStringLiteralStatements(sourceFragment);
             logger.debug("...got " + sourceFragment.size() + " triples.");
             sourceClassToModel.put(sourceClass, sourceFragment);
@@ -108,7 +92,7 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
 
         //compute the Concise Bounded Description(CBD) for each instance
         //in each each target class expression D_i, thus create a model for each class expression
-        Map<OWLClassExpression, Model> targetClassExpressionToModel = new HashMap<OWLClassExpression, Model>();
+        Map<OWLClassExpression, Model> targetCBDsModel = new HashMap<OWLClassExpression, Model>();
         for (OWLClassExpression targetClass : targetClasses) {
             // get all instances of D_i
             SortedSet<OWLIndividual> targetInstances = targetKB.getInstances(targetClass);
@@ -116,10 +100,10 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
 
             // get the fragment describing the instances of D_i
             logger.debug("Computing fragment...");
-            Model targetFragment = targetKB.getFragment(targetInstances, linkingMaxRecursionDepth_LIMES);
+            Model targetFragment = targetKB.getFragment(targetInstances, FRAGMENT_DEPTH);
             removeNonStringLiteralStatements(targetFragment);
             logger.debug("...got " + targetFragment.size() + " triples.");
-            targetClassExpressionToModel.put(targetClass, targetFragment);
+            targetCBDsModel.put(targetClass, targetFragment);
         }
 
         Multimap<OWLClass, String> map = HashMultimap.create();
@@ -129,32 +113,16 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
             OWLClass sourceClass = entry.getKey();
             Model sourceClassModel = entry.getValue();
 
-            //TODO TEST
-            try {
-                sourceClassModel.write(new FileWriter("/home/sherif/JavaProjects/LASSIE/tmp/" + sourceClass.toStringID().substring(sourceClass.toStringID().lastIndexOf("/")+1) + ".ttl"), "TTL");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            //          currentClass = sourceClass; 
-
             Cache cache = modelToCache(sourceClassModel);
 
             //for each D_i
-            for (Entry<OWLClassExpression, Model> entry2 : targetClassExpressionToModel.entrySet()) {
+            for (Entry<OWLClassExpression, Model> entry2 : targetCBDsModel.entrySet()) {
                 OWLClassExpression targetClassExpression = entry2.getKey();
                 Model targetClassExpressionModel = entry2.getValue();
 
                 logger.debug("Computing links between " + sourceClass + " and " + targetClassExpression + "...");
 
                 Cache cache2 = modelToCache(targetClassExpressionModel);
-
-                //TODO TEST
-                try {
-                    targetClassExpressionModel.write(new FileWriter("/home/sherif/JavaProjects/LASSIE/tmp/_" +  targetClassExpression.toString().substring(targetClassExpression.toString().lastIndexOf("/")+1)+ ".ttl"), "TTL");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
 
                 Mapping result = null;
 
@@ -177,7 +145,7 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
                 if(result.size > 0){
                     double f = MappingMath.computeFMeasure(result, cache2.size());
                     resultRecorder.setFMeasure(f, iterationNr, sourceClass);
-                    resultRecorder.setInstanceMapping(result, iterationNr, sourceClass);
+//                    resultRecorder.setInstanceMapping(result, iterationNr, sourceClass);
                 }
 
                 for (Entry<String, HashMap<String, Double>> mappingEntry : result.map.entrySet()) {
@@ -205,7 +173,7 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
 
             //get the fragment describing the instances of C_i
             logger.debug("Computing fragment...");
-            Model sourceFragment = sourceKB.getFragment(sourceInstances, linkingMaxRecursionDepth_LIMES);
+            Model sourceFragment = sourceKB.getFragment(sourceInstances, FRAGMENT_DEPTH);
             removeNonStringLiteralStatements(sourceFragment);
             logger.debug("...got " + sourceFragment.size() + " triples.");
             sourceClassToModel.put(sourceClass, sourceFragment);
@@ -224,7 +192,7 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
 
             // get the fragment describing the instances of D_i
             logger.debug("Computing fragment...");
-            Model targetFragment = targetKB.getFragment(targetInstances, linkingMaxRecursionDepth_LIMES);
+            Model targetFragment = targetKB.getFragment(targetInstances, FRAGMENT_DEPTH);
             removeNonStringLiteralStatements(targetFragment);
             logger.debug("...got " + targetFragment.size() + " triples.");
             targetClassExpressionToModel.put(targetClass, targetFragment);
@@ -290,41 +258,7 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
 
 
 
-    /**
-     * Return all instances of the given class in the source KB.
-     *
-     * @param cls
-     * @return
-     */
-    private SortedSet<OWLIndividual> getSourceInstances(OWLClass cls) {
-        logger.debug("Retrieving instances of class " + cls + "...");
-        mon.start();
-        SortedSet<OWLIndividual> instances = new TreeSet<>();
-        String query = String.format("SELECT DISTINCT ?s WHERE {?s a <%s>}", cls.toStringID());
-        ResultSet rs = sourceKB.executeSelect(query);
-        QuerySolution qs;
-        while (rs.hasNext()) {
-            qs = rs.next();
-            instances.add(owlDataFactory.getOWLNamedIndividual(IRI.create(qs.getResource("s").getURI())));
-        }
-        mon.stop();
-        logger.debug("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
-        return instances;
-    }
 
-    private void removeNonStringLiteralStatements(Model m) {
-        StmtIterator iterator = m.listStatements();
-        List<Statement> statements2Remove = new ArrayList<Statement>();
-        while (iterator.hasNext()) {
-            Statement st = iterator.next();
-            if (!st.getObject().isLiteral()
-                    || !(st.getObject().asLiteral().getDatatype() == null || 
-                    st.getObject().asLiteral().getDatatypeURI().equals(XSDDatatype.XSDstring.getURI()))){
-                statements2Remove.add(st);
-            }
-        }
-        m.remove(statements2Remove);
-    }
 
 
     /**
@@ -369,7 +303,6 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
         return map;
     }
 
-
     /**
      * Convert Jena Model to LIMES Cache
      * @param m
@@ -386,6 +319,7 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
         }
         return c;
     }
+
 
     //  /**
     //  * Return all instances which are (assumed to be) contained in the target

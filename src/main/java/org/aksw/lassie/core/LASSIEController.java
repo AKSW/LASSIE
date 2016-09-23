@@ -21,6 +21,8 @@ import java.util.TreeSet;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.exceptions.NonExistingLinksException;
 import org.aksw.lassie.core.linking.EuclidLinker;
+import org.aksw.lassie.core.linking.UnsupervisedLinker;
+import org.aksw.lassie.core.linking.WombatLinker;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.aksw.lassie.util.PrintUtils;
@@ -32,12 +34,10 @@ import org.dllearner.core.ComponentInitException;
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.core.KnowledgeSource;
 import org.dllearner.kb.OWLAPIOntology;
-import org.dllearner.kb.SparqlEndpointKS;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.learningproblems.PosNegLPStandard;
 import org.dllearner.learningproblems.PosOnlyLP;
 import org.dllearner.reasoning.ClosedWorldReasoner;
-import org.dllearner.reasoning.SPARQLReasoner;
 import org.dllearner.utilities.Helper;
 import org.dllearner.utilities.datastructures.SetManipulation;
 import org.dllearner.utilities.examples.AutomaticNegativeExampleFinderSPARQL2;
@@ -198,7 +198,8 @@ public class LASSIEController {
             logger.info(iterationNr + ". ITERATION:");
             //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
             //a map from C_i to a set of instances in the target KB
-            EuclidLinker linker = new EuclidLinker(sourceKB, targetKB, linkingProperty, resultRecorder);
+//          UnsupervisedLinker linker = new EuclidLinker(sourceKB, targetKB, linkingProperty, resultRecorder);
+            UnsupervisedLinker linker = new WombatLinker(sourceKB, targetKB, linkingProperty, resultRecorder);
             Multimap<OWLClass, String> links = linker.link(sourceClasses, targetClassExpressions);
 
             //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
