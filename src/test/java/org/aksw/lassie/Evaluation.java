@@ -52,14 +52,14 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.RDFNode;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
 import com.jamonapi.log4j.Log4jBufferListener;
 
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
@@ -77,11 +77,11 @@ public class Evaluation {
 	private String dbpediaNamespace = "http://dbpedia.org/ontology/";
 	private OWLOntology dbpediaOntology;
 
-	private Set<OWLClass> modifiedDbpediaClasses = new TreeSet<OWLClass>();
-	private Set<OWLClass> classesToLearn 			= new TreeSet<OWLClass>();
+	private Set<OWLClass> modifiedDbpediaClasses = new TreeSet<>();
+	private Set<OWLClass> classesToLearn 			= new TreeSet<>();
 
-	private static Map<Modifier, Double> classModifiersAndRates    = new HashMap<Modifier, Double>();
-	private static Map<Modifier, Double> instanceModifiersAndRates = new HashMap<Modifier, Double>();
+	private static Map<Modifier, Double> classModifiersAndRates    = new HashMap<>();
+	private static Map<Modifier, Double> instanceModifiersAndRates = new HashMap<>();
 
 	private int maxNrOfClasses = 1;//-1 all classes
 	private int maxNrOfInstancesPerClass = 20;

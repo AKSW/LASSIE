@@ -9,8 +9,8 @@ import java.util.List;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 
 /**
  * @author sherif
@@ -30,7 +30,7 @@ public class ClassDeleteModifier extends Modifier {
 		isClassModifier = true;
 	}
 	/* (non-Javadoc)
-	 * @see de.uni_leipzig.simba.bmGenerator.Modifier#destroy(com.hp.hpl.jena.rdf.model.Model)
+	 * @see de.uni_leipzig.simba.bmGenerator.Modifier#destroy(org.apache.jena.rdf.model.Model)
 	 */
 	@Override
 	Model destroy(Model subModel) {

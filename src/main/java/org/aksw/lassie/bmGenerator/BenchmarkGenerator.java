@@ -12,13 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.sparql.vocabulary.FOAF;
-import com.hp.hpl.jena.vocabulary.RDFS;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.RDFS;
 
 /**
  * @author Sherif
@@ -175,7 +175,7 @@ public class BenchmarkGenerator extends Modifier{
 	}
 
 	/* (non-Javadoc)
-	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy(com.hp.hpl.jena.rdf.model.Model)
+	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy(org.apache.jena.rdf.model.Model)
 	 */
 	@Override
 	Model destroy(Model subModel) {
@@ -257,7 +257,7 @@ public class BenchmarkGenerator extends Modifier{
 		//		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit1");
 		//		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit2");
 		System.out.println("----- Split Model -----");
-		Model outModel = classSpliter.destroy(null);
+		Model outModel = classSpliter.destroy((Model) null);
 		System.out.println("Size: "+outModel.size());
 		return outModel;
 	}

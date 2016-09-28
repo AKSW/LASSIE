@@ -1,13 +1,15 @@
 package org.aksw.lassie.core;
 
 import com.google.common.collect.Multimap;
-import de.uni_leipzig.simba.cache.Cache;
-import de.uni_leipzig.simba.data.Instance;
-import de.uni_leipzig.simba.data.Mapping;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.exceptions.NonExistingLinksException;
 import org.aksw.lassie.core.linking.EuclidLinker;
+import org.aksw.lassie.core.linking.UnsupervisedLinker;
+import org.aksw.lassie.core.linking.WombatLinker;
 import org.aksw.lassie.kb.KnowledgeBase;
+import org.aksw.limes.core.io.cache.ACache;
+import org.aksw.limes.core.io.cache.Instance;
+import org.aksw.limes.core.io.mapping.AMapping;
 import org.dllearner.core.EvaluatedDescription;
 import org.dllearner.utilities.Helper;
 import org.semanticweb.owlapi.model.OWLClass;
@@ -27,7 +29,7 @@ public class LASSIEController2 extends LASSIEController {
     }
 
     public Map<String, Object> runIntentionalEvaluation(Set<OWLClass> sourceClasses,
-                                                        Set<OWLClass> targetClasses, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates) {
+            Set<OWLClass> targetClasses, Map<Modifier, Double> instanceModefiersAndRates, Map<Modifier, Double> classModefiersAndRates) {
         for (Map.Entry<Modifier, Double> clsMod2Rat : classModefiersAndRates.entrySet()) {
             System.out.println("Modifer Name: " + clsMod2Rat.getKey());
             System.out.println("Optimal solution: " + clsMod2Rat.getKey().getOptimalSolution(sourceClasses.iterator().next()));
@@ -49,7 +51,8 @@ public class LASSIEController2 extends LASSIEController {
         //		do {
         //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
         //a map from C_i to a set of instances in the target KB
-        EuclidLinker linker = new EuclidLinker(sourceKB, targetKB, linkingProperty, resultRecorder);
+        //        UnsupervisedLinker linker = new EuclidLinker(sourceKB, targetKB, linkingProperty, resultRecorder);
+        UnsupervisedLinker linker = new WombatLinker(sourceKB, targetKB, linkingProperty, resultRecorder);
         Multimap<OWLClass, String> links = linker.link(sourceClasses, targetClassExpressions);
         result.put("posExamples", links);
         //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
@@ -100,8 +103,8 @@ public class LASSIEController2 extends LASSIEController {
      * @author sherif
      */
     public void serializeCurrentObjects(int j, OWLClass sourceClass,
-                                        SortedSet<OWLIndividual> targetInstances) throws IOException,
-            FileNotFoundException {
+            SortedSet<OWLIndividual> targetInstances) throws IOException,
+    FileNotFoundException {
         ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("sourceClass" + j + ".ser"));
         out.writeObject(sourceClass);
         out.close();
@@ -113,7 +116,7 @@ public class LASSIEController2 extends LASSIEController {
 
 
 
-    public Set<String> getAllProperties(Cache c) {
+    public Set<String> getAllProperties(ACache c) {
         //    	logger.info("Get all properties...");
         if (c.size() > 0) {
             HashSet<String> props = new HashSet<String>();
@@ -133,7 +136,7 @@ public class LASSIEController2 extends LASSIEController {
      * Computes initial mappings
      *
      */
-    public Mapping getNonDeterministicUnsupervisedMappings(Cache source, Cache target) {
+    public AMapping getNonDeterministicUnsupervisedMappings(ACache source, ACache target) {
         logger.info("Source size = " + source.getAllUris().size());
         logger.info("Target size = " + target.getAllUris().size());
         //TODO @Axel: Add genetic algorithm variant

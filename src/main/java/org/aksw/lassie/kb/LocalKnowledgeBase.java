@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.log4j.Logger;
 import org.dllearner.core.ComponentInitException;
 import org.dllearner.kb.LocalModelBasedSparqlEndpointKS;
@@ -15,17 +19,7 @@ import org.dllearner.reasoning.SPARQLReasoner;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
 import com.google.common.collect.Sets;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Literal;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.vocabulary.OWL;
-import com.hp.hpl.jena.vocabulary.RDF;
-import com.hp.hpl.jena.vocabulary.RDFS;
-import com.hp.hpl.jena.vocabulary.XSD;
+
 
 public class LocalKnowledgeBase extends AbstractKnowledgeBase {
 

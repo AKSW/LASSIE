@@ -20,12 +20,25 @@ import java.util.TreeSet;
 
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.exceptions.NonExistingLinksException;
-import org.aksw.lassie.core.linking.EuclidLinker;
 import org.aksw.lassie.core.linking.UnsupervisedLinker;
 import org.aksw.lassie.core.linking.WombatLinker;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.aksw.lassie.util.PrintUtils;
+import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.XSD;
 import org.apache.log4j.Logger;
 import org.dllearner.algorithms.celoe.CELOE;
 import org.dllearner.core.AbstractLearningProblem;
@@ -56,20 +69,6 @@ import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Literal;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Property;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.vocabulary.OWL;
-import com.hp.hpl.jena.vocabulary.RDF;
-import com.hp.hpl.jena.vocabulary.RDFS;
-import com.hp.hpl.jena.vocabulary.XSD;
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
 
@@ -342,7 +341,7 @@ public class LASSIEController {
             logger.info("...got " + positiveFragment.size() + " triples in " + mon.getLastValue() + "ms.");
             //			for (OWLIndividual ind : positiveExamplesSample) {
             //				System.out.println(ResultSetFormatter.asText(
-            //						com.hp.hpl.jena.query.QueryExecutionFactory.create("SELECT * WHERE {<" + ind.getName() + "> a ?o.}", positiveFragment).execSelect()));
+            //						org.apache.jena.query.QueryExecutionFactory.create("SELECT * WHERE {<" + ind.getName() + "> a ?o.}", positiveFragment).execSelect()));
             //			}
 
             //compute the negative examples

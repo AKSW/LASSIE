@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.semanticweb.owlapi.model.IRI;
 
-import com.hp.hpl.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Model;
 
 /**
  * @author sherif
@@ -27,7 +27,7 @@ public class ClassRenameModifier extends Modifier {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.aksw.lassie.bmGenerator.Modifier#destroy(com.hp.hpl.jena.rdf.model.Model)
+	 * @see org.aksw.lassie.bmGenerator.Modifier#destroy(org.apache.jena.rdf.model.Model)
 	 */
 	@Override
 	Model destroy(Model subModel) {

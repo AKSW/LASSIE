@@ -3,6 +3,9 @@ package org.aksw.lassie.kb;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
 import org.apache.log4j.Logger;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.dllearner.utilities.owl.OWLClassExpressionToSPARQLConverter;
@@ -11,10 +14,6 @@ import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
 
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;

@@ -2,12 +2,11 @@ package org.aksw.lassie.kb;
 
 import java.util.SortedSet;
 
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLIndividual;
-
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
 
 public interface KnowledgeBase {
 	

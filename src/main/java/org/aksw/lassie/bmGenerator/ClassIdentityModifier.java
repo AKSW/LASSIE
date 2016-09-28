@@ -6,7 +6,7 @@ package org.aksw.lassie.bmGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hp.hpl.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Model;
 
 /**
  * @author sherif

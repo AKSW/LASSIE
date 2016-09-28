@@ -4,6 +4,10 @@ import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.SortedSet;
 
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
 import org.apache.log4j.Logger;
 import org.dllearner.core.ComponentInitException;
 import org.dllearner.kb.SparqlEndpointKS;
@@ -15,10 +19,7 @@ import org.dllearner.kb.sparql.SparqlQuery;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
+
 
 public class RemoteKnowledgeBase extends AbstractKnowledgeBase {
     

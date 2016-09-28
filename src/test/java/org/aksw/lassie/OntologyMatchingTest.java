@@ -42,8 +42,8 @@ import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 
 import com.google.common.collect.Sets;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 
 //import cern.colt.Arrays;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;

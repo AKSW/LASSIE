@@ -17,6 +17,7 @@ import java.util.SortedSet;
 
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.limes.core.io.mapping.AMapping;
+import org.aksw.limes.core.ml.algorithm.euclid.SimpleClassifier;
 import org.apache.log4j.Logger;
 import org.dllearner.core.EvaluatedDescription;
 import org.semanticweb.owlapi.model.IRI;
@@ -24,8 +25,6 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
-import de.uni_leipzig.simba.data.Mapping;
-import de.uni_leipzig.simba.selfconfig.SimpleClassifier;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 
