@@ -69,7 +69,7 @@ public class TestDLLearnerConfig extends LASSIEController {
     
     private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
     private ExtractionDBCache cache = new ExtractionDBCache(Paths.get("cache").toAbsolutePath().toString());
-    private String cacheDirectory = "cache";
+    private String cacheDirectory = Paths.get("cache").toAbsolutePath().toString();
     private SPARQLReasoner reasoner = new SPARQLReasoner(new SparqlEndpointKS(endpoint, cacheDirectory));
 
     private ConciseBoundedDescriptionGenerator cbdGenerator = new ConciseBoundedDescriptionGeneratorImpl(endpoint, cacheDirectory);
@@ -281,7 +281,9 @@ public class TestDLLearnerConfig extends LASSIEController {
         KnowledgeBase source = new LocalKnowledgeBase(referenceDataset, "http://dbpedia.org/ontology/");
         KnowledgeBase target = new LocalKnowledgeBase(referenceDataset, "http://dbpedia.org/ontology/");
 
-        source = new RemoteKnowledgeBase(SparqlEndpoint.getEndpointDBpedia(), new ExtractionDBCache("cache"), "http://dbpedia.org/ontology/");
+        ExtractionDBCache cache = new ExtractionDBCache(Paths.get("cache").toAbsolutePath().toString());
+        
+        source = new RemoteKnowledgeBase(SparqlEndpoint.getEndpointDBpedia(), cache, "http://dbpedia.org/ontology/");
         target = source;
 
         //		KnowledgeBase target = new LocalKnowledgeBase(testDataset);

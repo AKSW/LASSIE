@@ -350,11 +350,12 @@ public class LASSIEController {
 
             AutomaticNegativeExampleFinderSPARQL2 negativeExampleFinder;
             //			if(useRemoteKB){
-            negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
+            negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner());
             //			}else{
             //				negativeExampleFinder = new AutomaticNegativeExampleFinderSPARQL2(targetKB.getReasoner(), targetKB.getNamespace());
             //			}
-            SortedSet<OWLIndividual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
+//            SortedSet<OWLIndividual> negativeExamples = negativeExampleFinder.getNegativeExamples(positiveExamples, maxNrOfNegativeExamples);
+            SortedSet<OWLIndividual> negativeExamples = new TreeSet<>();
             negativeExamples.removeAll(positiveExamples);
             MonitorFactory.getTimeMonitor("negative examples").stop();
             logger.info("Found " + negativeExamples.size() + " negative examples in " + MonitorFactory.getTimeMonitor("negative examples").getTotal() + "ms.");
