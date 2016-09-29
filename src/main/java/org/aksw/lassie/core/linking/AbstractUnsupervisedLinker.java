@@ -28,7 +28,7 @@ import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 public abstract class AbstractUnsupervisedLinker implements UnsupervisedLinker {
     protected static final Logger logger = Logger.getLogger(AbstractUnsupervisedLinker.class);
     
-    protected final int FRAGMENT_DEPTH = 0;
+    protected final int FRAGMENT_DEPTH = 2;
     
     protected OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
     
@@ -69,9 +69,10 @@ public abstract class AbstractUnsupervisedLinker implements UnsupervisedLinker {
         List<Statement> statements2Remove = new ArrayList<Statement>();
         while (iterator.hasNext()) {
             Statement st = iterator.next();
-            if (!st.getObject().isLiteral()
-                    || !(st.getObject().asLiteral().getDatatype() == null || 
-                    st.getObject().asLiteral().getDatatypeURI().equals(XSDDatatype.XSDstring.getURI()))){
+//            System.out.println(st);
+            if (!st.getObject().isLiteral() ){
+//                    || !(st.getObject().asLiteral().getDatatype() == null || 
+//                    st.getObject().asLiteral().getDatatypeURI().equals(XSDDatatype.XSDstring.getURI()))){
                 statements2Remove.add(st);
             }
         }

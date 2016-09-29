@@ -184,7 +184,7 @@ public class LASSIEController {
         resultRecorder = new LassieResultRecorder(maxNrOfIterations, sourceClasses);
 
         //initially, the class expressions E_i in the target KB are the named classes D_i
-        Collection<OWLClassExpression> targetClassExpressions = new TreeSet<OWLClassExpression>();
+        Collection<OWLClassExpression> targetClassExpressions = new TreeSet<>();
         targetClassExpressions.addAll(targetClasses);
 
         //perform the iterative schema matching

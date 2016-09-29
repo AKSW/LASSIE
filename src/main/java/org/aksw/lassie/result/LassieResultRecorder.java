@@ -39,10 +39,10 @@ public class LassieResultRecorder {
     public int nrOfInstancesPerClass;
     public int nrOfClassModifiers;
     public int nrOfInstanceModifiers;
-    public Map<Modifier, Double> instanceModefiersAndRates = new HashMap<Modifier, Double>();
-    public Map<Modifier, Double> classModefiersAndRates = new HashMap<Modifier, Double>();
+    public Map<Modifier, Double> instanceModefiersAndRates = new HashMap<>();
+    public Map<Modifier, Double> classModefiersAndRates = new HashMap<>();
     public int NrOfIterations;
-    public List<LassieIterationRecorder> iterationsRecords = new ArrayList<LassieIterationRecorder>(); 
+    public List<LassieIterationRecorder> iterationsRecords = new ArrayList<>(); 
     public long totalExecutionTime;
     public double totalCoverage;
     public double avgIterationExecutionTime;

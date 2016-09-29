@@ -10,7 +10,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
+import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
 import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.LASSIEController;
@@ -37,8 +39,8 @@ public class TestLimes {
 	private static final Logger logger = Logger.getLogger(TestLimes.class.getName());
 	
 	static int nrOfExperimentRepeats = 1;
-	static Map<Modifier, Double> classModifiersAndRates 	= new HashMap<Modifier, Double>();
-	static Map<Modifier, Double> instanceModifiersAndRates = new HashMap<Modifier, Double>();
+	static Map<Modifier, Double> classModifiersAndRates 	= new HashMap<>();
+	static Map<Modifier, Double> instanceModifiersAndRates = new HashMap<>();
 	static int maxNrOfIterations = 3;
 	static int nrOfClasses = 1;
 	static int nrOfInstancesPerClass = 5;
@@ -81,16 +83,18 @@ public class TestLimes {
 		
 		//do the experiment nrOfExperimentRepeats times for each modifier 
 		for(int expNr = 0 ; expNr < nrOfExperimentRepeats ; expNr++){
-			System.setOut(new PrintStream("/dev/null"));
+//			System.setOut(new PrintStream("/dev/null"));
 			long startTime = System.currentTimeMillis();
 //			Evaluation evaluator = new Evaluation(maxNrOfIterations, nrOfClasses, nrOfInstancesPerClass, classModifiersAndRates, instanceModifiersAndRates);
 			OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
 			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Scientist")));
-			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Mammal")));
-			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Plant")));
+//			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Mammal")));
+//			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Plant")));
 			
-			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
-			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.5);
+	         classModifiersAndRates.put(new ClassIdentityModifier(), 1.0);
+	         instanceModifiersAndRates.put(new InstanceIdentityModifier(), 1.0);
+//			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
+//			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.5);
 //			classModifiers.add(new ClassRenameModifier());
 //			classModifiers.add(new ClassDeleteModifier());
 //			classModifiers.add(new ClassIdentityModifier());

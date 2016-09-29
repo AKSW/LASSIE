@@ -1,7 +1,10 @@
 package org.aksw.lassie.core.linking;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -15,11 +18,13 @@ import org.aksw.limes.core.exceptions.UnsupportedMLImplementationException;
 import org.aksw.limes.core.io.cache.ACache;
 import org.aksw.limes.core.io.cache.MemoryCache;
 import org.aksw.limes.core.io.mapping.AMapping;
+import org.aksw.limes.core.ml.algorithm.LearningParameter;
 import org.aksw.limes.core.ml.algorithm.MLAlgorithmFactory;
 import org.aksw.limes.core.ml.algorithm.MLImplementationType;
 import org.aksw.limes.core.ml.algorithm.MLResults;
 import org.aksw.limes.core.ml.algorithm.UnsupervisedMLAlgorithm;
 import org.aksw.limes.core.ml.algorithm.WombatSimple;
+import org.aksw.limes.core.ml.algorithm.wombat.AWombat;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.log4j.Logger;
@@ -36,7 +41,7 @@ public class WombatLinker extends AbstractUnsupervisedLinker{
 
     protected static final Logger logger = Logger.getLogger(WombatLinker.class);
     
-    protected PseudoFMeasure pseudoFMeasure = null;
+    protected PseudoFMeasure pseudoFMeasure = new PseudoFMeasure();
     
     protected Map<OWLClass, Map<OWLClassExpression, AMapping>> mappingResults = new HashMap<>();
 
@@ -159,8 +164,8 @@ public class WombatLinker extends AbstractUnsupervisedLinker{
         } catch (UnsupportedMLImplementationException e) {
             e.printStackTrace();
         }
-        assert (wombatSimpleU.getClass().equals(UnsupervisedMLAlgorithm.class));
-        wombatSimpleU.init(null, sourceCache, targetCache);
+        wombatSimpleU.setParameter(AWombat.PARAMETER_MIN_PROPERTY_COVERAGE, 1.0);
+        wombatSimpleU.init(null , sourceCache, targetCache);
         MLResults mlModel = null;
         try {
             mlModel = wombatSimpleU.learn(new PseudoFMeasure());
