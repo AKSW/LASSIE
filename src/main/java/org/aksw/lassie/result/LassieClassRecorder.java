@@ -32,7 +32,7 @@ public class LassieClassRecorder {
     public SortedSet<OWLIndividual> posExamples = new TreeSet<>();
     public SortedSet<OWLIndividual> negExamples = new TreeSet<>();
     public AMapping instanceMapping = MappingFactory.createDefaultMapping();
-    public List<SimpleClassifier> classifiers =new ArrayList<SimpleClassifier>();
+    public List<SimpleClassifier> classifiers =new ArrayList<>();
 
 
     /**

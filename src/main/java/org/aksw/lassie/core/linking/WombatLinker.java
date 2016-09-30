@@ -45,17 +45,14 @@ public class WombatLinker extends AbstractUnsupervisedLinker{
     
     protected Map<OWLClass, Map<OWLClassExpression, AMapping>> mappingResults = new HashMap<>();
 
-    public static int iterationNr = 0;
+    public int iterationNr;
     
-    public WombatLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder){
+    public WombatLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder, int iterationNr){
         this.sourceKB = sourceKB;
         this.targetKB = targetKB; 
-
         this.linkingProperty = linkingProperty;
-
-        mon = MonitorFactory.getTimeMonitor("time");
-
         this.resultRecorder = resultRecorder;
+        this.iterationNr = iterationNr;
     }
 
     @Override
@@ -113,37 +110,37 @@ public class WombatLinker extends AbstractUnsupervisedLinker{
 
                 ACache targetCache = modelToCache(targetClassExpressionModel);
 
-                AMapping result = null;
+                AMapping resultMapping = null;
 
                 //buffers the mapping results and only carries out a computation if the mapping results are unknown
                 if (mappingResults.containsKey(sourceClass)) {
                     if (mappingResults.get(sourceClass).containsKey(targetClassExpression)) {
-                        result = mappingResults.get(sourceClass).get(targetClassExpression);
+                        resultMapping = mappingResults.get(sourceClass).get(targetClassExpression);
                     }
                 }
 
-                if (result == null) {
-                    result = linkUsingWombatUnsupervised(sourceCache, targetCache);
+                if (resultMapping == null) {
+                    resultMapping = linkUsingWombatUnsupervised(sourceCache, targetCache);
+                    resultMapping = resultMapping.getBestOneToOneMappings(resultMapping); 
                     if (!mappingResults.containsKey(sourceClass)) {
                         mappingResults.put(sourceClass, new HashMap<OWLClassExpression, AMapping>());
                     }
-                    mappingResults.get(sourceClass).put(targetClassExpression, result);
+                    mappingResults.get(sourceClass).put(targetClassExpression, resultMapping);
                 }
 
                 //Keep record of the real F-Measures
-                if(result.getSize() > 0){
-                    double pfm = pseudoFMeasure.calculate(result, new GoldStandard(null, sourceCache, targetCache));
-                    resultRecorder.setFMeasure(pfm, iterationNr , sourceClass);
-                    resultRecorder.setInstanceMapping(result, iterationNr, sourceClass);
+                if(resultMapping.getSize() > 0){
+                    double pfm = pseudoFMeasure.calculate(resultMapping, new GoldStandard(null, sourceCache, targetCache));
+                    resultRecorder.setPFMeasure(pfm, iterationNr , sourceClass);
+                    resultRecorder.setInstanceMapping(resultMapping, iterationNr, sourceClass);
                 }
 
-                for (Entry<String, HashMap<String, Double>> mappingEntry : result.getMap().entrySet()) {
+                for (Entry<String, HashMap<String, Double>> mappingEntry : resultMapping.getMap().entrySet()) {
                     HashMap<String, Double> value = mappingEntry.getValue();
                     map.put(sourceClass, value.keySet().iterator().next());
                 }
             }
         }
-        iterationNr++;
         return map;
     }
 
@@ -165,6 +162,7 @@ public class WombatLinker extends AbstractUnsupervisedLinker{
             e.printStackTrace();
         }
         wombatSimpleU.setParameter(AWombat.PARAMETER_MIN_PROPERTY_COVERAGE, 1.0);
+        wombatSimpleU.setParameter(AWombat.PARAMETER_ATOMIC_MEASURES, "trigrams");
         wombatSimpleU.init(null , sourceCache, targetCache);
         MLResults mlModel = null;
         try {
