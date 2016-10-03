@@ -1,15 +1,7 @@
 package org.aksw.lassie.core.linking;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.SortedSet;
-
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.aksw.limes.core.datastrutures.GoldStandard;
@@ -18,12 +10,7 @@ import org.aksw.limes.core.exceptions.UnsupportedMLImplementationException;
 import org.aksw.limes.core.io.cache.ACache;
 import org.aksw.limes.core.io.cache.MemoryCache;
 import org.aksw.limes.core.io.mapping.AMapping;
-import org.aksw.limes.core.ml.algorithm.LearningParameter;
-import org.aksw.limes.core.ml.algorithm.MLAlgorithmFactory;
-import org.aksw.limes.core.ml.algorithm.MLImplementationType;
-import org.aksw.limes.core.ml.algorithm.MLResults;
-import org.aksw.limes.core.ml.algorithm.UnsupervisedMLAlgorithm;
-import org.aksw.limes.core.ml.algorithm.WombatSimple;
+import org.aksw.limes.core.ml.algorithm.*;
 import org.aksw.limes.core.ml.algorithm.wombat.AWombat;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
@@ -32,9 +19,8 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.jamonapi.MonitorFactory;
+import java.util.*;
+import java.util.Map.Entry;
 
 
 public class WombatLinker extends AbstractUnsupervisedLinker{
