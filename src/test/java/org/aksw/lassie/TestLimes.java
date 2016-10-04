@@ -4,30 +4,26 @@
 package org.aksw.lassie;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
-import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
-import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.LASSIEController;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.util.FileManager;
 import org.apache.log4j.Logger;
 import org.dllearner.core.ComponentInitException;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
-
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.util.FileManager;
 
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 

@@ -49,15 +49,8 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
 
 
 
-    public EuclidLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder){
-        this.sourceKB = sourceKB;
-        this.targetKB = targetKB;
-
-        this.linkingProperty = linkingProperty;
-
-        mon = MonitorFactory.getTimeMonitor("time");
-
-        this.resultRecorder = resultRecorder;
+    public EuclidLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder, int iterationNr){
+        super(sourceKB, targetKB, linkingProperty, resultRecorder, iterationNr);
     }
 
     @Override

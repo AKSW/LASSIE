@@ -5,7 +5,7 @@ import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.exceptions.NonExistingLinksException;
 import org.aksw.lassie.core.linking.EuclidLinker;
 import org.aksw.lassie.core.linking.UnsupervisedLinker;
-import org.aksw.lassie.core.linking.WombatLinker;
+import org.aksw.lassie.core.linking.WombatSimpleLinker;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.limes.core.io.cache.ACache;
 import org.aksw.limes.core.io.cache.Instance;
@@ -52,7 +52,7 @@ public class LASSIEController2 extends LASSIEController {
         //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
         //a map from C_i to a set of instances in the target KB
         //        UnsupervisedLinker linker = new EuclidLinker(sourceKB, targetKB, linkingProperty, resultRecorder);
-        UnsupervisedLinker linker = new WombatLinker(sourceKB, targetKB, linkingProperty, resultRecorder,iterationNr);
+        UnsupervisedLinker linker = new WombatSimpleLinker(sourceKB, targetKB, linkingProperty, resultRecorder,iterationNr);
         Multimap<OWLClass, String> links = linker.link(sourceClasses, targetClassExpressions);
         result.put("posExamples", links);
         //for each source class C_i, compute a mapping to a class expression in the target KB based on the links

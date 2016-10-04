@@ -23,9 +23,9 @@ import java.util.*;
 import java.util.Map.Entry;
 
 
-public class WombatLinker extends AbstractUnsupervisedLinker{
+public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
 
-    protected static final Logger logger = Logger.getLogger(WombatLinker.class);
+    protected static final Logger logger = Logger.getLogger(WombatSimpleLinker.class);
     
     protected PseudoFMeasure pseudoFMeasure = new PseudoFMeasure();
     
@@ -33,12 +33,9 @@ public class WombatLinker extends AbstractUnsupervisedLinker{
 
     public int iterationNr;
     
-    public WombatLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder, int iterationNr){
-        this.sourceKB = sourceKB;
-        this.targetKB = targetKB; 
-        this.linkingProperty = linkingProperty;
-        this.resultRecorder = resultRecorder;
-        this.iterationNr = iterationNr;
+
+    public WombatSimpleLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder, int iterationNr){
+        super(sourceKB, targetKB, linkingProperty, resultRecorder, iterationNr);
     }
 
     @Override

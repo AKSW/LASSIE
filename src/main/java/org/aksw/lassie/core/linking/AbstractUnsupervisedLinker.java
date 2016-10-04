@@ -40,6 +40,16 @@ public abstract class AbstractUnsupervisedLinker implements UnsupervisedLinker {
     protected String linkingProperty = OWL.sameAs.getURI();
     
     protected LassieResultRecorder resultRecorder;
+
+    protected int iterationNr;
+    
+    public AbstractUnsupervisedLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder, int iterationNr){
+        this.sourceKB = sourceKB;
+        this.targetKB = targetKB; 
+        this.linkingProperty = linkingProperty;
+        this.resultRecorder = resultRecorder;
+        this.iterationNr = iterationNr;
+    }
     
     
     /**

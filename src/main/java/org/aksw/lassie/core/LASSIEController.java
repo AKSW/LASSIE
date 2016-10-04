@@ -20,8 +20,11 @@ import java.util.TreeSet;
 
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.exceptions.NonExistingLinksException;
+import org.aksw.lassie.core.linking.EuclidLinker;
+import org.aksw.lassie.core.linking.LinkerType;
 import org.aksw.lassie.core.linking.UnsupervisedLinker;
-import org.aksw.lassie.core.linking.WombatLinker;
+import org.aksw.lassie.core.linking.UnsupervisedLinkerFactory;
+import org.aksw.lassie.core.linking.WombatSimpleLinker;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.aksw.lassie.util.PrintUtils;
@@ -78,45 +81,38 @@ public class LASSIEController {
 
     //current status trackers
     protected static final Logger logger = Logger.getLogger(LASSIEController.class.getName());
-
     protected Monitor mon;
-
     protected OWLClass currentClass;
-
-    private int iterationNr = 1;
+    protected int iterationNr = 1;
 
     //LASSIE configurations
     protected boolean posNegLearning = true;
-
     protected final boolean performCrossValidation = true;
-
     protected static int maxNrOfIterations = 10;
-
     protected static final int coverageThreshold = 0;
-
     private String targetDomainNameSpace = "";
-
     protected List<Modifier> modifiers = new ArrayList<Modifier>();
-
+    LinkerType linkerType = LinkerType.WOMBAT_SIMPLE;
+    
     //DL-Learner configurations
     /** The maximum number of positive examples, used for the SPARQL extraction and learning algorithm */
     protected int maxNrOfPositiveExamples = 100;// 20;
     /** The maximum number of negative examples, used for the SPARQL extraction and learning algorithm */
     protected int maxNrOfNegativeExamples = 100;//20;
-
     protected KnowledgeBase sourceKB;
-
     protected KnowledgeBase targetKB;
-
     protected int MAX_RECURSION_DEPTH = 2;
-
     protected OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
-
     protected String linkingProperty = OWL.sameAs.getURI();
-
-    //result recording
+    protected SparqlEndpoint endpoint;
+    
+    //result recorder
     LassieResultRecorder resultRecorder;
-    private SparqlEndpoint endpoint;
+    
+    
+    
+    
+    
 
     public  LASSIEController() throws ComponentInitException{
     }
@@ -197,8 +193,8 @@ public class LASSIEController {
             logger.info(iterationNr + ". ITERATION:");
             //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
             //a map from C_i to a set of instances in the target KB
-//          UnsupervisedLinker linker = new EuclidLinker(sourceKB, targetKB, linkingProperty, resultRecorder);
-            UnsupervisedLinker linker = new WombatLinker(sourceKB, targetKB, linkingProperty, resultRecorder, iterationNr);
+            UnsupervisedLinker linker = UnsupervisedLinkerFactory.createUnsupervisedLinker(linkerType, sourceKB, targetKB, linkingProperty, resultRecorder, iterationNr);
+            
             Multimap<OWLClass, String> links = linker.link(sourceClasses, targetClassExpressions);
 
             //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
@@ -314,16 +310,19 @@ public class LASSIEController {
         return classes;
     }
 
-    public EvaluatedDescription<?> computeMapping(SortedSet<OWLIndividual> positiveExamples, boolean useRemoteKB) throws NonExistingLinksException, ComponentInitException {
+    public EvaluatedDescription<?> computeMapping(SortedSet<OWLIndividual> positiveExamples, boolean useRemoteKB) 
+            throws NonExistingLinksException, ComponentInitException {
         return computeMappings(positiveExamples, useRemoteKB).get(0);
     }
 
-    public List<? extends EvaluatedDescription<?>> computeMappings(OWLClassExpression targetClassExpression, boolean useRemoteKB) throws NonExistingLinksException, ComponentInitException {
+    public List<? extends EvaluatedDescription<?>> computeMappings(OWLClassExpression targetClassExpression, boolean useRemoteKB) 
+            throws NonExistingLinksException, ComponentInitException {
         SortedSet<OWLIndividual> targetInstances = targetKB.getInstances(targetClassExpression);
         return computeMappings(targetInstances, useRemoteKB);
     }
 
-    public List<? extends EvaluatedDescription<?>> computeMappings(SortedSet<OWLIndividual> positiveExamples, boolean useRemoteKB) throws NonExistingLinksException, ComponentInitException {
+    public List<? extends EvaluatedDescription<?>> computeMappings(SortedSet<OWLIndividual> positiveExamples, boolean useRemoteKB) 
+            throws NonExistingLinksException, ComponentInitException {
         logger.info("positiveExamples: " + positiveExamples);
         //if there are no links to the target KB, then we can skip learning
         if (positiveExamples.isEmpty()) {
@@ -552,10 +551,10 @@ public class LASSIEController {
         model.remove(statementsToRemove);
     }
 
-    public static void main(String[] args) throws Exception {
-        Model m = ModelFactory.createDefaultModel();
-        m.read(new FileInputStream(new File("/tmp/inc.owl")), null);
-        cleanUpModel(m);
-    }
+//    public static void main(String[] args) throws Exception {
+//        Model m = ModelFactory.createDefaultModel();
+//        m.read(new FileInputStream(new File("/tmp/inc.owl")), null);
+//        cleanUpModel(m);
+//    }
 
 }
