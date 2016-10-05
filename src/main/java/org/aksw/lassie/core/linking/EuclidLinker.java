@@ -259,7 +259,7 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
         //default is 0.3
         bsc.MIN_THRESHOLD = 0.9;
         bsc.setMeasure(fmeasure_LIMES);
-        Set<String> measure =  new HashSet<String>();
+        Set<String> measure =  new HashSet<>();
         measure.add("trigrams");
         //      measure.add("euclidean");
         //      measure.add("levenshtein");

@@ -123,7 +123,7 @@ public class BenchmarkGenerator extends Modifier{
 	public Model destroyClasses (Map<? extends Modifier, Double> modefiersAndRates){
 		Model resultModel = ModelFactory.createDefaultModel();
 		//		List<String> classNames = getClasses(baseModel);
-		List<String> classNames = new ArrayList<String>();
+		List<String> classNames = new ArrayList<>();
 		if (baseClasses.size() == 0) {
 			classNames = getClasses(baseModel);
 		} else {
@@ -219,7 +219,7 @@ public class BenchmarkGenerator extends Modifier{
 
 
 	public Model bmPeel(Model inModel, String inClassUri, Double dRatio) throws IOException{
-		baseModel = inModel;
+	    baseModel = inModel;
 		System.out.println("----- Base Model -----");
 		System.out.println("Size: "+baseModel.size());
 		//		Modifier.baseModel.write(System.out, "N-TRIPLE");

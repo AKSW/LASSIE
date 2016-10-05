@@ -26,13 +26,11 @@ import java.util.Map.Entry;
 public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
 
     protected static final Logger logger = Logger.getLogger(WombatSimpleLinker.class);
-    
+
     protected PseudoFMeasure pseudoFMeasure = new PseudoFMeasure();
-    
+
     protected Map<OWLClass, Map<OWLClassExpression, AMapping>> mappingResults = new HashMap<>();
 
-    public int iterationNr;
-    
 
     public WombatSimpleLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder, int iterationNr){
         super(sourceKB, targetKB, linkingProperty, resultRecorder, iterationNr);
@@ -46,7 +44,7 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
 
         //compute the Concise Bounded Description(CBD) for each instance
         //in each source class C_i, thus create a model for each class
-        Map<OWLClass, Model> sourceClassToModel = new HashMap<OWLClass, Model>();
+        Map<OWLClass, Model> sourceClassToModel = new HashMap<>();
         for (OWLClass sourceClass : sourceClasses) {
             //get all instances of C_i
             SortedSet<OWLIndividual> sourceInstances = getSourceInstances(sourceClass);
@@ -101,26 +99,29 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
                         resultMapping = mappingResults.get(sourceClass).get(targetClassExpression);
                     }
                 }
-
                 if (resultMapping == null) {
                     resultMapping = linkUsingWombatUnsupervised(sourceCache, targetCache);
-                    resultMapping = resultMapping.getBestOneToOneMappings(resultMapping); 
-                    if (!mappingResults.containsKey(sourceClass)) {
-                        mappingResults.put(sourceClass, new HashMap<OWLClassExpression, AMapping>());
+
+                    if(resultMapping == null){
+                        System.out.println("No entity matching between " + sourceClass + " and " + targetClassExpression);
+                    } else{
+                        resultMapping = resultMapping.getBestOneToOneMappings(resultMapping); 
+                        if (!mappingResults.containsKey(sourceClass)) {
+                            mappingResults.put(sourceClass, new HashMap<OWLClassExpression, AMapping>());
+                        }
+                        mappingResults.get(sourceClass).put(targetClassExpression, resultMapping);
+
+                        //Keep record of the PFM
+                        if(resultMapping.getSize() > 0){
+                            double pfm = pseudoFMeasure.calculate(resultMapping, new GoldStandard(null, sourceCache, targetCache));
+                            resultRecorder.setPFMeasure(pfm, iterationNr , sourceClass);
+                            resultRecorder.setInstanceMapping(resultMapping, iterationNr, sourceClass);
+                        }
+                        for (Entry<String, HashMap<String, Double>> mappingEntry : resultMapping.getMap().entrySet()) {
+                            HashMap<String, Double> value = mappingEntry.getValue();
+                            map.put(sourceClass, value.keySet().iterator().next());
+                        }
                     }
-                    mappingResults.get(sourceClass).put(targetClassExpression, resultMapping);
-                }
-
-                //Keep record of the real F-Measures
-                if(resultMapping.getSize() > 0){
-                    double pfm = pseudoFMeasure.calculate(resultMapping, new GoldStandard(null, sourceCache, targetCache));
-                    resultRecorder.setPFMeasure(pfm, iterationNr , sourceClass);
-                    resultRecorder.setInstanceMapping(resultMapping, iterationNr, sourceClass);
-                }
-
-                for (Entry<String, HashMap<String, Double>> mappingEntry : resultMapping.getMap().entrySet()) {
-                    HashMap<String, Double> value = mappingEntry.getValue();
-                    map.put(sourceClass, value.keySet().iterator().next());
                 }
             }
         }
@@ -146,17 +147,20 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
         }
         wombatSimpleU.setParameter(AWombat.PARAMETER_MIN_PROPERTY_COVERAGE, 1.0);
         wombatSimpleU.setParameter(AWombat.PARAMETER_ATOMIC_MEASURES, "trigrams");
-        wombatSimpleU.init(null , sourceCache, targetCache);
-        MLResults mlModel = null;
+        wombatSimpleU.init(wombatSimpleU.getParameters() , sourceCache, targetCache);
+        MLResults mlResults = null;
         try {
-            mlModel = wombatSimpleU.learn(new PseudoFMeasure());
+            mlResults = wombatSimpleU.learn(new PseudoFMeasure());
         } catch (UnsupportedMLImplementationException e) {
             e.printStackTrace();
         }
-        AMapping resultMap = wombatSimpleU.predict(sourceCache, targetCache, mlModel);
+        AMapping resultMap = null;
+        if(mlResults != null){
+            resultMap = wombatSimpleU.predict(sourceCache, targetCache, mlResults);
+        }
         return resultMap;
     } 
-    
+
     /**
      * Convert Jena Model to LIMES Cache
      * @param m

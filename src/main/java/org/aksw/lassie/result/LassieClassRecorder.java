@@ -209,13 +209,13 @@ public class LassieClassRecorder {
     @Override
     public String toString() {
         String str = 
-                " Class name:  " + namedClass.getClass().getName() + "\n" +
+                " Class name:  " + namedClass + "\n" +
                         "\tCoverage:    " + coverage + "\n" +
                         "\tF-Measure:   " + FMeasure + "\n" +
                         "\tP-F-Measure: "	+ PFMesure + "\n" +
                         "\tMapping:\n";
         int i =1;
-        for(EvaluatedDescription eD: mapping){
+        for(EvaluatedDescription<?> eD: mapping){
             str += "\t\t(" + i++ + ") " + eD + "\n";
         }
 

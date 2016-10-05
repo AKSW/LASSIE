@@ -94,6 +94,8 @@ public class LASSIEController {
     protected List<Modifier> modifiers = new ArrayList<Modifier>();
     LinkerType linkerType = LinkerType.WOMBAT_SIMPLE;
     
+
+
     //DL-Learner configurations
     /** The maximum number of positive examples, used for the SPARQL extraction and learning algorithm */
     protected int maxNrOfPositiveExamples = 100;// 20;
@@ -551,7 +553,15 @@ public class LASSIEController {
         model.remove(statementsToRemove);
     }
 
-//    public static void main(String[] args) throws Exception {
+
+    public LinkerType getLinkerType() {
+        return linkerType;
+    }
+
+    public void setLinkerType(LinkerType linkerType) {
+        this.linkerType = linkerType;
+    }
+    //    public static void main(String[] args) throws Exception {
 //        Model m = ModelFactory.createDefaultModel();
 //        m.read(new FileInputStream(new File("/tmp/inc.owl")), null);
 //        cleanUpModel(m);

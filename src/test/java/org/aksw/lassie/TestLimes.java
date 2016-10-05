@@ -10,9 +10,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
+import org.aksw.lassie.bmGenerator.ClassRenameModifier;
+import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
+import org.aksw.lassie.bmGenerator.InstanceMisspellingModifier;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.LASSIEController;
+import org.aksw.lassie.core.linking.LinkerType;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
@@ -35,7 +39,7 @@ public class TestLimes {
 	private static final Logger logger = Logger.getLogger(TestLimes.class.getName());
 	
 	static int nrOfExperimentRepeats = 1;
-	static Map<Modifier, Double> classModifiersAndRates 	= new HashMap<>();
+	static Map<Modifier, Double> classModifiersAndRates    = new HashMap<>();
 	static Map<Modifier, Double> instanceModifiersAndRates = new HashMap<>();
 	static int maxNrOfIterations = 3;
 	static int nrOfClasses = 1;
@@ -84,14 +88,14 @@ public class TestLimes {
 //			Evaluation evaluator = new Evaluation(maxNrOfIterations, nrOfClasses, nrOfInstancesPerClass, classModifiersAndRates, instanceModifiersAndRates);
 			OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
 			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Scientist")));
-//			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Mammal")));
-//			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Plant")));
+			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Mammal")));
+			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Plant")));
 			
-	         classModifiersAndRates.put(new ClassIdentityModifier(), 1.0);
-	         instanceModifiersAndRates.put(new InstanceIdentityModifier(), 1.0);
+//	         classModifiersAndRates.put(new ClassIdentityModifier(), 1.0);
+//	         instanceModifiersAndRates.put(new InstanceIdentityModifier(), 1.0);
 //			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
-//			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.5);
-//			classModifiers.add(new ClassRenameModifier());
+			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.5);
+			classModifiersAndRates.put(new ClassRenameModifier(), 1.0);
 //			classModifiers.add(new ClassDeleteModifier());
 //			classModifiers.add(new ClassIdentityModifier());
 //			classModifiers.add(new ClassMergeModifier());
@@ -113,6 +117,7 @@ public class TestLimes {
 			
 			LASSIEController generator = new LASSIEController(sourceKB, targetKB, maxNrOfIterations, testClasses);
 			generator.setTargetDomainNameSpace("http://dbpedia.org/ontology/");
+//			generator.setLinkerType(LinkerType.EUCLID);
 			
 			LassieResultRecorder experimentResults = generator.run(testClasses, false);
 			
