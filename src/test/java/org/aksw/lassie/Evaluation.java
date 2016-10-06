@@ -83,7 +83,7 @@ public class Evaluation {
 	private static Map<Modifier, Double> classModifiersAndRates    = new HashMap<>();
 	private static Map<Modifier, Double> instanceModifiersAndRates = new HashMap<>();
 
-	private int maxNrOfClasses = 1;//-1 all classes
+	private int maxNrOfClasses = -1; //-1 for all classes
 	private int maxNrOfInstancesPerClass = 20;
 
 	private int maxCBDDepth = 0;//0 means only the directly asserted triples
@@ -198,7 +198,7 @@ public class Evaluation {
 		
 		Model classesWithAtLeastNInstancesModel = getModelOfClassesWithAtLeastNInstances(referenceDataset, noOfclasses, noOfInstancePerClass);
 		Model differenceModel = referenceDataset.difference(classesWithAtLeastNInstancesModel);
-		BenchmarkGenerator benchmarker= new BenchmarkGenerator(classesWithAtLeastNInstancesModel);
+		BenchmarkGenerator benchmarker = new BenchmarkGenerator(classesWithAtLeastNInstancesModel);
 		Modifier.setNameSpace(dbpediaNamespace);
 		benchmarker.setBaseClasses(classesToLearn);
 		Model testDataset = ModelFactory.createDefaultModel();
@@ -258,7 +258,6 @@ public class Evaluation {
 			resultModel.add(m);
 		}
 
-		logger.info("resultModel size: " + resultModel.size());
 		return resultModel;
 	}
 

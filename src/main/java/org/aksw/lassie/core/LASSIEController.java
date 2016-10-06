@@ -91,7 +91,7 @@ public class LASSIEController {
     protected static int maxNrOfIterations = 10;
     protected static final int coverageThreshold = 0;
     private String targetDomainNameSpace = "";
-    protected List<Modifier> modifiers = new ArrayList<Modifier>();
+    protected List<Modifier> modifiers = new ArrayList<>();
     LinkerType linkerType = LinkerType.WOMBAT_SIMPLE;
     
 

@@ -252,7 +252,7 @@ public class BenchmarkGenerator extends Modifier{
 		System.out.println("baseModel: "+ baseModel.size());
 		//		baseModel.write(System.out, "TTL");
 
-		ClassSplitModifier classSpliter=new ClassSplitModifier();
+		ClassSplitModifier classSpliter = new ClassSplitModifier();
 		//		classSpliter.splitSourceClassUri = inClassUri;
 		//		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit1");
 		//		classSpliter.splitTargetClassUri.add("http://purl.org/ontology/mo/MusicArtistSplit2");
@@ -283,7 +283,7 @@ public class BenchmarkGenerator extends Modifier{
 		Model m= loadModel(args[0]);
 		BenchmarkGenerator benchmarker= new BenchmarkGenerator(m);
 		System.out.println("m.size(): "+m.size());
-		Map<Modifier, Double> modefiersAndRates= new HashMap<Modifier, Double>();
+		Map<Modifier, Double> modefiersAndRates= new HashMap<>();
 		modefiersAndRates.put(new ClassSplitModifier(), 1d);
 		Model desM = benchmarker.destroyClasses (modefiersAndRates);
 		System.out.println("desM.size(): "+desM.size());

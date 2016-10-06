@@ -10,9 +10,17 @@ import java.util.TreeSet;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
-
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResIterator;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.vocabulary.RDF;
 
 /**
  * @author sherif
@@ -64,10 +72,72 @@ public class ClassSplitModifier extends Modifier {
      * @see de.uni_leipzig.simba.bmGenerator.Modifier#destroy(org.apache.jena.rdf.model.Model)
      */
     @Override
-    public Model destroy(Model subModel) {
+    public Model destroy(final Model subModel) {
         Model result = ModelFactory.createDefaultModel();
 
-        List<String> classNames = new ArrayList<String>();
+        List<String> classNames = new ArrayList<>();
+        if (baseClasses.size() == 0) {
+            classNames = getClasses(subModel);
+        } else {
+            classNames = baseClasses;
+        }
+
+        for(String oldClassName: classNames){
+            Model sourceClassModel = getClassInstancesModel(oldClassName);
+
+            //create split classes URIs
+            List<String> splitTargetClassUri = new ArrayList<>();
+            for(int i = 0 ; i < splitCount ; i++){
+                String splitUri = oldClassName + "_SPLIT_" + (i+1);
+                splitTargetClassUri.add(splitUri);
+                modifiedClasses.add(splitUri);
+            }
+            //generate optimal solution
+            List<OWLClassExpression> children = new ArrayList<>();
+            for (String uri : splitTargetClassUri) {
+                children.add(owlDataFactory.getOWLClass(IRI.create(uri)));
+            }
+            OWLObjectUnionOf optimalSolution = owlDataFactory.getOWLObjectUnionOf(new TreeSet<> (children));
+            optimalSolutions.put(owlDataFactory.getOWLClass(IRI.create(oldClassName)), optimalSolution);
+
+            //divide the source class instances equally to target classes
+            ResIterator subjectItr = sourceClassModel.listSubjects();
+            int i = 0;
+            while(subjectItr.hasNext()){
+                Resource r = subjectItr.next();
+                String newClassName = splitTargetClassUri.get(i);
+                Model splitModel = changeResourceType(r, oldClassName, newClassName, subModel);
+                result.add(splitModel);
+                i = (i + 1) % splitCount;
+            }
+        }
+        return result;
+    }
+
+
+    private Model changeResourceType(Resource r,String oldClassName, String newClassName, final Model subModel) {
+        Model resultModel = ModelFactory.createDefaultModel();
+        String sparqlQueryString= "CONSTRUCT {?s ?p ?o} WHERE {<" + r.getURI() +"> ?p ?o. ?s ?p ?o} " ;
+        QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, subModel);
+        Model instanceMode = qexec.execConstruct();
+
+        StmtIterator sItr = instanceMode.listStatements(); 
+        while(sItr.hasNext()){
+            Statement stmt = sItr.nextStatement();
+            if(stmt.getPredicate().equals(RDF.type) && stmt.getObject().toString().equals(oldClassName)){
+                resultModel.add(r, RDF.type,  ResourceFactory.createResource(newClassName));
+            }else if(!stmt.getPredicate().equals(RDF.type)){
+                resultModel.add(stmt);
+            }
+        }
+        return resultModel;
+    }
+
+    public Model _destroy(final Model subModel) {
+        Model result = ModelFactory.createDefaultModel();
+
+        List<String> classNames = new ArrayList<>();
         if (baseClasses.size() == 0) {
             classNames = getClasses(subModel);
         } else {
@@ -82,9 +152,9 @@ public class ClassSplitModifier extends Modifier {
             long sourceClassModelOffset = 0L;
 
             //create split classes URIs
-            List<String> splitTargetClassUri = new ArrayList<String>();
-            for(int i=0 ; i<splitCount ; i++){
-                String splitUri = className +"_SPLIT_"+(i+1);
+            List<String> splitTargetClassUri = new ArrayList<>();
+            for(int i = 0 ; i < splitCount ; i++){
+                String splitUri = className + "_SPLIT_" + (i+1);
                 splitTargetClassUri.add(splitUri);
                 modifiedClasses.add(splitUri);
             }

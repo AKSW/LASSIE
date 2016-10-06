@@ -59,7 +59,7 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
 
         //compute the Concise Bounded Description(CBD) for each instance
         //in each each target class expression D_i, thus create a model for each class expression
-        Map<OWLClassExpression, Model> targetCBDsModel = new HashMap<OWLClassExpression, Model>();
+        Map<OWLClassExpression, Model> targetCBDsModel = new HashMap<>();
         for (OWLClassExpression targetClass : targetClasses) {
             // get all instances of D_i
             SortedSet<OWLIndividual> targetInstances = targetKB.getInstances(targetClass);
@@ -106,6 +106,7 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
                         System.out.println("No entity matching between " + sourceClass + " and " + targetClassExpression);
                     } else{
                         resultMapping = resultMapping.getBestOneToOneMappings(resultMapping); 
+                        System.out.println("Found " + resultMapping.size() + " matched entities between " + sourceClass + " and " + targetClassExpression);
                         if (!mappingResults.containsKey(sourceClass)) {
                             mappingResults.put(sourceClass, new HashMap<OWLClassExpression, AMapping>());
                         }

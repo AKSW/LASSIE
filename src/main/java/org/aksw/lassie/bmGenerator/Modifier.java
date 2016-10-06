@@ -17,7 +17,7 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 
-
+import com.jamonapi.utils.Logger;
 
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
@@ -30,7 +30,7 @@ public abstract class Modifier {
 	static Model destroyedPropertiesModel = ModelFactory.createDefaultModel(); 		//destroyed properties model
 	static Model destroyedClassModel      = ModelFactory.createDefaultModel();     //destroyed class model
 	static Model destroyedModel           = ModelFactory.createDefaultModel();     //final destroyed model
-	static List<Property> properties = new ArrayList<Property>();
+	static List<Property> properties = new ArrayList<>();
 	double destructionRatio = 0.5;
 	long destroyedInstancesCount;
 	boolean destroyProperty = false;
@@ -45,9 +45,9 @@ public abstract class Modifier {
 	
 	OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
 	
-	Map<OWLClass, OWLClassExpression> optimalSolutions = new HashMap<OWLClass, OWLClassExpression>();
+	Map<OWLClass, OWLClassExpression> optimalSolutions = new HashMap<>();
 	
-	Map<OWLClass, OWLClass> alteredClasses = new HashMap<OWLClass, OWLClass>();
+	Map<OWLClass, OWLClass> alteredClasses = new HashMap<>();
 	
 	public String getName(){
 		return this.getClass().getCanonicalName();
@@ -172,7 +172,7 @@ public abstract class Modifier {
 		String sparqlQueryString= "CONSTRUCT {?s ?p ?o} WHERE {?s a <"+classUri+">. ?s ?p ?o}";
 		QueryFactory.create(sparqlQueryString);
 		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, baseModel);
-		result =qexec.execConstruct();
+		result = qexec.execConstruct();
 		return result;
 	}
 	
@@ -186,7 +186,7 @@ public abstract class Modifier {
 	}
 	
 	protected Model getClassInstancesModel(String classUri, Model m, long limit, long offset){
-		Model result=ModelFactory.createDefaultModel();
+		Model result = ModelFactory.createDefaultModel();
 		String sparqlQueryString= 	"CONSTRUCT {?s ?p ?o} " +
 									" WHERE {?s a <"+classUri+">. ?s ?p ?o} " +
 									" LIMIT " + limit + 
@@ -210,12 +210,12 @@ public abstract class Modifier {
 		StmtIterator sItr = inputModel.listStatements();
 
 		//skip statements tell the offset reached
-		for(int i=0 ; i < baseModelOffset ; i++){
+		for(int i = 0 ; i < baseModelOffset ; i++){
 			sItr.nextStatement();		
 		}
 
 		//Copy the sub-model
-		for(int i=0 ; i<subModelSize ; i++){
+		for(int i = 0 ; i < subModelSize ; i++){
 			Statement stat = sItr.nextStatement();	
 			subModel.add(stat);
 		}
@@ -247,29 +247,52 @@ public abstract class Modifier {
 	}
 	
 	/**
-	 * @param model
-	 * @param oldClassUri
-	 * @param newClassUri
+	 * @param inputModel
+	 * @param oldClassName
+	 * @param newClassName
 	 * @return
 	 * @author Sherif
 	 */
-	public Model renameClass(Model model, String oldClassUri,String newClassUri) {
-		Model result = model;
-		Model inClassModel = ModelFactory.createDefaultModel();
-		String sparqlQueryString = "CONSTRUCT {?s a <"+oldClassUri+">} WHERE {?s a <"+oldClassUri+">.}";
-		QueryFactory.create(sparqlQueryString);
-		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, model);
-		inClassModel = qexec.execConstruct();
-		result.remove(inClassModel);
-		StmtIterator sItr = inClassModel.listStatements();
-		
-		RDFNode newClassURI = ResourceFactory.createResource(newClassUri);
-		while(sItr.hasNext()){
-			Statement stmt = sItr.nextStatement();
-			result.add(stmt.getSubject(), RDF.type, newClassURI);
-		}
+	public Model renameClass(final Model inputModel, String oldClassName,String newClassName) {
+		Model result = ModelFactory.createDefaultModel();
+		StmtIterator sItr = inputModel.listStatements();
+		Resource oldClassURI = ResourceFactory.createResource(oldClassName);
+		Resource newClassURI = ResourceFactory.createResource(newClassName);
+        while(sItr.hasNext()){
+            Statement stmt = sItr.nextStatement();
+            if(stmt.getObject().equals(oldClassURI)){
+                result.add(stmt.getSubject(), stmt.getPredicate(), newClassURI);
+            }else{
+                result.add(stmt.getSubject(), stmt.getPredicate(), stmt.getObject());
+            }
+        }
 		return result;
 	}
+	
+	   /**
+     * @param model
+     * @param oldClassUri
+     * @param newClassUri
+     * @return
+     * @author Sherif
+     */
+    public Model _renameClass(Model model, String oldClassUri,String newClassUri) {
+        Model result = model;
+        Model inClassModel = ModelFactory.createDefaultModel();
+        String sparqlQueryString = "CONSTRUCT {?s a <"+oldClassUri+">} WHERE {?s a <"+oldClassUri+">.}";
+        QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, model);
+        inClassModel = qexec.execConstruct();
+        result.remove(inClassModel);
+        StmtIterator sItr = inClassModel.listStatements();
+        
+        RDFNode newClassURI = ResourceFactory.createResource(newClassUri);
+        while(sItr.hasNext()){
+            Statement stmt = sItr.nextStatement();
+            result.add(stmt.getSubject(), RDF.type, newClassURI);
+        }
+        return result;
+    }
 	
 
 	/**
@@ -300,7 +323,8 @@ public abstract class Modifier {
 	 * @author Sherif
 	 */
 	public static Model loadModel(String fileNameOrUri){
-		Model model=ModelFactory.createDefaultModel();
+	    long start = System.currentTimeMillis();
+	    Model model = ModelFactory.createDefaultModel();
 		java.io.InputStream in = FileManager.get().open( fileNameOrUri );
 		if (in == null) {
 			throw new IllegalArgumentException(
@@ -320,7 +344,7 @@ public abstract class Modifier {
 			model.read(fileNameOrUri);
 		}
 
-		System.out.println("loading "+ fileNameOrUri + " is done!!");
+		System.out.println("loading "+ fileNameOrUri + " is done in " +  (System.currentTimeMillis() - start) + "ms");
 		System.out.println();
 		return model;
 	}

@@ -9,15 +9,18 @@ import org.junit.Test;
 
 public class ClassSplitModifierTest {
     
-    final static String toyDatasetFile = "src/main/resources/datasets/toydataset/toydataset_scientist_mammal_plant.nt";
+    final static String toyDatasetFile = "src/main/resources/datasets/toydataset/toydataset_scientist.nt";
     
     @Test
     public void testClassSplitModifier(){
-        String toyDatasetFile = "src/main/resources/datasets/toydataset/toydataset_scientist_mammal_plant.nt";
         Model startModel = Modifier.loadModel(toyDatasetFile);
         Modifier modifer = new ClassSplitModifier(startModel);
         Model destroedModel = modifer.destroy(startModel);
-        assertTrue(destroedModel.size() > startModel.size());
+        destroedModel.write(System.out, "TTL");
+        assertTrue(destroedModel.size() == startModel.size());
+        
+        
+
     }
 
 }

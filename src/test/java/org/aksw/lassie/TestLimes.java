@@ -44,9 +44,9 @@ public class TestLimes {
 	static int maxNrOfIterations = 3;
 	static int nrOfClasses = 1;
 	static int nrOfInstancesPerClass = 5;
-	static String toyDatasetFile = "src/main/resources/datasets/toydataset/toydataset_scientist_mammal_plant.nt";
+//	static String toyDatasetFile = "src/main/resources/datasets/toydataset/toydataset_scientist_mammal_plant.nt";
 //	static String toyDatasetFile = "src/main/resources/datasets/toydataset/toydataset_scientist_mammal.nt";
-//	static String toyDatasetFile = "datasets/toydataset/toydataset_scientist.nt";
+	static String toyDatasetFile = "datasets/toydataset/toydataset_scientist.nt";
 //	static String toyDatasetFile = "datasets/toydataset/toydataset_mammal.nt";
 	static String outputFile = "limesTestResult.txt";
 	static Set<OWLClass> testClasses = new HashSet<OWLClass>();
@@ -88,14 +88,14 @@ public class TestLimes {
 //			Evaluation evaluator = new Evaluation(maxNrOfIterations, nrOfClasses, nrOfInstancesPerClass, classModifiersAndRates, instanceModifiersAndRates);
 			OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
 			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Scientist")));
-			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Mammal")));
-			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Plant")));
+//			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Mammal")));
+//			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Plant")));
 			
 //	         classModifiersAndRates.put(new ClassIdentityModifier(), 1.0);
 //	         instanceModifiersAndRates.put(new InstanceIdentityModifier(), 1.0);
-//			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
-			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.5);
-			classModifiersAndRates.put(new ClassRenameModifier(), 1.0);
+			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
+//			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 1.0);
+//			classModifiersAndRates.put(new ClassRenameModifier(), 1.0);
 //			classModifiers.add(new ClassDeleteModifier());
 //			classModifiers.add(new ClassIdentityModifier());
 //			classModifiers.add(new ClassMergeModifier());
@@ -112,7 +112,7 @@ public class TestLimes {
 			
 			LocalKnowledgeBase sourceKB = new LocalKnowledgeBase(toyDatasetModel, "http://dbpedia.org/ontology/");
 //			KnowledgeBase targetKB = new LocalKnowledgeBase(toyDatasetModel, "http://dbpedia.org/ontology/");
-			Model targetKBModel = (new Evaluation()).createTestDataset(sourceKB.getModel(), instanceModifiersAndRates, classModifiersAndRates, testClasses.size(), 5);
+			Model targetKBModel = (new Evaluation()).createTestDataset(sourceKB.getModel(), instanceModifiersAndRates, classModifiersAndRates, 100, 5);
 			KnowledgeBase targetKB = new LocalKnowledgeBase(targetKBModel, "http://dbpedia.org/ontology/");
 			
 			LASSIEController generator = new LASSIEController(sourceKB, targetKB, maxNrOfIterations, testClasses);

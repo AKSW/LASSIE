@@ -17,6 +17,8 @@ public class ClassRenameModifierTest {
         Modifier modifier = new ClassRenameModifier(startModel);
         Model destroedModel = modifier.destroy(startModel);
         assertTrue(startModel.size() == destroedModel.size());
+        
+        destroedModel.write(System.out, "TTL");
     }
 
 }
