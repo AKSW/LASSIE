@@ -30,11 +30,8 @@ public class ClassRenameModifier extends Modifier {
 	 * @see org.aksw.lassie.bmGenerator.Modifier#destroy(org.apache.jena.rdf.model.Model)
 	 */
 	@Override
-	Model destroy(Model subModel) {
-//		Model removeModel = ModelFactory.createDefaultModel();
-//		Model addModel = ModelFactory.createDefaultModel();
-		
-		List<String> classNames = new ArrayList<String>();
+	public Model destroy(Model subModel) {
+		List<String> classNames = new ArrayList<>();
 		if (baseClasses.size() == 0) {
 			classNames = getClasses(subModel);
 		} else {
@@ -42,7 +39,7 @@ public class ClassRenameModifier extends Modifier {
 		}
 		
 		for (String className : classNames) {
-			String renamedClassName = className+"_RENAME";
+			String renamedClassName = className + "_RENAME";
 			subModel = renameClass(subModel, className,  renamedClassName);
 			modifiedClasses.add(renamedClassName);
 			optimalSolutions.put(owlDataFactory.getOWLClass(IRI.create(renamedClassName)), owlDataFactory.getOWLClass(IRI.create(className)));
@@ -50,19 +47,4 @@ public class ClassRenameModifier extends Modifier {
 		return subModel;
 	}
 
-
-	public static void main(String[] args){
-		Model m= loadModel(args[0]);
-		ClassRenameModifier classRenamer=new ClassRenameModifier(m);
-
-		System.out.println("----- Base Model -----");
-		System.out.println("Size: "+ m.size());
-		baseModel.write(System.out,"TTL");
-		System.out.println();
-
-		System.out.println("----- Remaned Model -----");
-		Model desM = classRenamer.destroy(m);
-		System.out.println("Size: " + desM.size());
-		desM.write(System.out,"TTL");
-	}
 }

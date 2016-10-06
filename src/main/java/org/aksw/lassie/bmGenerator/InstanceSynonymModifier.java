@@ -26,7 +26,7 @@ public class InstanceSynonymModifier extends Modifier {
 	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy()
 	 */
 	@Override
-	Model destroy(Model subModel) {
+	public Model destroy(Model subModel) {
 		System.out.println();
 		System.out.println("Synonym modifier not yet Implemented, return the input model as it is");
 		// TODO Auto-generated method stub

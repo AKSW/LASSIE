@@ -11,6 +11,7 @@ import java.util.TreeSet;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.FileManager;
+import org.apache.jena.vocabulary.RDF;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
@@ -25,7 +26,7 @@ import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
  *
  */
 public abstract class Modifier {
-	static Model baseModel = ModelFactory.createDefaultModel();
+	protected static Model baseModel = ModelFactory.createDefaultModel();
 	static Model destroyedPropertiesModel = ModelFactory.createDefaultModel(); 		//destroyed properties model
 	static Model destroyedClassModel      = ModelFactory.createDefaultModel();     //destroyed class model
 	static Model destroyedModel           = ModelFactory.createDefaultModel();     //final destroyed model
@@ -38,8 +39,8 @@ public abstract class Modifier {
 	public String outputClassUri = null;
 	
 	static protected String  nameSpace = "";
-	static protected List<String> baseClasses     = new ArrayList<String>();
-	static protected List<String> modifiedClasses = new ArrayList<String>();
+	static protected List<String> baseClasses     = new ArrayList<>();
+	static protected List<String> modifiedClasses = new ArrayList<>();
 	protected boolean isClassModifier = false;
 	
 	OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
@@ -125,13 +126,13 @@ public abstract class Modifier {
 	}
 
 	public Modifier(Model m){
-		baseModel=m;
+		baseModel = m;
 	}
 	
 	public Modifier(){
 	}
 	
-	abstract Model destroy(Model subModel);
+	public abstract Model destroy(Model subModel);
 	
 	/**
 	 * @return the baseModel
@@ -192,7 +193,7 @@ public abstract class Modifier {
 									" OFFSET " + offset;
 		QueryFactory.create(sparqlQueryString);
 		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, m);
-		result =qexec.execConstruct();
+		result = qexec.execConstruct();
 		return result;
 	}
 	
@@ -209,7 +210,7 @@ public abstract class Modifier {
 		StmtIterator sItr = inputModel.listStatements();
 
 		//skip statements tell the offset reached
-		for(int i=0 ; i<baseModelOffset ; i++){
+		for(int i=0 ; i < baseModelOffset ; i++){
 			sItr.nextStatement();		
 		}
 
@@ -235,8 +236,8 @@ public abstract class Modifier {
 		ResultSet results = qexec.execSelect();
 		
 		while (results.hasNext()) {
-		    QuerySolution row= results.next();
-		    RDFNode className= row.get("class");
+		    QuerySolution row = results.next();
+		    RDFNode className = row.get("class");
 		    if(!nameSpace.equals("")){
 		    	if(!className.toString().startsWith(nameSpace)) continue;
 		    }
@@ -255,42 +256,21 @@ public abstract class Modifier {
 	public Model renameClass(Model model, String oldClassUri,String newClassUri) {
 		Model result = model;
 		Model inClassModel = ModelFactory.createDefaultModel();
-		String sparqlQueryString= "CONSTRUCT {?s a <"+oldClassUri+">} WHERE {?s a <"+oldClassUri+">.}";
+		String sparqlQueryString = "CONSTRUCT {?s a <"+oldClassUri+">} WHERE {?s a <"+oldClassUri+">.}";
 		QueryFactory.create(sparqlQueryString);
 		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, model);
 		inClassModel = qexec.execConstruct();
 		result.remove(inClassModel);
 		StmtIterator sItr = inClassModel.listStatements();
+		
+		RDFNode newClassURI = ResourceFactory.createResource(newClassUri);
 		while(sItr.hasNext()){
 			Statement stmt = sItr.nextStatement();
-			Resource subject = stmt.getSubject();
-			Property predicate = stmt.getPredicate();
-			RDFNode object = ResourceFactory.createResource(newClassUri);
-			result.add( subject, predicate, object);
+			result.add(stmt.getSubject(), RDF.type, newClassURI);
 		}
 		return result;
 	}
 	
-	public Model renameAllClasses(Model model, String oldClassUri,String newClassUri) {
-		Model result=model;
-		Model inClassModel=ModelFactory.createDefaultModel();
-		String sparqlQueryString= "CONSTRUCT {?s a <"+oldClassUri+">} WHERE {?s a <"+oldClassUri+">.}";
-		QueryFactory.create(sparqlQueryString);
-		QueryExecution qexec = QueryExecutionFactory.create(sparqlQueryString, model);
-		inClassModel = qexec.execConstruct();
-
-		result.remove(inClassModel);
-
-		StmtIterator sItr = inClassModel.listStatements();
-		while(sItr.hasNext()){
-			Statement stmt = sItr.nextStatement();
-			Resource subject = stmt.getSubject();
-			Property predicate = stmt.getPredicate();
-			RDFNode object = ResourceFactory.createResource(newClassUri);
-			result.add( subject, predicate, object);
-		}
-		return result;
-	}
 
 	/**
 	 * @return the properties

@@ -24,7 +24,7 @@ public class ClassIdentityModifier extends Modifier {
 	}
 
 	@Override
-	Model destroy(Model subModel) {
+    public Model destroy(Model subModel) {
 
 		List<String> classNames = new ArrayList<String>();
 		if (baseClasses.size() == 0) {

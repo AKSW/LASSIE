@@ -151,7 +151,7 @@ public class InstanceMisspellingModifier extends Modifier {
 	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy() 
 	 */
 	@Override
-	Model destroy(Model subModel) {
+	public Model destroy(Model subModel) {
 		permutationTriplesCount = (long) Math.ceil(subModel.size() * permutationRatio);
 		insertionTriplesCount   = (long) Math.ceil(subModel.size() * insertionRatio);
 		deletionTriplesCount	= (long) Math.ceil(subModel.size() * deletionRatio);

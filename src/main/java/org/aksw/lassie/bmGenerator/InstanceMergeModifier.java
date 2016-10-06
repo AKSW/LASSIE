@@ -54,7 +54,7 @@ public class InstanceMergeModifier extends Modifier{
 	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy()
 	 */
 	@Override
-	Model destroy(Model subModel) {
+	public Model destroy(Model subModel) {
 		System.out.println();
 		long n = (subModel.size() %2 == 0) ? subModel.size():subModel.size()-1;
 		System.out.println("Merging " + n + " triples.");

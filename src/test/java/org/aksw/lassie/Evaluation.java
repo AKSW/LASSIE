@@ -66,7 +66,7 @@ import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 public class Evaluation {
 
-	private static final Logger logger = Logger.getLogger(Evaluation.class.getName());
+	private static final Logger logger = Logger.getLogger(Evaluation.class);
 
 	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpedia();
 //	private SparqlEndpoint endpoint = SparqlEndpoint.getEndpointDBpediaLiveAKSW();
@@ -78,7 +78,7 @@ public class Evaluation {
 	private OWLOntology dbpediaOntology;
 
 	private Set<OWLClass> modifiedDbpediaClasses = new TreeSet<>();
-	private Set<OWLClass> classesToLearn 			= new TreeSet<>();
+	private Set<OWLClass> classesToLearn 		 = new TreeSet<>();
 
 	private static Map<Modifier, Double> classModifiersAndRates    = new HashMap<>();
 	private static Map<Modifier, Double> instanceModifiersAndRates = new HashMap<>();

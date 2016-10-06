@@ -52,7 +52,7 @@ public class ClassTypeDeleteModifier extends Modifier{
 	 * @see org.aksw.lassie.bmGenerator.Modifier#destroy(org.apache.jena.rdf.model.Model)
 	 */
 	@Override
-	Model destroy(Model subModel) {
+	public Model destroy(Model subModel) {
 		Model result = ModelFactory.createDefaultModel();
 		List<String> classNames = new ArrayList<String>();
 		if (baseClasses.size() == 0) {

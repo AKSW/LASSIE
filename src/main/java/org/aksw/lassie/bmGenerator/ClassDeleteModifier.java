@@ -33,46 +33,22 @@ public class ClassDeleteModifier extends Modifier {
 	 * @see de.uni_leipzig.simba.bmGenerator.Modifier#destroy(org.apache.jena.rdf.model.Model)
 	 */
 	@Override
-	Model destroy(Model subModel) {
-		List<String> classNames = new ArrayList<String>();
+    public Model destroy(Model subModel) {
+		List<String> classNames = new ArrayList<>();
 		if (baseClasses.size() == 0) {
 			classNames = getClasses(subModel);
 		} else {
 			classNames = baseClasses;
 		}
-		
-//		modifiedClasses.removeAll(classNames);
-		
 		for(String className: classNames){
-//			System.out.println("className: "+className);
-			Model sourceClassModel = getClassInstancesModel(className, subModel);
-//			System.out.println("************* sourceClassModel *********");
-//			sourceClassModel.write(System.out,"TTL");
-//			System.exit(1);
-			baseModel.remove(sourceClassModel);
+			Model deleteClassInstancesModel = getClassInstancesModel(className, subModel);
+			baseModel.remove(deleteClassInstancesModel);
 			modifiedClasses.add(className);
 			OWLClass cls = owlDataFactory.getOWLClass(IRI.create(className));
 			optimalSolutions.put(cls, cls);
 		}
-		
-		
-		
-//		baseModel.remove(subModel);
 		return ModelFactory.createDefaultModel();
 	}
-	public static void main(String[] args){
-		Model m= loadModel(args[0]);
-		ClassDeleteModifier classDeleter=new ClassDeleteModifier(m);
+	
 
-		System.out.println("----- Base Model -----");
-		System.out.println("Size: "+m.size());
-		baseModel.write(System.out,"TTL");
-		System.out.println();
-
-		System.out.println("----- Merge Model -----");
-		Model desM = classDeleter.destroy(m);
-		System.out.println("Size: "+desM.size());
-		desM.write(System.out,"TTL");
-
-	}
 }

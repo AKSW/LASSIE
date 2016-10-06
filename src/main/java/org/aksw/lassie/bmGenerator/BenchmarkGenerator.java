@@ -62,9 +62,9 @@ public class BenchmarkGenerator extends Modifier{
 	Model destroyInstances (Map<? extends Modifier, Double> modefiersAndRates, double startPointRatio){
 		Model inputModel= ModelFactory.createDefaultModel();
 
-		if(properties.size()==0 && inputClassUri==null){   // If the modifier properties are not set and no Class is set then divide the whole Model
-			inputModel=baseModel;
-		}else if(inputClassUri!=null){ // if class is set the divide based on class
+		if(properties.size() == 0 && inputClassUri == null){   // If the modifier properties are not set and no Class is set then divide the whole Model
+			inputModel = baseModel;
+		}else if(inputClassUri != null){ // if class is set the divide based on class
 			destroyedClassModel = getInputClassModel(inputClassUri);
 			inputModel=destroyedClassModel;
 			if(properties.size()>0){    // and if the modifier properties are set and Class is set then divide the the properties of that class 
@@ -112,7 +112,7 @@ public class BenchmarkGenerator extends Modifier{
 			baseModel.remove(destroyedClassModel);
 			destroyedModel.add(baseModel); 
 		}
-		if(inputClassUri!=null && outputClassUri!=null){
+		if(inputClassUri != null && outputClassUri != null){
 			destroyedModel = renameClass(destroyedModel, inputClassUri,outputClassUri);
 		}
 		baseModel=destroyedModel;
@@ -178,7 +178,7 @@ public class BenchmarkGenerator extends Modifier{
 	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy(org.apache.jena.rdf.model.Model)
 	 */
 	@Override
-	Model destroy(Model subModel) {
+	public Model destroy(Model subModel) {
 		// TODO Auto-generated method stub
 		return null;
 	}

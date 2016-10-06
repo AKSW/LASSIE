@@ -32,7 +32,7 @@ public class InstanceAcronymModifier extends Modifier{
 	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy()
 	 */
 	@Override
-	Model destroy(Model subModel) {
+	public Model destroy(Model subModel) {
 		System.out.println();
 		System.out.println("Generating acronym of " + subModel.size() + " triples.");
 		

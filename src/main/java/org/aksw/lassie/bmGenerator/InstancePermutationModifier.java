@@ -29,7 +29,7 @@ public class InstancePermutationModifier extends Modifier {
      * (non-Javadoc) @see de.uni_leipzig.simba.benchmarker.Modifier#destroy()
      */
     @Override
-    Model destroy(Model subModel) {
+    public Model destroy(Model subModel) {
         System.out.println();
         System.out.println("Performing permutation of " + subModel.size() + " triples.");
 

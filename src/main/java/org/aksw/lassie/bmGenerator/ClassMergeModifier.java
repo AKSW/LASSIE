@@ -57,7 +57,7 @@ public class ClassMergeModifier extends Modifier{
 	 * @see de.uni_leipzig.simba.bmGenerator.Modifier#destroy(org.apache.jena.rdf.model.Model)
 	 */
 	@Override
-	Model destroy(Model subModel) {
+    public	Model destroy(Model subModel) {
 		Model result = ModelFactory.createDefaultModel();
 
 		List<String> classNames = new ArrayList<String>();

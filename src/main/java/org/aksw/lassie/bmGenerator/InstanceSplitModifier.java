@@ -59,7 +59,7 @@ public class InstanceSplitModifier extends Modifier{
 	 * @see de.uni_leipzig.simba.benchmarker.Modifier#destroy()
 	 */
 	@Override
-	Model destroy(Model subModel) {
+    public	Model destroy(Model subModel) {
 		System.out.println();
 		System.out.println("Splitting " + subModel.size() + " triples.");
 		
