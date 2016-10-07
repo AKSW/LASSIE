@@ -93,8 +93,8 @@ public class TestLimes {
 			
 //	         classModifiersAndRates.put(new ClassIdentityModifier(), 1.0);
 //	         instanceModifiersAndRates.put(new InstanceIdentityModifier(), 1.0);
-			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
-//			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 1.0);
+//			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
+			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 1.0);
 //			classModifiersAndRates.put(new ClassRenameModifier(), 1.0);
 //			classModifiers.add(new ClassDeleteModifier());
 //			classModifiers.add(new ClassIdentityModifier());
