@@ -35,8 +35,8 @@ import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
  * @author sherif
  *
  */
-public class TestLimes {
-	private static final Logger logger = Logger.getLogger(TestLimes.class.getName());
+public class TestUsingToyDataset {
+	private static final Logger logger = Logger.getLogger(TestUsingToyDataset.class);
 	
 	static int nrOfExperimentRepeats = 1;
 	static Map<Modifier, Double> classModifiersAndRates    = new HashMap<>();
