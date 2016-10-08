@@ -54,7 +54,7 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
     }
 
     @Override
-    public Multimap<OWLClass, String> link(Set<OWLClass> sourceClasses, Collection<OWLClassExpression> targetClasses) {
+    public Multimap<OWLClass, String> link(Set<OWLClass> sourceClasses, Set<OWLClassExpression> targetClasses) {
         logger.info("Computing links...");
         logger.info("Source classes: " + sourceClasses);
         logger.info("Target classes: " + targetClasses);
@@ -143,7 +143,7 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
 
 
     @Override
-    public Multimap<OWLClass, String> linkMultiThreaded(Set<OWLClass> sourceClasses, Collection<OWLClassExpression> targetClasses) {
+    public Multimap<OWLClass, String> linkMultiThreaded(Set<OWLClass> sourceClasses, Set<OWLClassExpression> targetClasses) {
         logger.info("Computing links...");
         logger.info("Source classes: " + sourceClasses);
         logger.info("Target classes: " + targetClasses);

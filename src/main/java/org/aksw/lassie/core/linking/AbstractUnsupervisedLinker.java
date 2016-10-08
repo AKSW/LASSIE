@@ -74,7 +74,7 @@ public abstract class AbstractUnsupervisedLinker implements UnsupervisedLinker {
         return instances;
     }
 
-    protected void removeNonStringLiteralStatements(Model m) {
+    protected static void removeNonStringLiteralStatements(Model m) {
         StmtIterator iterator = m.listStatements();
         List<Statement> statements2Remove = new ArrayList<Statement>();
         while (iterator.hasNext()) {

@@ -10,6 +10,6 @@ import com.google.common.collect.Multimap;
 
 public interface UnsupervisedLinker {
 
-    abstract public Multimap<OWLClass, String> link(Set<OWLClass> sourceClasses, Collection<OWLClassExpression> targetClasses);
-    abstract public Multimap<OWLClass, String> linkMultiThreaded(Set<OWLClass> sourceClasses, Collection<OWLClassExpression> targetClasses);
+    Multimap<OWLClass, String> link(Set<OWLClass> sourceClasses, Set<OWLClassExpression> targetClasses);
+    Multimap<OWLClass, String> linkMultiThreaded(Set<OWLClass> sourceClasses, Set<OWLClassExpression> targetClasses);
 }

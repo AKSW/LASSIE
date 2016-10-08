@@ -1,30 +1,15 @@
 package org.aksw.lassie.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.jamonapi.Monitor;
+import com.jamonapi.MonitorFactory;
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.exceptions.NonExistingLinksException;
-import org.aksw.lassie.core.linking.EuclidLinker;
 import org.aksw.lassie.core.linking.LinkerType;
 import org.aksw.lassie.core.linking.UnsupervisedLinker;
 import org.aksw.lassie.core.linking.UnsupervisedLinkerFactory;
-import org.aksw.lassie.core.linking.WombatSimpleLinker;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.aksw.lassie.util.PrintUtils;
@@ -32,23 +17,14 @@ import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
 import org.apache.log4j.Logger;
 import org.dllearner.algorithms.celoe.CELOE;
-import org.dllearner.core.AbstractLearningProblem;
-import org.dllearner.core.AbstractReasonerComponent;
-import org.dllearner.core.ComponentInitException;
-import org.dllearner.core.EvaluatedDescription;
-import org.dllearner.core.KnowledgeSource;
+import org.dllearner.core.*;
 import org.dllearner.kb.OWLAPIOntology;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.learningproblems.PosNegLPStandard;
@@ -60,22 +36,12 @@ import org.dllearner.utilities.examples.AutomaticNegativeExampleFinderSPARQL2;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
-import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLClass;
-import org.semanticweb.owlapi.model.OWLClassExpression;
-import org.semanticweb.owlapi.model.OWLDataFactory;
-import org.semanticweb.owlapi.model.OWLIndividual;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.model.OWLOntologyStorageException;
-
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.jamonapi.Monitor;
-import com.jamonapi.MonitorFactory;
-
+import org.semanticweb.owlapi.model.*;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
+
+import java.io.*;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class LASSIEController {
 
@@ -182,7 +148,7 @@ public class LASSIEController {
         resultRecorder = new LassieResultRecorder(maxNrOfIterations, sourceClasses);
 
         //initially, the class expressions E_i in the target KB are the named classes D_i
-        Collection<OWLClassExpression> targetClassExpressions = new TreeSet<>();
+        Set<OWLClassExpression> targetClassExpressions = new TreeSet<>();
         targetClassExpressions.addAll(targetClasses);
 
         //perform the iterative schema matching
@@ -201,7 +167,6 @@ public class LASSIEController {
 
             //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
             for (OWLClass sourceClass : sourceClasses) {
-
                 logger.info("+++++++++++++++++++++" + sourceClass + "+++++++++++++++++++++");
                 currentClass = sourceClass;
                 try {
@@ -212,7 +177,7 @@ public class LASSIEController {
                     List<? extends EvaluatedDescription<?>> mappingList = computeMappings(targetInstances, useRemoteKB);
                     resultRecorder.setMapping(mappingList, iterationNr, sourceClass);
 
-                    OWLClassExpression oce = (OWLClassExpression) mappingList.get(0).getDescription();
+                    OWLClassExpression oce = mappingList.get(0).getDescription();
                     iterationResultConceptDescription.put(sourceClass, oce);
                 } catch (NonExistingLinksException e) {
                     logger.warn(e.getMessage() + " Skipped learning.");
@@ -222,7 +187,7 @@ public class LASSIEController {
             }
 
             //set the target class expressions
-            targetClassExpressions = iterationResultConceptDescription.values();
+            targetClassExpressions = new TreeSet<>(iterationResultConceptDescription.values());
             double newTotalCoverage = computeCoverage(iterationResultConceptDescription);
 
             //if no better coverage then break
@@ -277,7 +242,7 @@ public class LASSIEController {
     }
 
     private Set<OWLClass> getClasses(KnowledgeBase kb) {
-        Set<OWLClass> classes = new HashSet<OWLClass>();
+        Set<OWLClass> classes = new HashSet<>();
 
         //get all OWL classes
         String query = "SELECT ?type WHERE {?type a <" + OWL.Class.getURI() + ">.";

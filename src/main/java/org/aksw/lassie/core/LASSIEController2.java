@@ -42,7 +42,7 @@ public class LASSIEController2 extends LASSIEController {
 
         Map<Modifier, OWLClassExpression> modifier2optimalSolution = new HashMap<Modifier, OWLClassExpression>();
         //initially, the class expressions E_i in the target KB are the named classes D_i
-        Collection<OWLClassExpression> targetClassExpressions = new TreeSet<OWLClassExpression>();
+        Set<OWLClassExpression> targetClassExpressions = new TreeSet<OWLClassExpression>();
         targetClassExpressions.addAll(targetClasses);
 
         //perform the iterative schema matching

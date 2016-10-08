@@ -4,6 +4,8 @@
 package org.aksw.lassie;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -23,6 +25,7 @@ import org.aksw.lassie.result.LassieResultRecorder;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.util.FileManager;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.dllearner.core.ComponentInitException;
 import org.semanticweb.owlapi.model.IRI;
@@ -137,6 +140,7 @@ public class TestUsingToyDataset {
 	}
 	
 	public static void main(String args[]) throws IOException, ComponentInitException{
+        Logger.getRootLogger().setLevel(Level.OFF);
 		test();
 	}
 }
