@@ -41,7 +41,7 @@ public class ClassRenameModifier extends Modifier {
 		for (String className : classNames) {
 			String renamedClassName = className + "_RENAME";
 			subModel = renameClass(subModel, className,  renamedClassName);
-			modifiedClasses.add(renamedClassName);
+			modifiedClassesURIs.add(renamedClassName);
 			optimalSolutions.put(owlDataFactory.getOWLClass(IRI.create(renamedClassName)), owlDataFactory.getOWLClass(IRI.create(className)));
 		}
 		return subModel;

@@ -40,7 +40,7 @@ public abstract class Modifier {
 	
 	static protected String  nameSpace = "";
 	static protected List<String> baseClasses     = new ArrayList<>();
-	static protected List<String> modifiedClasses = new ArrayList<>();
+	static protected List<String> modifiedClassesURIs = new ArrayList<>();
 	protected boolean isClassModifier = false;
 	
 	OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
@@ -93,12 +93,12 @@ public abstract class Modifier {
 	 * @return the modifiedClasses
 	 */
 	public List<String> getModifiedClasses() {
-		return modifiedClasses;
+		return modifiedClassesURIs;
 	}
 	
 	public Set<OWLClass> getModifiedOWLClasses() {
 		Set<OWLClass> namedClasses = new TreeSet<OWLClass>();
-		for (String mc : modifiedClasses) {
+		for (String mc : modifiedClassesURIs) {
 			namedClasses.add(owlDataFactory.getOWLClass(IRI.create(mc)));
 		}
 		return namedClasses;
@@ -108,7 +108,7 @@ public abstract class Modifier {
 	 * @param modifiedClasses the modifiedClasses to set
 	 */
 	public void setModifiedClasses(List<String> modifiedClasses) {
-		Modifier.modifiedClasses = modifiedClasses;
+		Modifier.modifiedClassesURIs = modifiedClasses;
 	}
 	
 	/**
@@ -260,14 +260,17 @@ public abstract class Modifier {
 		Resource newClassURI = ResourceFactory.createResource(newClassName);
         while(sItr.hasNext()){
             Statement stmt = sItr.nextStatement();
-            if(stmt.getObject().equals(oldClassURI)){
-                result.add(stmt.getSubject(), stmt.getPredicate(), newClassURI);
+            if(stmt.getPredicate().equals(RDF.type) && stmt.getObject().equals(oldClassURI)){
+                result.add(stmt.getSubject(), RDF.type, newClassURI);
             }else{
-                result.add(stmt.getSubject(), stmt.getPredicate(), stmt.getObject());
+                result.add(stmt);
             }
         }
 		return result;
 	}
+	
+	
+	
 	
 	   /**
      * @param model

@@ -90,7 +90,7 @@ public class ClassSplitModifier extends Modifier {
             for(int i = 0 ; i < splitCount ; i++){
                 String splitUri = oldClassName + "_SPLIT_" + (i+1);
                 splitTargetClassUri.add(splitUri);
-                modifiedClasses.add(splitUri);
+                modifiedClassesURIs.add(splitUri);
             }
             //generate optimal solution
             List<OWLClassExpression> children = new ArrayList<>();
@@ -106,7 +106,7 @@ public class ClassSplitModifier extends Modifier {
             while(subjectItr.hasNext()){
                 Resource r = subjectItr.next();
                 String newClassName = splitTargetClassUri.get(i);
-                Model splitModel = changeResourceType(r, oldClassName, newClassName, subModel);
+                Model splitModel = getchangedResourceTypeModel(r, oldClassName, newClassName, subModel);
                 result.add(splitModel);
                 i = (i + 1) % splitCount;
             }
@@ -115,7 +115,7 @@ public class ClassSplitModifier extends Modifier {
     }
 
 
-    private Model changeResourceType(Resource r,String oldClassName, String newClassName, final Model subModel) {
+    private Model getchangedResourceTypeModel(Resource r,String oldClassName, String newClassName, final Model subModel) {
         Model resultModel = ModelFactory.createDefaultModel();
         String sparqlQueryString= "CONSTRUCT {?s ?p ?o} WHERE {<" + r.getURI() +"> ?p ?o. ?s ?p ?o} " ;
         QueryFactory.create(sparqlQueryString);
@@ -156,7 +156,7 @@ public class ClassSplitModifier extends Modifier {
             for(int i = 0 ; i < splitCount ; i++){
                 String splitUri = className + "_SPLIT_" + (i+1);
                 splitTargetClassUri.add(splitUri);
-                modifiedClasses.add(splitUri);
+                modifiedClassesURIs.add(splitUri);
             }
             //generate optimal solution
             List<OWLClassExpression> children = new ArrayList<>();

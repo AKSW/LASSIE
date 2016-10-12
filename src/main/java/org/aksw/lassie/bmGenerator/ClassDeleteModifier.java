@@ -43,7 +43,7 @@ public class ClassDeleteModifier extends Modifier {
 		for(String className: classNames){
 			Model deleteClassInstancesModel = getClassInstancesModel(className, subModel);
 			baseModel.remove(deleteClassInstancesModel);
-			modifiedClasses.add(className);
+			modifiedClassesURIs.add(className);
 			OWLClass cls = owlDataFactory.getOWLClass(IRI.create(className));
 			optimalSolutions.put(cls, cls);
 		}

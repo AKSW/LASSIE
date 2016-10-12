@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
+import org.aksw.lassie.bmGenerator.ClassMergeModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
 import org.aksw.lassie.bmGenerator.InstanceIdentityModifier;
@@ -97,11 +98,11 @@ public class TestUsingToyDataset {
 //	         classModifiersAndRates.put(new ClassIdentityModifier(), 1.0);
 //	         instanceModifiersAndRates.put(new InstanceIdentityModifier(), 1.0);
 //			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
-			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 1.0);
+			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 0.5);
 //			classModifiersAndRates.put(new ClassRenameModifier(), 1.0);
 //			classModifiers.add(new ClassDeleteModifier());
 //			classModifiers.add(new ClassIdentityModifier());
-//			classModifiers.add(new ClassMergeModifier());
+			classModifiersAndRates.put(new ClassMergeModifier(), 1.0);
 //			classModifiers.add(new ClassSplitModifier());
 //			classModifiers.add(new ClassTypeDeleteModifier());
 

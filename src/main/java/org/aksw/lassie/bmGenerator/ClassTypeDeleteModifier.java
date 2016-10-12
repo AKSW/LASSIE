@@ -68,7 +68,7 @@ public class ClassTypeDeleteModifier extends Modifier{
 
 			sourceClassModel.removeAll(null, RDF.type, null);
 			result.add(sourceClassModel);
-			modifiedClasses.add(className);
+			modifiedClassesURIs.add(className);
 			OWLClass cls = owlDataFactory.getOWLClass(IRI.create(className));
 			optimalSolutions.put(cls, cls);
 			}

@@ -328,7 +328,7 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
             e.printStackTrace();
         }
         wombatSimpleU.setParameter(AWombat.PARAMETER_MIN_PROPERTY_COVERAGE, 1.0);
-        wombatSimpleU.setParameter(AWombat.PARAMETER_ATOMIC_MEASURES, "trigrams");
+//        wombatSimpleU.setParameter(AWombat.PARAMETER_ATOMIC_MEASURES, "trigrams");
         wombatSimpleU.init(wombatSimpleU.getParameters() , sourceCache, targetCache);
         MLResults mlResults = null;
         try {

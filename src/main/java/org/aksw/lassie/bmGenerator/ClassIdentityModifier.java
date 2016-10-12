@@ -33,7 +33,7 @@ public class ClassIdentityModifier extends Modifier {
 			classNames = baseClasses;
 		}
 
-		modifiedClasses.addAll(classNames);
+		modifiedClassesURIs.addAll(classNames);
 		return subModel;
 	}
 }
