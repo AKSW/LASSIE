@@ -32,7 +32,7 @@ import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
  *
  */
 public class Experiments {
-	private static final Logger logger = Logger.getLogger(Experiments.class.getName());
+	private static final Logger logger = Logger.getLogger(Experiments.class);
 
 	private List<Modifier> classModifiers = new ArrayList<Modifier>();
 	private List<Modifier> instanceModifiers = new ArrayList<Modifier>();

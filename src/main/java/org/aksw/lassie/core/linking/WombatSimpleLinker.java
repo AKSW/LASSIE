@@ -27,6 +27,8 @@ import java.util.concurrent.*;
 
 
 public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
+    
+    private static double wombatPropertyCoverage = 0.6;
 
     protected static final Logger logger = Logger.getLogger(WombatSimpleLinker.class);
 
@@ -327,7 +329,8 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
         } catch (UnsupportedMLImplementationException e) {
             e.printStackTrace();
         }
-        wombatSimpleU.setParameter(AWombat.PARAMETER_MIN_PROPERTY_COVERAGE, 1.0);
+        
+        wombatSimpleU.setParameter(AWombat.PARAMETER_MIN_PROPERTY_COVERAGE, wombatPropertyCoverage);
 //        wombatSimpleU.setParameter(AWombat.PARAMETER_ATOMIC_MEASURES, "trigrams");
         wombatSimpleU.init(wombatSimpleU.getParameters() , sourceCache, targetCache);
         MLResults mlResults = null;
@@ -358,6 +361,14 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
             }
         }
         return c;
+    }
+
+    public double getWombatPropertyCoverage() {
+        return this.wombatPropertyCoverage;
+    }
+
+    public void setWombatPropertyCoverage(double wombatPropertyCoverage) {
+        this.wombatPropertyCoverage = wombatPropertyCoverage;
     }
 
 }

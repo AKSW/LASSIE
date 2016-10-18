@@ -47,13 +47,12 @@ public class TestUsingLANCEDatasets {
     static int maxNrOfIterations = 3;
     static int nrOfClasses = 1;
     static int nrOfInstancesPerClass = 5;
-    //	static String toyDatasetFile = "src/main/resources/datasets/toydataset/toydataset_scientist_mammal_plant.nt";
-//	static String toyDatasetFile = "src/main/resources/datasets/toydataset/toydataset_scientist_mammal.nt";
-    static String toyDatasetFile = "datasets/spimbench/Tbox1.nt";
-    //	static String toyDatasetFile = "datasets/toydataset/toydataset_mammal.nt";
-    static String outputFile = "limesTestResult.txt";
-    static Set<OWLClass> testClasses = new HashSet<OWLClass>();
-    private static String toyDatasetFile2 = "datasets/spimbench/Tbox2.nt";
+    
+    static String outputFile = "lanceTestResult.txt";
+    static Set<OWLClass> testClasses = new HashSet<>();
+    
+    static String sourceDatasetFile = "datasets/spimbench/Tbox1.nt";
+    static String targetDatasetFile = "datasets/spimbench/Tbox2.nt";
 
     public static Model readModel(String fileNameOrUri)
     {
@@ -83,55 +82,25 @@ public class TestUsingLANCEDatasets {
 
     public  static void test() throws IOException, ComponentInitException{
 
-        Model toyDatasetModel = readModel(toyDatasetFile);
-        Model targetKBModel = readModel(toyDatasetFile2);
+        Model toyDatasetModel = readModel(sourceDatasetFile);
+        Model targetKBModel = readModel(targetDatasetFile);
 
         //do the experiment nrOfExperimentRepeats times for each modifier
         for(int expNr = 0 ; expNr < nrOfExperimentRepeats ; expNr++){
-//			System.setOut(new PrintStream("/dev/null"));
             long startTime = System.currentTimeMillis();
-//			Evaluation evaluator = new Evaluation(maxNrOfIterations, nrOfClasses, nrOfInstancesPerClass, classModifiersAndRates, instanceModifiersAndRates);
             OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
             testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Sport")));
-//			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Mammal")));
-//			testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Plant")));
-
-//	         classModifiersAndRates.put(new ClassIdentityModifier(), 1.0);
-//	         instanceModifiersAndRates.put(new InstanceIdentityModifier(), 1.0);
-//			classModifiersAndRates.put(new ClassSplitModifier(), 1.0);
-//			instanceModifiersAndRates.put(new InstanceMisspellingModifier(), 1.0);
-//			classModifiersAndRates.put(new ClassRenameModifier(), 1.0);
-//			classModifiers.add(new ClassDeleteModifier());
-//			classModifiers.add(new ClassIdentityModifier());
-//			classModifiers.add(new ClassMergeModifier());
-//			classModifiers.add(new ClassSplitModifier());
-//			classModifiers.add(new ClassTypeDeleteModifier());
-
-//			instanceModifiers.add(new InstanceAbbreviationModifier());
-//			instanceModifiers.add(new InstanceAcronymModifier());
-//			instanceModifiers.add(new InstanceIdentityModifier());
-//			instanceModifiers.add(new InstanceMergeModifier());
-//			instanceModifiers.add(new InstanceMisspellingModifier());
-//			instanceModifiers.add(new InstancePermutationModifier());
-//			instanceModifiers.add(new InstanceSplitModifier());
-
             LocalKnowledgeBase sourceKB = new LocalKnowledgeBase(toyDatasetModel, "http://dbpedia.org/ontology/");
-//			KnowledgeBase targetKB = new LocalKnowledgeBase(toyDatasetModel, "http://dbpedia.org/ontology/");
-//			Model targetKBModel = (new Evaluation()).createTestDataset(sourceKB.getModel(), instanceModifiersAndRates, classModifiersAndRates, 100, 5);
-
             KnowledgeBase targetKB = new LocalKnowledgeBase(targetKBModel, "http://dbpedia.org/ontology/");
+            LASSIEController controller = new LASSIEController(sourceKB, targetKB, maxNrOfIterations, testClasses);
+            controller.setTargetDomainNameSpace("http://dbpedia.org/ontology/");
+            LassieResultRecorder experimentResults = controller.run(testClasses, false);
 
-            LASSIEController generator = new LASSIEController(sourceKB, targetKB, maxNrOfIterations, testClasses);
-            generator.setTargetDomainNameSpace("http://dbpedia.org/ontology/");
-//			generator.setLinkerType(LinkerType.EUCLID);
-
-            LassieResultRecorder experimentResults = generator.run(testClasses, false);
-
-            experimentResults.setNrOfInstancesPerClass(nrOfInstancesPerClass);
-            experimentResults.setNrOfClassModifiers(classModifiersAndRates.size());
-            experimentResults.setNrOfInstanceModifiers(instanceModifiersAndRates.size());
-            experimentResults.setClassModefiersAndRates(classModifiersAndRates);
-            experimentResults.setInstanceModefiersAndRates(instanceModifiersAndRates);
+//            experimentResults.setNrOfInstancesPerClass(nrOfInstancesPerClass);
+//            experimentResults.setNrOfClassModifiers(classModifiersAndRates.size());
+//            experimentResults.setNrOfInstanceModifiers(instanceModifiersAndRates.size());
+//            experimentResults.setClassModefiersAndRates(classModifiersAndRates);
+//            experimentResults.setInstanceModefiersAndRates(instanceModifiersAndRates);
 
             logger.info("Experiment Results:\n" + experimentResults.toString());
             experimentResults.saveToFile(outputFile);
@@ -143,7 +112,7 @@ public class TestUsingLANCEDatasets {
     }
 
     public static void main(String args[]) throws IOException, ComponentInitException{
-        Logger.getRootLogger().setLevel(Level.OFF);
+        Logger.getRootLogger().setLevel(Level.DEBUG);
         test();
     }
 }

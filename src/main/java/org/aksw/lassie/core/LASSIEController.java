@@ -167,7 +167,7 @@ public class LASSIEController {
 
             //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
             for (OWLClass sourceClass : sourceClasses) {
-                logger.info("+++++++++++++++++++++" + sourceClass + "+++++++++++++++++++++");
+                logger.info("+++++++++++++++++++++ " + sourceClass + " +++++++++++++++++++++");
                 currentClass = sourceClass;
                 try {
                     SortedSet<OWLIndividual> targetInstances = Helper.getIndividualSet(new TreeSet<>(links.get(sourceClass)));

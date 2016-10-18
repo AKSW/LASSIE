@@ -141,7 +141,7 @@ public class TestUsingToyDataset {
 	}
 	
 	public static void main(String args[]) throws IOException, ComponentInitException{
-        Logger.getRootLogger().setLevel(Level.OFF);
+//        Logger.getRootLogger().setLevel(Level.OFF);
 		test();
 	}
 }
