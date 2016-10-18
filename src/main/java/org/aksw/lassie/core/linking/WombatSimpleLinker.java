@@ -28,7 +28,7 @@ import java.util.concurrent.*;
 
 public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
     
-    private static double wombatPropertyCoverage = 0.6;
+    private static double wombatPropertyCoverage = 0.4;
 
     protected static final Logger logger = Logger.getLogger(WombatSimpleLinker.class);
 

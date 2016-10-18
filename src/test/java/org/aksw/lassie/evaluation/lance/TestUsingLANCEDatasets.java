@@ -1,7 +1,7 @@
 /**
  *
  */
-package org.aksw.lassie;
+package org.aksw.lassie.evaluation.lance;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.aksw.lassie.TestUsingToyDataset;
 import org.aksw.lassie.bmGenerator.ClassIdentityModifier;
 import org.aksw.lassie.bmGenerator.ClassRenameModifier;
 import org.aksw.lassie.bmGenerator.ClassSplitModifier;
@@ -47,10 +48,10 @@ public class TestUsingLANCEDatasets {
     static int maxNrOfIterations = 3;
     static int nrOfClasses = 1;
     static int nrOfInstancesPerClass = 5;
-    
+
     static String outputFile = "lanceTestResult.txt";
     static Set<OWLClass> testClasses = new HashSet<>();
-    
+
     static String sourceDatasetFile = "datasets/spimbench/Tbox1.nt";
     static String targetDatasetFile = "datasets/spimbench/Tbox2.nt";
 
@@ -85,30 +86,21 @@ public class TestUsingLANCEDatasets {
         Model toyDatasetModel = readModel(sourceDatasetFile);
         Model targetKBModel = readModel(targetDatasetFile);
 
-        //do the experiment nrOfExperimentRepeats times for each modifier
-        for(int expNr = 0 ; expNr < nrOfExperimentRepeats ; expNr++){
             long startTime = System.currentTimeMillis();
             OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
-            testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Sport")));
+//            testClasses.add(owlDataFactory.getOWLClass(IRI.create("http://dbpedia.org/ontology/Sport")));
             LocalKnowledgeBase sourceKB = new LocalKnowledgeBase(toyDatasetModel, "http://dbpedia.org/ontology/");
             KnowledgeBase targetKB = new LocalKnowledgeBase(targetKBModel, "http://dbpedia.org/ontology/");
             LASSIEController controller = new LASSIEController(sourceKB, targetKB, maxNrOfIterations, testClasses);
             controller.setTargetDomainNameSpace("http://dbpedia.org/ontology/");
-            LassieResultRecorder experimentResults = controller.run(testClasses, false);
-
-//            experimentResults.setNrOfInstancesPerClass(nrOfInstancesPerClass);
-//            experimentResults.setNrOfClassModifiers(classModifiersAndRates.size());
-//            experimentResults.setNrOfInstanceModifiers(instanceModifiersAndRates.size());
-//            experimentResults.setClassModefiersAndRates(classModifiersAndRates);
-//            experimentResults.setInstanceModefiersAndRates(instanceModifiersAndRates);
-
+//            LassieResultRecorder experimentResults = controller.run(testClasses, false);
+            LassieResultRecorder experimentResults = controller.run(false);
             logger.info("Experiment Results:\n" + experimentResults.toString());
             experimentResults.saveToFile(outputFile);
 
             long experimentTime = System.currentTimeMillis() - startTime;
             System.out.println("Experiment time: " + experimentTime + "ms.");
-            logger.info("Experiment (" + (expNr+1) + ")  is done in " + experimentTime + "ms.");
-        }
+            logger.info("Experiment is done in " + experimentTime + "ms.");
     }
 
     public static void main(String args[]) throws IOException, ComponentInitException{

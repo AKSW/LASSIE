@@ -136,6 +136,23 @@ public class LASSIEController {
 
     }
 
+    /**
+     * run all source classes against all target classes
+     * @param useRemoteKB
+     * @return
+     */
+    public LassieResultRecorder run(boolean useRemoteKB) {
+        Set<OWLClass> sourceClasses = getClasses(sourceKB);
+        logger.debug("sourceClasses: " + sourceClasses);
+        return run(sourceClasses, useRemoteKB);
+    }
+    
+    /**
+     * run the given source classes against all target classes
+     * @param sourceClasses
+     * @param useRemoteKB
+     * @return
+     */
     public LassieResultRecorder run(Set<OWLClass> sourceClasses, boolean useRemoteKB) {
         // get all classes D_i in target KB
         Set<OWLClass> targetClasses = getClasses(targetKB);
@@ -143,6 +160,13 @@ public class LASSIEController {
         return run(sourceClasses, targetClasses, useRemoteKB);
     }
 
+    /**
+     * run the given source classes against the given target classes
+     * @param sourceClasses
+     * @param targetClasses
+     * @param useRemoteKB
+     * @return
+     */
     public LassieResultRecorder run(Set<OWLClass> sourceClasses, Set<OWLClass> targetClasses, boolean useRemoteKB) {
 
         resultRecorder = new LassieResultRecorder(maxNrOfIterations, sourceClasses);
