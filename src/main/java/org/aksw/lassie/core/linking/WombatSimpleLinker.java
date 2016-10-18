@@ -1,16 +1,35 @@
 package org.aksw.lassie.core.linking;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.aksw.limes.core.datastrutures.GoldStandard;
+import org.aksw.limes.core.evaluation.qualititativeMeasures.FMeasure;
 import org.aksw.limes.core.evaluation.qualititativeMeasures.PseudoFMeasure;
 import org.aksw.limes.core.exceptions.UnsupportedMLImplementationException;
 import org.aksw.limes.core.io.cache.ACache;
 import org.aksw.limes.core.io.cache.MemoryCache;
 import org.aksw.limes.core.io.mapping.AMapping;
-import org.aksw.limes.core.ml.algorithm.*;
+import org.aksw.limes.core.io.mapping.MappingFactory;
+import org.aksw.limes.core.ml.algorithm.MLAlgorithmFactory;
+import org.aksw.limes.core.ml.algorithm.MLImplementationType;
+import org.aksw.limes.core.ml.algorithm.MLResults;
+import org.aksw.limes.core.ml.algorithm.UnsupervisedMLAlgorithm;
+import org.aksw.limes.core.ml.algorithm.WombatSimple;
 import org.aksw.limes.core.ml.algorithm.wombat.AWombat;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
@@ -19,11 +38,8 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 
 public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
@@ -35,6 +51,8 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
     protected PseudoFMeasure pseudoFMeasure = new PseudoFMeasure();
 
     protected Map<OWLClass, Map<OWLClassExpression, AMapping>> mappingResults = new HashMap<>();
+    
+    private AMapping oracleMapping = MappingFactory.createDefaultMapping();
 
 
     public WombatSimpleLinker(KnowledgeBase sourceKB, KnowledgeBase targetKB, String linkingProperty, LassieResultRecorder resultRecorder, int iterationNr){
@@ -118,10 +136,12 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
                         }
                         mappingResults.get(sourceClass).put(targetClassExpression, resultMapping);
 
-                        //Keep record of the PFM
+                        //Keep record of the PFM and F-Measure
                         if(resultMapping.getSize() > 0){
                             double pfm = pseudoFMeasure.calculate(resultMapping, new GoldStandard(null, sourceCache, targetCache));
                             resultRecorder.setPFMeasure(pfm, iterationNr , sourceClass);
+                            double f = new FMeasure().calculate(resultMapping, new GoldStandard(getOracleMapping()));
+                            resultRecorder.setFMeasure(f, iterationNr , sourceClass);
                             resultRecorder.setInstanceMapping(resultMapping, iterationNr, sourceClass);
                         }
                         for (Entry<String, HashMap<String, Double>> mappingEntry : resultMapping.getMap().entrySet()) {
@@ -364,11 +384,19 @@ public class WombatSimpleLinker extends AbstractUnsupervisedLinker{
     }
 
     public double getWombatPropertyCoverage() {
-        return this.wombatPropertyCoverage;
+        return WombatSimpleLinker.wombatPropertyCoverage;
     }
 
     public void setWombatPropertyCoverage(double wombatPropertyCoverage) {
-        this.wombatPropertyCoverage = wombatPropertyCoverage;
+        WombatSimpleLinker.wombatPropertyCoverage = wombatPropertyCoverage;
+    }
+
+    public AMapping getOracleMapping() {
+        return oracleMapping;
+    }
+
+    public void setOracleMapping(AMapping oracleMapping) {
+        this.oracleMapping = oracleMapping;
     }
 
 }

@@ -1,9 +1,19 @@
 package org.aksw.lassie.core;
 
-import com.google.common.collect.Multimap;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.exceptions.NonExistingLinksException;
-import org.aksw.lassie.core.linking.EuclidLinker;
 import org.aksw.lassie.core.linking.UnsupervisedLinker;
 import org.aksw.lassie.core.linking.WombatSimpleLinker;
 import org.aksw.lassie.kb.KnowledgeBase;
@@ -16,11 +26,7 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.*;
+import com.google.common.collect.Multimap;
 
 public class LASSIEController2 extends LASSIEController {
 

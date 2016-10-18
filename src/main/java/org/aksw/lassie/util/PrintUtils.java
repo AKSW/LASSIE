@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.aksw.lassie.kb.KnowledgeBase;
-import org.aksw.lassie.kb.LocalKnowledgeBase;
 import org.aksw.lassie.kb.RemoteKnowledgeBase;
 import org.dllearner.core.ComponentInitException;
 import org.dllearner.core.EvaluatedDescription;

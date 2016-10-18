@@ -14,7 +14,6 @@ import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
-
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
 

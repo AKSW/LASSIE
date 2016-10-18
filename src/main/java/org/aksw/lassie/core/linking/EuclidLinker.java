@@ -1,8 +1,20 @@
 package org.aksw.lassie.core.linking;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.jamonapi.MonitorFactory;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.aksw.limes.core.datastrutures.GoldStandard;
@@ -28,8 +40,8 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLIndividual;
 
-import java.util.*;
-import java.util.concurrent.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 public class EuclidLinker extends AbstractUnsupervisedLinker{
     protected static final Logger logger = Logger.getLogger(EuclidLinker.class);
@@ -46,6 +58,9 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
     protected Map<OWLClass, Map<OWLClassExpression, AMapping>> mappingResults = new HashMap<>();
 
     private int iterationNr = 0;
+    
+    private AMapping oracleMapping = MappingFactory.createDefaultMapping();
+
 
 
 
@@ -328,5 +343,13 @@ public class EuclidLinker extends AbstractUnsupervisedLinker{
         mon.stop();
         logger.trace("...found " + instances.size() + " instances in " + mon.getLastValue() + "ms.");
         return instances;
+    }
+    
+    public AMapping getOracleMapping() {
+        return oracleMapping;
+    }
+
+    public void setOracleMapping(AMapping oracleMapping) {
+        this.oracleMapping = oracleMapping;
     }
 }

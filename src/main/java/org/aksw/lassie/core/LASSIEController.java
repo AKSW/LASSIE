@@ -1,10 +1,22 @@
 package org.aksw.lassie.core;
 
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.jamonapi.Monitor;
-import com.jamonapi.MonitorFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import org.aksw.lassie.bmGenerator.Modifier;
 import org.aksw.lassie.core.exceptions.NonExistingLinksException;
 import org.aksw.lassie.core.linking.LinkerType;
@@ -13,18 +25,29 @@ import org.aksw.lassie.core.linking.UnsupervisedLinkerFactory;
 import org.aksw.lassie.kb.KnowledgeBase;
 import org.aksw.lassie.result.LassieResultRecorder;
 import org.aksw.lassie.util.PrintUtils;
+import org.aksw.limes.core.io.mapping.AMapping;
+import org.aksw.limes.core.io.mapping.MappingFactory;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
 import org.apache.log4j.Logger;
 import org.dllearner.algorithms.celoe.CELOE;
-import org.dllearner.core.*;
+import org.dllearner.core.AbstractLearningProblem;
+import org.dllearner.core.AbstractReasonerComponent;
+import org.dllearner.core.ComponentInitException;
+import org.dllearner.core.EvaluatedDescription;
+import org.dllearner.core.KnowledgeSource;
 import org.dllearner.kb.OWLAPIOntology;
 import org.dllearner.kb.sparql.SparqlEndpoint;
 import org.dllearner.learningproblems.PosNegLPStandard;
@@ -36,12 +59,22 @@ import org.dllearner.utilities.examples.AutomaticNegativeExampleFinderSPARQL2;
 import org.dllearner.utilities.owl.OWLEntityTypeAdder;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
-import org.semanticweb.owlapi.model.*;
-import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLIndividual;
+import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
-import java.io.*;
-import java.util.*;
-import java.util.Map.Entry;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.jamonapi.Monitor;
+import com.jamonapi.MonitorFactory;
+
+import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 public class LASSIEController {
 
@@ -73,6 +106,8 @@ public class LASSIEController {
     protected OWLDataFactory owlDataFactory = new OWLDataFactoryImpl();
     protected String linkingProperty = OWL.sameAs.getURI();
     protected SparqlEndpoint endpoint;
+    
+    protected AMapping oracleMapping = MappingFactory.createDefaultMapping();
     
     //result recorder
     LassieResultRecorder resultRecorder;
@@ -186,7 +221,7 @@ public class LASSIEController {
             //compute a set of links between each pair of class expressions (C_i, E_j), thus finally we get
             //a map from C_i to a set of instances in the target KB
             UnsupervisedLinker linker = UnsupervisedLinkerFactory.createUnsupervisedLinker(linkerType, sourceKB, targetKB, linkingProperty, resultRecorder, iterationNr);
-            
+            linker.setOracleMapping(oracleMapping);
             Multimap<OWLClass, String> links = linker.link(sourceClasses, targetClassExpressions);
 
             //for each source class C_i, compute a mapping to a class expression in the target KB based on the links
@@ -550,10 +585,12 @@ public class LASSIEController {
     public void setLinkerType(LinkerType linkerType) {
         this.linkerType = linkerType;
     }
-    //    public static void main(String[] args) throws Exception {
-//        Model m = ModelFactory.createDefaultModel();
-//        m.read(new FileInputStream(new File("/tmp/inc.owl")), null);
-//        cleanUpModel(m);
-//    }
+    
+    public AMapping getOracleMapping() {
+        return oracleMapping;
+    }
 
+    public void setOracleMapping(AMapping oracleMapping) {
+        this.oracleMapping = oracleMapping;
+    } 
 }

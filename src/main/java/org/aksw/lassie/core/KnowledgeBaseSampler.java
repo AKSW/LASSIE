@@ -16,7 +16,6 @@ import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 
-
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 /**

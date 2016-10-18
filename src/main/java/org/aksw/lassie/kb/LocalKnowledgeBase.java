@@ -1,9 +1,5 @@
 package org.aksw.lassie.kb;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 import java.util.SortedSet;
 
 import org.apache.jena.query.QueryExecutionFactory;
@@ -17,8 +13,6 @@ import org.dllearner.kb.sparql.ConciseBoundedDescriptionGenerator;
 import org.dllearner.kb.sparql.ConciseBoundedDescriptionGeneratorImpl;
 import org.dllearner.reasoning.SPARQLReasoner;
 import org.semanticweb.owlapi.model.OWLIndividual;
-
-import com.google.common.collect.Sets;
 
 
 public class LocalKnowledgeBase extends AbstractKnowledgeBase {

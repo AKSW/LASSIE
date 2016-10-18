@@ -6,9 +6,8 @@ package org.aksw.lassie.bmGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.semanticweb.owlapi.model.IRI;
-
 import org.apache.jena.rdf.model.Model;
+import org.semanticweb.owlapi.model.IRI;
 
 /**
  * @author sherif
