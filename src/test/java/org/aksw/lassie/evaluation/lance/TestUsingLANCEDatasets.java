@@ -34,7 +34,7 @@ import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
  *
  */
 public class TestUsingLANCEDatasets {
-    private static final Logger logger = Logger.getLogger(TestUsingToyDataset.class);
+    private static final Logger logger = Logger.getLogger(TestUsingLANCEDatasets.class);
 
     static int nrOfExperimentRepeats = 1;
     static Map<Modifier, Double> classModifiersAndRates    = new HashMap<>();
@@ -45,6 +45,13 @@ public class TestUsingLANCEDatasets {
 
     static String outputFile = "lanceTestResult.txt";
     static Set<OWLClass> testClasses = new HashSet<>();
+
+    static String datasetRootPath = "datasets/SPIMBENCH/";
+    static String[] datasetExperimentSizes = {"10K", "50K"};
+    static String[] datasetExperimentFlavours = {"COMPLEX", "SEMANTICS", "SIMPLE", "STRUCTURE", "VALUE"};
+    static String datasetSourceName = "Tbox1.nt";
+    static String datasetTargetName = "Tbox2.nt";
+    static String datasetGSName = "gs.txt";
 
     static String sourceDatasetFile = "datasets/spimbench/Tbox1.nt";
     static String targetDatasetFile = "datasets/spimbench/Tbox2.nt";
@@ -77,7 +84,8 @@ public class TestUsingLANCEDatasets {
         return model;
     }
 
-    public  static void test() throws IOException, ComponentInitException{
+    public  static void test(String sourceDatasetFile, String targetDatasetFile, String goldStandardFile, String outputFile)
+            throws IOException, ComponentInitException{
 
         Model toyDatasetModel = readModel(sourceDatasetFile);
         Model targetKBModel   = readModel(targetDatasetFile);
@@ -104,8 +112,20 @@ public class TestUsingLANCEDatasets {
             logger.info("Experiment is done in " + experimentTime + "ms.");
     }
 
+    public  static void testAll() throws IOException, ComponentInitException{
+        for (String datasetExperimentSize : datasetExperimentSizes) {
+            for (String datasetExperimentFlavour : datasetExperimentFlavours) {
+                String path = datasetRootPath + datasetExperimentSize + "/" + datasetExperimentFlavour + "/";
+                        test(path + datasetSourceName, path + datasetTargetName, path + datasetGSName,
+                                datasetExperimentSize + "_" + datasetExperimentFlavour + "_" + "result.txt");
+            }
+        }
+    }
+
     public static void main(String args[]) throws IOException, ComponentInitException{
         Logger.getRootLogger().setLevel(Level.DEBUG);
-        test();
+        String path = datasetRootPath + datasetExperimentSizes[0] + "/" + datasetExperimentFlavours[2] + "/";
+//        test(path + datasetSourceName, path + datasetTargetName, path + datasetGSName, outputFile);
+        testAll();
     }
 }
